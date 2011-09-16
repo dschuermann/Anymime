@@ -346,8 +346,10 @@ class AnyMimeActivity extends Activity {
       }
     }
     activityResumed = false
-    if(btService!=null)
+    if(btService!=null) {
       btService.acceptAndConnect = false
+      Log.e(TAG, "onPause btService.acceptAndConnect cleared")
+    }
     System.gc
     if(D) Log.i(TAG, "onPause done")
   }
@@ -743,12 +745,15 @@ class AnyMimeActivity extends Activity {
               startTime = System.currentTimeMillis
               receivedAnyData = false
 
+              firstBtActor = false
               if(mConnectedDeviceAddr!=null && mConnectedDeviceAddr<mBluetoothAdapter.getAddress) {
                 firstBtActor = true
+                if(D) Log.i(TAG, "handleMessage firstBtActor=true")
                 
                 // auto-delivery: send selected files (we are the 1st actor)
                 deliverFileArray(arrayListSelectedFileStrings)
               } else {
+                if(D) Log.i(TAG, "handleMessage firstBtActor=false")
                 // todo: new ReceiverIdleCheckThread().start
               }
               //if(D) Log.i(TAG, "handleMessage MESSAGE_STATE_CHANGE: STATE_CONNECTED DONE")
@@ -891,7 +896,8 @@ class AnyMimeActivity extends Activity {
           val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
           val bundle = new Bundle()
           bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
-          bundle.putString("opentype", "auto") // activity will auto-close if not used
+          bundle.putString("opentype", "auto") // activity will auto-close after about 15s if not used
+          bundle.putString("otherName", mDisconnectedDeviceName)
           intent.putExtras(bundle)
           startActivity(intent)
       }

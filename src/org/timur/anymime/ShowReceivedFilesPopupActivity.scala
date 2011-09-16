@@ -45,6 +45,7 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
   private val TAG = "ShowReceivedFilesPopupActivity"
   private val D = true
   @volatile private var userInteractionCount:Int = 0
+  private var otherName:String = null
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
@@ -102,6 +103,8 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
             finish
         }
       }.start                        
+
+      otherName = bundle.getString("otherName")
     }
   }
 
@@ -122,9 +125,7 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
 		if(fileUriString.startsWith("file:"))
 		  fileUriString = fileUriString.substring(5)
     if(D) Log.i(TAG, "onListItemClick fileUriString="+fileUriString)
-		//Toast.makeText(this, "Selected file: "+fileUriString, Toast.LENGTH_LONG).show
     try {
-      //val selectedUri = Uri.parse(fileUriString)
       val selectedUri = Uri.fromFile(new File(fileUriString))
       if(D) Log.i(TAG, "onListItemClick fileUriString="+fileUriString+" selectedUri="+selectedUri)
       val processFileIntent = new Intent(Intent.ACTION_VIEW)
@@ -141,6 +142,13 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
       } else {
         if(D) Log.i(TAG, "onListItemClick extension=null mimeType=*/*")
         processFileIntent.setDataAndType(selectedUri,"*/*")
+      }
+
+      if(otherName!=null) {
+        // hint the name of the bt device, may for example be used as the default filename when uploading a pgp file
+        val bundle = new Bundle()
+        bundle.putString("anymimeOtherName", otherName)
+        processFileIntent.putExtras(bundle)
       }
 
       if(D) Log.i(TAG, "onListItemClick startActivity processFileIntent="+processFileIntent)

@@ -65,6 +65,7 @@ class UploadPgpFilesPopupActivity extends Activity {
   private var sshLocalKeyPath:String = null
   private var srcFilePathNameString:String = null
   private var srcFileNameString:String = null
+  private var anymimeOtherName:String = null
 
   private var context:Context = null
 
@@ -101,7 +102,13 @@ class UploadPgpFilesPopupActivity extends Activity {
     srcFilePathNameString = fileUri.getPath
     srcFileNameString = fileUri.getLastPathSegment
 
+    val bundle = intent.getExtras
+    if(bundle!=null)
+      anymimeOtherName = bundle.getString("anymimeOtherName")
+
     sshTargetFilename = ".asc"
+    if(anymimeOtherName!=null)
+      sshTargetFilename = anymimeOtherName+sshTargetFilename
     sshPathphrase = ""
     if(sshTargetFilenameEditView!=null)
       sshTargetFilenameEditView.setText(sshTargetFilename)
@@ -124,7 +131,7 @@ class UploadPgpFilesPopupActivity extends Activity {
 
     if(sshTargetFilenameEditView!=null)
       sshTargetFilename = sshTargetFilenameEditView.getText.toString
-    if(sshTargetFilename.length<=0 || sshTargetFilename==".asc") {
+    if(sshTargetFilename.length<=0 || sshTargetFilename==".asc" || sshTargetFilename.length<4) {
   		Toast.makeText(context, "Please enter the target filename", Toast.LENGTH_SHORT).show
       return
     }

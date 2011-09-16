@@ -557,7 +557,7 @@ class RFCommHelperService extends android.app.Service {
               connected(socket, socket.getRemoteDevice, mSocketType)
             }
           } else {
-            if(D) Log.i(TAG, "AcceptThread - denying incoming connect request")
+            if(D) Log.i(TAG, "AcceptThread - denying incoming connect request, acceptAndConnect="+acceptAndConnect)
             // hangup
             socket.close
 
@@ -828,7 +828,7 @@ class RFCommHelperService extends android.app.Service {
 
           if(running && codedInputStream!=null) {
             val size = codedInputStream.readRawVarint32 // may block
-            if(D) Log.i(TAG, "ConnectedThread run " + socketType+" read size="+size+" magic="+magic+" magicRecount="+magicRecount+" socket="+socket+" running="+running)
+            //if(D) Log.i(TAG, "ConnectedThread run " + socketType+" read size="+size+" magic="+magic+" magicRecount="+magicRecount+" socket="+socket+" running="+running)
             if(running && size>0) {
               val rawdata = codedInputStream.readRawBytes(size) // bc we know the size of data to expect, this will not block
               if(running)
