@@ -13,7 +13,7 @@ Download Android apk: [https://market.android.com/details?id=org.timur.anymime](
 
 App home page: [http://timur.mobi/anymime/](http://timur.mobi/anymime/)
 
-Copyright (C) 2011 Timur Mehrvarz
+Copyright (C) 2011 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
 
 Source code is licensed under the GNU General Public License, Version 3:
 
