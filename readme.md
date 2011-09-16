@@ -9,6 +9,8 @@ It allows you to easily and quickly establish ad-hoc two-way file exchange sessi
 Info
 ----
 
+(please note: this application is not yet released to the Android market)
+
 Download Android apk: [https://market.android.com/details?id=org.timur.anymime](https://market.android.com/details?id=org.timur.anymime)
 
 App home page: [http://timur.mobi/anymime/](http://timur.mobi/anymime/)
