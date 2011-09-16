@@ -1,0 +1,6 @@
+# this command will generate a local file "BtShare.bin"
+protoc BtShare.proto -oBtShare.bin
+
+# this command will generate "../src/org/timur/anymime/BtShare.java"
+protoc BtShare.proto --java_out=../src
+

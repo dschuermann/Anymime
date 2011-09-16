@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This file is part of AnyMime, a program to help you swap files
+  wirelessly between mobile devices.
+  Copyright (C) 2011 timur.mehrvarz@gmail.com
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/buttonLayout"
+  android:layout_width="420px"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:padding="12dip"
+  >
+
+  <ScrollView
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:layout_alignParentTop="true"
+    android:layout_marginTop="12px"
+    android:layout_marginBottom="12px"
+    android:layout_marginLeft="8px"
+    android:layout_marginRight="7px"
+    android:scrollbarSize="0px"
+    android:scrollbars="none">
+
+    <LinearLayout 
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:gravity="fill"
+      android:layout_centerHorizontal="true"
+    >
+
+      <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="6px"
+        android:layout_marginBottom="0px"
+        android:textSize="14sp"
+        android:text="Target file name:"
+      />
+      <EditText
+        android:id="@+id/sshTargetFilename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:padding="6dip"
+      />
+
+      <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="6px"
+        android:layout_marginBottom="0px"
+        android:textSize="14sp"
+        android:text="SSH Hostname:"
+      />
+      <EditText
+        android:id="@+id/sshHostname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:padding="6dip"
+      />
+
+      <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="6px"
+        android:layout_marginBottom="0px"
+        android:textSize="14sp"
+        android:text="SSH Username:"
+      />
+      <EditText
+        android:id="@+id/sshUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:padding="6dip"
+      />
+
+      <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="6px"
+        android:layout_marginBottom="0px"
+        android:textSize="14sp"
+        android:text="Target path:"
+      />
+      <EditText
+        android:id="@+id/sshTargetPath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:padding="6dip"
+      />
+
+      <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="6px"
+        android:layout_marginBottom="0px"
+        android:textSize="14sp"
+        android:text="Path to SSH key:"
+      />
+      <EditText
+        android:id="@+id/sshLocalKeyPath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:padding="6dip"
+      />
+
+      <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="6px"
+        android:layout_marginBottom="0px"
+        android:textSize="14sp"
+        android:text="Pathphrase:"
+      />
+      <EditText
+        android:id="@+id/sshPathphrase"
+        android:inputType="textPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:padding="6dip"
+      />
+
+      <LinearLayout 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6px"
+        android:layout_marginBottom="200px"
+      >
+        <Button
+          android:id="@+id/cancel"
+          android:text="Cancel"
+          android:layout_width="120dip"
+          android:layout_height="60dip" 
+          android:layout_marginBottom="4px"
+          android:textSize="18sp"
+          style="@style/dialogTextAppearence.Button"
+        />
+        <Button
+          android:id="@+id/upload"
+          android:text="Upload"
+          android:layout_width="120dip"
+          android:layout_height="60dip" 
+          android:layout_marginBottom="4px"
+          android:textSize="18sp"
+          style="@style/dialogTextAppearence.Button"
+        />
+      </LinearLayout>
+
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>
+
+

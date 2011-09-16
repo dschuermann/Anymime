@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This file is part of AnyMime, a program to help you swap files
+  wirelessly between mobile devices.
+
+  Copyright (C) 2011 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<resources>
+  <!-- AnyMimeActivity.scala -->
+  <string name="app_name">Anymime</string>
+  <string name="app_fullname">Anymime</string>
+  <string name="bt_not_enabled_leaving">Bluetooth was not enabled</string>    
+
+  <!-- file_dialog_main.xml -->
+  <string name="nnew">New</string>
+  <string name="select">Select</string>
+  <string name="file_name">File name:</string>
+  <string name="cancel">Cancel</string>
+  <string name="create">Create</string>
+  <string name="no_data">No Data</string>
+  <string name="location">Location</string>
+  <string name="cant_read_folder">folder can\'t be read!</string>
+
+<!--
+  <string name="not_connected">You are not connected to a device</string>
+	<color name="gray">#ffff0000</color>
+-->
+</resources>
+

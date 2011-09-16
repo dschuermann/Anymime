@@ -1,0 +1,25 @@
+package btshare;
+
+option java_package = "org.timur.anymime";
+option java_outer_classname = "BtShare";
+
+option optimize_for = LITE_RUNTIME;
+
+message Message {
+  required string command     = 1;
+  required string fromName    = 2;
+  required string fromAddr    = 3;
+
+  required int64  argCount    = 4;
+  optional int64  id          = 5;
+  optional int64  dataLength  = 6;
+
+  optional string arg1        = 7;
+  optional string arg2        = 8;
+  optional string arg3        = 9;
+  optional string arg4        = 10;
+  optional bytes  argBytes    = 11;
+  optional string toName      = 12;
+  optional string toAddr      = 13;
+}
+

@@ -1,0 +1,9 @@
+sdk.dir=${user.home}/android-sdk-linux_86
+scala.dir=${user.home}/scala-2.8.1.final
+proguard.dir=${sdk.dir}/tools/proguard
+
+key.store=${user.home}/.android/release.keystore
+key.alias=android-sdk
+key.store.password=android
+key.alias.password=android
+

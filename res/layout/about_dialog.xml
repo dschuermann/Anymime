@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This file is part of AnyMime, a program to help you swap files
+  wirelessly between mobile devices.
+  Copyright (C) 2011 timur.mehrvarz@gmail.com
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/buttonLayout"
+  android:layout_width="420px"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:padding="12dip"
+  >
+
+  <ScrollView
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:layout_alignParentTop="true"
+    android:layout_marginTop="12px"
+    android:layout_marginBottom="12px"
+    android:layout_marginLeft="8px"
+    android:layout_marginRight="7px"
+    android:scrollbarSize="0px"
+    android:scrollbars="none">
+
+    <LinearLayout 
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:gravity="fill"
+      android:layout_centerHorizontal="true"
+    >
+      <TextView
+        android:id="@+id/aboutText"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="6px"
+        android:layout_marginBottom="0px"
+        android:textColor="#eef"
+        android:textStyle="bold"
+        android:textSize="21sp"
+        android:text="Anymime for Android"
+      />
+
+      <!-- at runtime this will be filled with android:versionName from the manifest and build date+time -->
+      <TextView
+        android:id="@+id/aboutVersion"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="0px"
+        android:lineSpacingExtra="4sp"
+        android:textColor="#eef"
+        android:textSize="16sp"
+      />
+
+      <TextView
+        android:id="@+id/aboutCopyright"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="0px"
+        android:layout_marginBottom="8dp"
+        android:textColor="#eef"
+        android:textSize="16sp"
+        android:text="(c) 2011 Timur Mehrvarz"
+      />
+
+      <TextView
+        android:id="@+id/aboutText4"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:textColor="#eef"
+        android:textSize="16sp"
+        android:text="This application has been open sourced under GPL3"
+      />
+
+      <TextView
+        android:id="@+id/aboutText4"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:textColor="#eef"
+        android:textSize="16sp"
+        android:text="3rd party code being used: Google Protobuf, JCraft JSch + JZLib, Teambox file icons"
+      />
+
+      <Button
+        android:id="@+id/buttonPromoteSMS"
+        android:text="Send download link via SMS"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="17sp"
+        android:padding="10dip"
+        style="@style/dialogTextAppearence.Button"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+      />
+      <!-- todo: Send download link via email -->
+
+      <Button
+        android:id="@+id/buttonClose"
+        android:text="Close"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="17sp"
+        android:padding="10dip"
+        android:layout_marginTop="18dp"
+        style="@style/dialogTextAppearence.Button"
+      />
+
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>
+
+

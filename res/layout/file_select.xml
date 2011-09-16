@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This file is part of AnyMime, a program to help you swap files
+  wirelessly between mobile devices.
+  Copyright (C) 2011 timur.mehrvarz@gmail.com
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:background="@drawable/backrepeat"
+>
+
+<!--
+  <LinearLayout 
+    android:id="@+id/quickBar"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="82dip"
+    android:layout_alignParentBottom="true"
+    android:layout_weight="1">
+    <Button
+      android:id="@+id/buttonClearAll"
+      android:text="Clear"
+      android:textSize="12sp"
+      android:layout_width="0dip"
+      android:layout_height="match_parent"
+      style="@style/dialogTextAppearence.HighlightButton"
+      android:layout_weight="0.25"
+      android:drawableTop="@android:drawable/ic_menu_delete"
+      android:drawablePadding="0dp"
+      android:layout_marginRight="2dip"
+    />
+    <Button
+      android:id="@+id/buttonSelectSlot"
+      android:text="Slot"
+      android:textSize="12sp"
+      android:layout_width="0dip"
+      android:layout_height="match_parent"
+      style="@style/dialogTextAppearence.HighlightButton"
+      android:layout_weight="0.25"
+      android:drawableTop="@android:drawable/ic_menu_more"
+      android:drawablePadding="0dp"
+      android:layout_marginRight="2dip"
+    />
+    <Button
+      android:id="@+id/buttonAdd"
+      android:text="Add"
+      android:textSize="12sp"
+      android:layout_width="0dip"
+      android:layout_height="match_parent"
+      style="@style/dialogTextAppearence.HighlightButton"
+      android:layout_weight="0.25"
+      android:drawableTop="@android:drawable/ic_menu_add"
+      android:drawablePadding="0dp"
+      android:layout_marginRight="2dip"
+    />
+    <Button
+      android:id="@+id/buttonDone"
+      android:text="OK"
+      android:textSize="12sp"
+      android:layout_width="0dip"
+      android:layout_height="match_parent"
+      style="@style/dialogTextAppearence.HighlightButton"
+      android:layout_weight="0.25"
+      android:drawableTop="@android:drawable/ic_menu_agenda"
+      android:drawablePadding="0dp"
+    />
+  </LinearLayout>
+-->
+
+  <!--ImageView
+    android:id="@+id/applogo"
+    android:src="@drawable/anymime"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentTop="true"
+    android:layout_centerInParent="true"
+    android:paddingTop="8dp"
+    android:gravity="center"
+  /-->
+
+  <LinearLayout
+    android:id="@+id/footer"
+    android:layout_width="wrap_content"
+    android:layout_height="82dip"
+    android:orientation="vertical"
+    android:layout_alignParentBottom="true"
+    android:layout_centerInParent="true"
+    android:layout_gravity="center"
+  >
+    <!-- button bar -->
+    <HorizontalScrollView
+      android:id="@+id/quickBar"
+      android:layout_width="wrap_content"
+      android:layout_height="fill_parent"
+      android:fillViewport="true"
+      android:layout_alignParentBottom="true"
+      android:layout_centerInParent="true"
+    >
+      <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_above="@+id/progressBar"
+        android:orientation="horizontal"
+        android:paddingBottom="4dp"
+      >
+        <Button
+          android:id="@+id/buttonDone"
+          android:text="Main"
+          android:textSize="12sp"
+          android:layout_width="100dip"
+          android:layout_height="fill_parent"
+          style="@style/dialogTextAppearence.HighlightButton"
+          android:drawableTop="@android:drawable/ic_menu_revert"
+          android:drawablePadding="0dp"
+          android:layout_marginLeft="2dip"
+          android:layout_marginRight="2dip"
+          android:paddingBottom="6dp"
+        />
+        <Button
+          android:id="@+id/buttonAdd"
+          android:text="Add file"
+          android:textSize="12sp"
+          android:layout_width="100dip"
+          android:layout_height="fill_parent"
+          style="@style/dialogTextAppearence.HighlightButton"
+          android:drawableTop="@android:drawable/ic_menu_add"
+          android:drawablePadding="0dp"
+          android:layout_marginLeft="2dip"
+          android:layout_marginRight="2dip"
+          android:paddingBottom="6dp"
+        />
+        <Button
+          android:id="@+id/buttonSelectSlot"
+          android:text="Switch Slot"
+          android:textSize="12sp"
+          android:layout_width="100dip"
+          android:layout_height="fill_parent"
+          style="@style/dialogTextAppearence.HighlightButton"
+          android:drawableTop="@android:drawable/ic_menu_more"
+          android:drawablePadding="0dp"
+          android:layout_marginLeft="2dip"
+          android:layout_marginRight="2dip"
+          android:paddingBottom="6dp"
+        />
+        <Button
+          android:id="@+id/buttonRenameSlot"
+          android:text="Rename slot"
+          android:textSize="12sp"
+          android:layout_width="100dip"
+          android:layout_height="fill_parent"
+          style="@style/dialogTextAppearence.HighlightButton"
+          android:drawableTop="@android:drawable/ic_menu_edit"
+          android:drawablePadding="0dp"
+          android:layout_marginLeft="2dip"
+          android:layout_marginRight="2dip"
+          android:paddingBottom="6dp"
+        />
+        <Button
+          android:id="@+id/buttonClearAll"
+          android:text="Clear list"
+          android:textSize="12sp"
+          android:layout_width="100dip"
+          android:layout_height="fill_parent"
+          style="@style/dialogTextAppearence.HighlightButton"
+          android:drawableTop="@android:drawable/ic_menu_delete"
+          android:drawablePadding="0dp"
+          android:layout_marginLeft="2dip"
+          android:layout_marginRight="2dip"
+          android:paddingBottom="6dp"
+        />
+      </LinearLayout>
+    </HorizontalScrollView>
+  </LinearLayout>
+
+  <ListView 
+    android:id="@+id/selectedFilesList"
+    android:layout_above="@+id/footer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:textSize="16sp"
+    android:transcriptMode="alwaysScroll"
+    android:cacheColorHint="#00000000"
+  />
+</RelativeLayout>
+

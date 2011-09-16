@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This file is part of AnyMime, a program to help you swap files
+  wirelessly between mobile devices.
+  Copyright (C) 2011 timur.mehrvarz@gmail.com
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.timur.anymime"
+    android:versionCode="1"
+    android:versionName="0.71 - $buildtime">
+
+  <application android:icon="@drawable/app_icon"
+               android:label="@string/app_name"
+               android:hardwareAccelerated="true" >
+
+    <activity android:name=".AnyMimeActivity"
+              android:label="@string/app_name"
+            	android:configChanges="orientation|keyboardHidden"
+            	android:launchMode="singleTask" >
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+      <intent-filter>
+        <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
+        <data android:mimeType="text/plain" />
+      </intent-filter>
+    </activity>
+
+    <activity android:name=".SelectPairedDevicePopupActivity"
+              android:label="Connect to a paired device"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden" />
+
+
+    <activity android:name=".ShowReceivedFilesPopupActivity"
+              android:label="Received files"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden" />
+
+    <activity android:name=".ShowSelectedSlotActivity"
+              android:label="Select delivery slot"
+              android:configChanges="orientation|keyboardHidden" />
+
+    <activity android:name=".ShowSelectedFilesActivity"
+              android:label="Files selected for delivery"
+              android:configChanges="orientation|keyboardHidden" />
+
+
+    <activity android:name=".UploadPgpFilesPopupActivity"
+              android:label="Upload PGP key"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:mimeType="application/pgp"/>
+      </intent-filter>
+    </activity>
+
+    <activity android:name=".PgpKeySigningPopupActivity"
+              android:label="Sign PGP key"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:mimeType="application/pgp"/>
+      </intent-filter>
+    </activity>
+
+    <activity android:name=".DisplayTextFileActivity"
+              android:label="Display text file"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:mimeType="text/plain"/>
+        <data android:mimeType="application/pgp"/>
+      </intent-filter>
+    </activity>
+
+
+    <activity android:name=".FileDialog"
+              android:label="File select"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden" >
+      <intent-filter>
+        <action android:name="android.intent.action.GET_CONTENT" />
+        <data android:mimeType="*/*" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.OPENABLE" />
+      </intent-filter>
+    </activity>
+
+<!--
+    <activity android:name=".SettingsPopupActivity"
+              android:label="Settings"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden" />
+-->
+
+    <service android:name=".RFCommHelperService" />
+  </application>
+
+  <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="11" />
+
+  <uses-permission android:name="android.permission.VIBRATE"/>
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+  <uses-permission android:name="android.permission.BLUETOOTH" />
+  <uses-permission android:name="android.permission.NFC" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
+
+  <!-- for scp upload only -->
+  <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
+
