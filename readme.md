@@ -50,6 +50,6 @@ $ ./make
 This will build a debug version of the application in bin/Anymime-debug.apk.
 View the logs at runtime using this:
 
-$ adb logcat |grep -E "Anymime|RFComm|AndroidRuntime|Show|BtDevice|Popup|nfc|Nfc|Bluetooth|SshHelper|E/|DEBUG"
+$ adb logcat |grep -E "Any|RFComm|Show|BtDevice|Popup|nfc|Nfc|Bluetooth|SshHelper|AndroidRuntime|E/|DEBUG"
 
 
