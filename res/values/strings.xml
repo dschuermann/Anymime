@@ -33,10 +33,5 @@
   <string name="no_data">No Data</string>
   <string name="location">Location</string>
   <string name="cant_read_folder">folder can\'t be read!</string>
-
-<!--
-  <string name="not_connected">You are not connected to a device</string>
-	<color name="gray">#ffff0000</color>
--->
 </resources>
 
