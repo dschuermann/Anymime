@@ -34,11 +34,13 @@ Source code is licensed under the GNU General Public License, Version 3:
 Initial adjustments
 -------------------
 
-Building requires Android SDK version-8 "Froyo", JDK 6 and Ant 1.8.2.
+Building requires Android SDK version-11, JDK 6, Scala 2.8.1 + Ant 1.8.2
 
 $ cp local.properties.sample local.properties
 
 - Adjust SDK path settings in "local.properties"
+
+- Do not commit "local.properties" back to git
 
 Building from source
 --------------------
