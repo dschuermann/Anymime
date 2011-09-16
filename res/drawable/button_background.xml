@@ -54,8 +54,8 @@
   <item>        
     <shape>
       <gradient
-        android:startColor="#5070ff"
-        android:endColor=  "#000080"
+        android:startColor="#707070"
+        android:endColor=  "#303030"
         android:angle="270" />
       <corners
         android:radius="3dp" />

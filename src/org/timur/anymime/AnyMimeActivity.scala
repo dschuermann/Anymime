@@ -1121,7 +1121,7 @@ class AnyMimeActivity extends Activity {
       else {
         userHint3View.setTypeface(null, 0);  // not bold
         userHint3View.setTextSize(15)  // normal size
-        userHint3View.setText("NFC not enabled")
+        userHint3View.setText("NFC disabled - must connect manually")
       }
     }
 

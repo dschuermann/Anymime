@@ -62,7 +62,6 @@
         android:layout_width="wrap_content"
         android:layout_marginTop="8px"
         android:layout_marginBottom="0px"
-        android:lineSpacingExtra="4sp"
         android:textColor="#eef"
         android:textSize="16sp"
       />
@@ -97,7 +96,20 @@
         android:layout_marginBottom="2dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="3rd party code being used: Google Protobuf, JCraft JSch + JZLib, Teambox file icons"
+        android:text="github.com/mehrvarz/Anymime"
+      />
+
+
+
+      <TextView
+        android:id="@+id/aboutText4"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:textColor="#eef"
+        android:textSize="16sp"
+        android:text="3rd party components being used: Google Protobuf, JCraft JSch + JZLib, Teambox file icons"
       />
 
       <Button
