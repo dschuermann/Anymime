@@ -47,17 +47,8 @@ Building from source
 
 $ ./make
 
-This will build a debug version of the application in bin/Anymime-debug.apk
-
-Installation and remote execution
----------------------------------
-
-$ ./deploy
-
-This will install (replace) the app on your Android device and remote execute it.
-
-Viewing the logs at runtime
----------------------------
+This will build a debug version of the application in bin/Anymime-debug.apk.
+View the logs at runtime using this:
 
 $ adb logcat |grep -E "Anymime|RFComm|AndroidRuntime|Show|BtDevice|Popup|nfc|Nfc|Bluetooth|SshHelper|E/|DEBUG"
 
