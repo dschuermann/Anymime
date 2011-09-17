@@ -24,15 +24,14 @@
   android:orientation="vertical"
   android:padding="12dip"
   >
-
   <ScrollView
     android:layout_height="fill_parent"
     android:layout_width="fill_parent"
     android:layout_alignParentTop="true"
-    android:layout_marginTop="12px"
-    android:layout_marginBottom="12px"
+    android:layout_marginTop="4px"
+    android:layout_marginBottom="4px"
     android:layout_marginLeft="8px"
-    android:layout_marginRight="7px"
+    android:layout_marginRight="8px"
     android:scrollbarSize="0px"
     android:scrollbars="none">
 
@@ -43,7 +42,6 @@
       android:gravity="fill"
       android:layout_centerHorizontal="true"
     >
-
       <TextView
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
@@ -146,7 +144,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="6px"
-        android:layout_marginBottom="200px"
+        android:layout_marginBottom="220px"
       >
         <Button
           android:id="@+id/cancel"
@@ -154,6 +152,7 @@
           android:layout_width="120dip"
           android:layout_height="60dip" 
           android:layout_marginBottom="4px"
+          android:layout_marginRight="2px"
           android:textSize="18sp"
           style="@style/dialogTextAppearence.Button"
         />
