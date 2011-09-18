@@ -19,7 +19,7 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.timur.anymime"
-    android:versionCode="1"
+    android:versionCode="2"
     android:versionName="0.72 - $buildtime">
 
   <application android:icon="@drawable/app_icon"
@@ -93,6 +93,18 @@
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
         <data android:mimeType="text/plain"/>
+        <data android:mimeType="application/pgp"/>
+      </intent-filter>
+    </activity>
+
+    <activity android:name=".ShowPgpFingerprintActivity"
+              android:label="Show Fingerprint"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
         <data android:mimeType="application/pgp"/>
       </intent-filter>
     </activity>
