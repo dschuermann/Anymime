@@ -78,26 +78,31 @@ class ShowPgpFingerprintActivity extends Activity {
     if(textView!=null) {
       try {
         val source = scala.io.Source.fromFile(filePathName, "utf-8")
-        val lines = source.mkString
-        if(D) Log.i(TAG, "showFileFingerprint filePathName="+filePathName+" lines="+lines)
-        // todo: need to rip header + footer out of lines
+        if(source!=null) {
+          // simple ripping of pgp header + footer
+          val fileAsString = source.getLines.toList.drop(3).dropRight(2).mkString
+          if(D) Log.i(TAG, "showFileFingerprint filePathName="+filePathName+" fileAsString="+fileAsString)
 
-        val messageDigest = MessageDigest.getInstance("SHA")
-        try {
-          messageDigest.update(lines.getBytes)
-          val byteArray = messageDigest.digest
-          if(D) Log.i(TAG, "showFileFingerprint digest byteArray="+byteArray)
-          val bytesAsString = getBytesAsString(byteArray)
-          if(D) Log.i(TAG, "showFileFingerprint bytesAsString="+bytesAsString)
-          textView.setText(bytesAsString)
-
-        } catch {
-          case ex:Exception => 
-            Log.e(TAG, "onCreate() ex",ex)
-            // todo: Toast
+          if(fileAsString.length>0) {
+            val messageDigest = MessageDigest.getInstance("SHA")
+            try {
+              messageDigest.update(fileAsString.getBytes)
+              val byteArray = messageDigest.digest
+              if(D) Log.i(TAG, "showFileFingerprint digest byteArray="+byteArray)
+              val bytesAsString = getBytesAsString(byteArray)
+              if(D) Log.i(TAG, "showFileFingerprint bytesAsString="+bytesAsString)
+              textView.setText(bytesAsString)
+            } catch {
+              case ex:Exception => 
+                Log.e(TAG, "onCreate() ex",ex)
+                // todo: Toast
+            }
+          } else {
+            textView.setText("---")
+          }
+          source.close
         }
 
-        source.close
       } catch {
         case mfinpex:java.nio.charset.MalformedInputException =>
           Log.e(TAG, "onCreate() MalformedInputException",mfinpex)
