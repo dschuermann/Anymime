@@ -256,6 +256,17 @@ class AnyMimeActivity extends Activity {
       val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
       val bundle = new Bundle()
       bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
+      // hand over .asc file from most recent delivery
+      if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
+        val iterator = arrayListSelectedFileStrings.iterator 
+        while(iterator.hasNext) {
+          val fileString = iterator.next
+          if(fileString.endsWith(".asc")) {
+            bundle.putString("sendKeyFile", fileString)
+            // break
+          }
+        }
+      }
       intent.putExtras(bundle)
       startActivity(intent)
     }
@@ -898,6 +909,17 @@ class AnyMimeActivity extends Activity {
           bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
           bundle.putString("opentype", "auto") // activity will auto-close after about 15s if not used
           bundle.putString("otherName", mDisconnectedDeviceName)
+          // hand over .asc file from most recent delivery
+          if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
+            val iterator = arrayListSelectedFileStrings.iterator 
+            while(iterator.hasNext) {
+              val fileString = iterator.next
+              if(fileString.endsWith(".asc")) {
+                bundle.putString("sendKeyFile", fileString)
+                // break
+              }
+            }
+          }
           intent.putExtras(bundle)
           startActivity(intent)
       }

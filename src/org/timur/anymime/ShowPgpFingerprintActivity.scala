@@ -41,7 +41,7 @@ class ShowPgpFingerprintActivity extends Activity {
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
     if(D) Log.i(TAG, "onCreate()")
-    setContentView(R.layout.show_text_file)
+    setContentView(R.layout.show_fingerprint)
 
     val intent = getIntent
     if(intent==null) {
@@ -59,28 +59,33 @@ class ShowPgpFingerprintActivity extends Activity {
 
     val filePathNameString = fileUri.getPath
     val fileNameString = fileUri.getLastPathSegment
-    val textView = findViewById(R.id.text).asInstanceOf[TextView]
+    val text1View = 
+    showFileFingerprint(findViewById(R.id.text1).asInstanceOf[TextView], filePathNameString, fileNameString)
+
+    val bundle = intent.getExtras
+    if(bundle!=null) {
+      val sendKeyFilePath = bundle.getString("sendKeyFile")
+      if(sendKeyFilePath!=null)
+        showFileFingerprint(findViewById(R.id.text2).asInstanceOf[TextView], sendKeyFilePath, null)
+    }
+  }
+
+  private def showFileFingerprint(textView:TextView, filePathName:String, fileNameString:String) {
+    if(D) Log.i(TAG, "showFileFingerprint filePathName="+filePathName+" textView="+textView)
     if(textView!=null) {
       try {
-        val source = scala.io.Source.fromFile(filePathNameString, "utf-8")
+        val source = scala.io.Source.fromFile(filePathName, "utf-8")
         val lines = source.mkString
-        if(D) Log.i(TAG, "onCreate() lines="+lines)
+        if(D) Log.i(TAG, "showFileFingerprint filePathName="+filePathName+" lines="+lines)
+        // todo: need to rip header + footer out of lines
 
         val messageDigest = MessageDigest.getInstance("SHA")
         try {
           messageDigest.update(lines.getBytes)
           val byteArray = messageDigest.digest
-          if(D) Log.i(TAG, "onCreate() digest byteArray="+byteArray)
-          
-          val stringBuilder = new StringBuilder()
-          for(byte <- byteArray) {
-            if(stringBuilder.length>0)
-              stringBuilder append " "
-            val hexString = "%02X" format (byte & 0xff)
-            stringBuilder append hexString
-          }
-          val bytesAsString = stringBuilder.toString
-          if(D) Log.i(TAG, "onCreate() bytesAsString="+bytesAsString)
+          if(D) Log.i(TAG, "showFileFingerprint digest byteArray="+byteArray)
+          val bytesAsString = getBytesAsString(byteArray)
+          if(D) Log.i(TAG, "showFileFingerprint bytesAsString="+bytesAsString)
           textView.setText(bytesAsString)
 
         } catch {
@@ -103,5 +108,19 @@ class ShowPgpFingerprintActivity extends Activity {
       }
     }
   }
+
+  private def getBytesAsString(byteArray:Array[Byte]) :String = {
+    val stringBuilder = new StringBuilder()
+    if(byteArray!=null) {
+      for(byte <- byteArray) {
+        if(stringBuilder.length>0)
+          stringBuilder append " "
+        val hexString = "%02X" format (byte & 0xff)
+        stringBuilder append hexString
+      }
+    }
+    return stringBuilder.toString
+  }
+
 }
 

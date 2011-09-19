@@ -46,6 +46,7 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
   private val D = true
   @volatile private var userInteractionCount:Int = 0
   private var otherName:String = null
+  private var sendKeyFilePath:String = null
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
@@ -92,6 +93,8 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
       fileListAdapter.add(filePathString)
     }
     fileListAdapter.notifyDataSetChanged
+
+    sendKeyFilePath = bundle.getString("sendKeyFile")
 
     val opentype = bundle.getString("opentype")
     if(opentype!=null && opentype=="auto") {
@@ -144,13 +147,15 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
         processFileIntent.setDataAndType(selectedUri,"*/*")
       }
 
-      if(otherName!=null) {
-        // hint the name of the bt device, may for example be used as the default filename when uploading a pgp file
-        val bundle = new Bundle()
-        bundle.putString("anymimeOtherName", otherName)
-        processFileIntent.putExtras(bundle)
-      }
+      val bundle = new Bundle()
 
+      // hint the name of the bt device, may for example be used as the default filename when uploading a pgp file
+      bundle.putString("anymimeOtherName", otherName)
+
+      // hand over .asc file from most recent delivery
+      bundle.putString("sendKeyFile", sendKeyFilePath)
+
+      processFileIntent.putExtras(bundle)
       if(D) Log.i(TAG, "onListItemClick startActivity processFileIntent="+processFileIntent)
       startActivity(Intent.createChooser(processFileIntent,"Apply action..."))
 
