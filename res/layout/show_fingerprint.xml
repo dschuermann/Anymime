@@ -21,59 +21,61 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  android:padding="6dip"
-  android:fillViewport="true" >
-
+  android:padding="12dip"
+  android:fillViewport="true" 
+>
   <ScrollView
-    android:layout_height="fill_parent"
     android:layout_width="fill_parent"
-    android:layout_alignParentTop="true"
+    android:layout_height="wrap_content"
   >
     <LinearLayout
-      android:id="@+id/header"
-	    android:layout_width="wrap_content"
+	    android:layout_width="fill_parent"
       android:layout_height="wrap_content"
 	    android:orientation="vertical"
-      android:gravity="center_vertical"
-      android:layout_centerHorizontal="true"
-      android:layout_alignParentTop="true"
     >
       <TextView
-        android:layout_height="wrap_content"
+        android:id="@+id/title1"
         android:layout_width="fill_parent"
-        android:textSize="16sp"
-        android:textColor="#aaa"
-        android:padding="8dp"
-        android:text="received key file:"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textColor="#bbf"
+        android:gravity="center_horizontal"
+        android:text="Received key fingerprint"
+        android:layout_marginBottom="2dp"
       />
       <TextView
         android:id="@+id/text1"
-        android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:textSize="21sp"
-        android:textColor="#aaa"
-        android:padding="8dp"
+        android:layout_height="fill_parent"
+        android:textSize="26sp"
+        android:textColor="#fff"
+        android:typeface="monospace"
+        android:textStyle="bold"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
       />
 
       <TextView
-        android:layout_height="wrap_content"
+        android:id="@+id/title2"
         android:layout_width="fill_parent"
-        android:textSize="16sp"
-        android:textColor="#aaa"
-        android:padding="8dp"
-        android:text="sent key file:"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textColor="#aae"
+        android:gravity="center_horizontal"
+        android:text="Sent key fingerprint"
+        android:layout_marginBottom="2dp"
       />
       <TextView
         android:id="@+id/text2"
-        android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:textSize="21sp"
-        android:textColor="#aaa"
-        android:padding="8dp"
+        android:layout_height="fill_parent"
+        android:textSize="26sp"
+        android:textColor="#fff"
+        android:typeface="monospace"
+        android:textStyle="bold"
+        android:gravity="center_horizontal"
       />
     </LinearLayout>
   </ScrollView>
-
 </RelativeLayout>
-
 

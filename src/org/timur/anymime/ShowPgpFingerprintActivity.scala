@@ -33,6 +33,7 @@ import android.util.Log
 import android.widget.Toast
 import android.widget.ListView
 import android.widget.TextView
+import android.view.Window
 
 class ShowPgpFingerprintActivity extends Activity {
   private val TAG = "ShowPgpFingerprintActivity"
@@ -40,8 +41,6 @@ class ShowPgpFingerprintActivity extends Activity {
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
-    if(D) Log.i(TAG, "onCreate()")
-    setContentView(R.layout.show_fingerprint)
 
     val intent = getIntent
     if(intent==null) {
@@ -56,6 +55,10 @@ class ShowPgpFingerprintActivity extends Activity {
   		Toast.makeText(this, "Path to file not given", Toast.LENGTH_LONG).show
       return
     }
+
+    if(D) Log.i(TAG, "onCreate()")
+    requestWindowFeature(Window.FEATURE_NO_TITLE);
+    setContentView(R.layout.show_fingerprint)
 
     val filePathNameString = fileUri.getPath
     val fileNameString = fileUri.getLastPathSegment
@@ -112,11 +115,16 @@ class ShowPgpFingerprintActivity extends Activity {
   private def getBytesAsString(byteArray:Array[Byte]) :String = {
     val stringBuilder = new StringBuilder()
     if(byteArray!=null) {
+      var count=0
       for(byte <- byteArray) {
+        if(count>0 && count%4==0)
+          stringBuilder append "\n"
+        else
         if(stringBuilder.length>0)
           stringBuilder append " "
         val hexString = "%02X" format (byte & 0xff)
         stringBuilder append hexString
+        count += 1
       }
     }
     return stringBuilder.toString

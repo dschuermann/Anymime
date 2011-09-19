@@ -72,6 +72,8 @@
       </intent-filter>
     </activity>
 
+<!-- not yet implemented -->
+<!--
     <activity android:name=".PgpKeySigningPopupActivity"
               android:label="Sign PGP key"
               android:theme="@android:style/Theme.Dialog"
@@ -83,6 +85,7 @@
         <data android:mimeType="application/pgp"/>
       </intent-filter>
     </activity>
+-->
 
     <activity android:name=".DisplayTextFileActivity"
               android:label="Display text file"
