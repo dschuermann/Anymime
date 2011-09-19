@@ -143,16 +143,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="6px"
-        android:layout_marginBottom="220px"
+        android:layout_marginTop="8dip"
+        android:layout_marginBottom="220dip"
       >
         <Button
           android:id="@+id/cancel"
           android:text="Cancel"
           android:layout_width="120dip"
           android:layout_height="60dip" 
-          android:layout_marginBottom="4px"
-          android:layout_marginRight="2px"
+          android:layout_marginRight="3dip"
           android:textSize="18sp"
           style="@style/dialogTextAppearence.Button"
         />
@@ -161,7 +160,7 @@
           android:text="Upload"
           android:layout_width="120dip"
           android:layout_height="60dip" 
-          android:layout_marginBottom="4px"
+          android:layout_marginLeft="3dip"
           android:textSize="18sp"
           style="@style/dialogTextAppearence.Button"
         />
