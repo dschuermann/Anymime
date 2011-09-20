@@ -29,6 +29,7 @@ import android.nfc.tech.NfcF
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.media.MediaPlayer
 
 import java.nio.charset.Charset
@@ -54,18 +55,18 @@ object NfcHelper {
   }
 
   // as a result of NfcAdapter.ACTION_NDEF_DISCOVERED
-  def checkForNdefAction(context:Context, intent:Intent, btService:RFCommHelperService, mBluetoothAdapter:BluetoothAdapter, secure:Boolean, uiUpdateFunction:()=>Unit) :Unit = {
+  def checkForNdefAction(context:Context, intent:Intent, btService:RFCommHelperService, mBluetoothAdapter:BluetoothAdapter) :String = {
     if(D) Log.i(TAG, "checkForNdefAction intent="+intent)
 
     if(intent==null || intent.getAction!=NfcAdapter.ACTION_NDEF_DISCOVERED) {
       if(D) Log.i(TAG, "checkForNdefAction intent.getAction!=ACTION_NDEF_DISCOVERED -> ABORT")
-      return
+      return null
     }
 
     def rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
     if(rawMsgs==null || rawMsgs.length<=0) {
       if(D) Log.i(TAG, "checkForNdefAction no rawMsgs.length -> ABORT")
-      return
+      return null
     }
 
     if(D) Log.i(TAG, "checkForNdefAction rawMsgs.length="+rawMsgs.length)
@@ -76,7 +77,7 @@ object NfcHelper {
     if(D) Log.i(TAG, "checkForNdefAction ndefRecord="+ndefRecord)
     if(ndefRecord==null || ndefRecord.getTnf!=NdefRecord.TNF_WELL_KNOWN) {
       if(D) Log.i(TAG, "checkForNdefAction ndefRecord.getTnf!=NdefRecord.TNF_WELL_KNOWN -> ABORT")
-      return
+      return null
     }
 
     if(D) Log.i(TAG, "checkForNdefAction ndefRecord.getTnf==NdefRecord.TNF_WELL_KNOWN")
@@ -96,29 +97,12 @@ object NfcHelper {
     // btAddress plausibility check
     if(result==null || !result.startsWith("bt=") /*|| result.indexOf(":")!=2*/) {
       if(D) Log.i(TAG, "checkForNdefAction btAddress ["+result+"] plausibility check failed -> ABORT")
-      return
+      return null
     }
 
     val btAddress = result.substring(3)
-    if(D) Log.i(TAG, "checkForNdefAction btAddress=" + btAddress)
-
-    // play audio notification (as earliest possible feedback for nfc activity)
-    val mediaPlayer = MediaPlayer.create(context, R.raw.textboxbloop8bit) // non-alert
-    if(mediaPlayer!=null)
-      mediaPlayer.start
-      
-    // todo: show "bt-connect-ProgressDialog" as additional feedback for activity
-
-    // get the remote BluetoothDevice object
-    def bluetoothDevice = mBluetoothAdapter.getRemoteDevice(btAddress)
-
-    if(bluetoothDevice.getAddress < mBluetoothAdapter.getAddress) {
-      // visually indicate to both users, that a connect attempt is taking place
-      uiUpdateFunction  // -> mainViewUpdate in activity
-
-      // attempt to connect to the remote bluetoothDevice
-      btService.connect(bluetoothDevice, secure)
-    }
+    if(D) Log.i(TAG, "checkForNdefAction verified btAddress="+btAddress)
+    return btAddress
   }
 }
 

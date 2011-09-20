@@ -413,8 +413,10 @@ class RFCommHelperService extends android.app.Service {
   // called by: ConnectThread() / activity options menu (or NFC touch) -> connect() -> ConnectThread()
   // called by: ConnectPopupActivity
   def connected(socket:BluetoothSocket, remoteDevice:BluetoothDevice, socketType:String) :Unit = synchronized {
+    // in case of nfc triggered connect: for the device with the bigger btAddr, this is the 1st indication of the connect
     if(D) Log.i(TAG, "connected, sockettype="+socketType+" remoteDevice="+remoteDevice)
-    if(remoteDevice==null) return
+    if(remoteDevice==null) 
+      return
 
     val btAddrString = remoteDevice.getAddress
     var btNameString = remoteDevice.getName
@@ -550,13 +552,10 @@ class RFCommHelperService extends android.app.Service {
 
         if(socket != null) {
           // a bt connection is technically possible and can be accepted
+/* */
           // note: this is where we can decide to acceptAndConnect - or not
-          if(acceptAndConnect) {
-            // activity is not paused
-            RFCommHelperService.this synchronized {
-              connected(socket, socket.getRemoteDevice, mSocketType)
-            }
-          } else {
+          // todo: acceptAndConnect can be false here, while it is set to true in the activity (CRAZY!)
+          if(!acceptAndConnect) {
             if(D) Log.i(TAG, "AcceptThread - denying incoming connect request, acceptAndConnect="+acceptAndConnect)
             // hangup
             socket.close
@@ -569,6 +568,13 @@ class RFCommHelperService extends android.app.Service {
                                           "Run Anymime in the foreground to accept connections.", Toast.LENGTH_LONG).show
                 }
               })
+          } else 
+/* */
+          {
+            // activity is not paused
+            RFCommHelperService.this synchronized {
+              connected(socket, socket.getRemoteDevice, mSocketType)
+            }
           }
         }
         

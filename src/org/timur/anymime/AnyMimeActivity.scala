@@ -339,9 +339,9 @@ class AnyMimeActivity extends Activity {
     activityResumed = true
     if(btService!=null) {
       btService.acceptAndConnect = true
-      if(D) Log.i(TAG, "onResume set btService.acceptAndConnect")
+      if(D) Log.i(TAG, "onResume set btService.acceptAndConnect="+btService.acceptAndConnect)
     } else {
-      Log.e(TAG, "onResume btService.acceptAndConnect not set")
+      Log.e(TAG, "onResume btService==null, acceptAndConnect not set")
     }
     if(D) Log.i(TAG, "onResume done")
   }
@@ -360,6 +360,8 @@ class AnyMimeActivity extends Activity {
     if(btService!=null) {
       btService.acceptAndConnect = false
       Log.e(TAG, "onPause btService.acceptAndConnect cleared")
+    } else {
+      Log.e(TAG, "onResume btService==null, acceptAndConnect not cleared")
     }
     System.gc
     if(D) Log.i(TAG, "onPause done")
@@ -400,8 +402,64 @@ class AnyMimeActivity extends Activity {
     if(android.os.Build.VERSION.SDK_INT>=10) {
       if(mNfcAdapter!=null && mNfcAdapter.isEnabled) {
         // possible, as a result of NfcAdapter.ACTION_NDEF_DISCOVERED
-        var secure = true
-        NfcHelper.checkForNdefAction(context, intent, btService, mBluetoothAdapter, secure, mainViewUpdate)
+        val remoteBtAddress = NfcHelper.checkForNdefAction(context, intent, btService, mBluetoothAdapter)
+        if(remoteBtAddress!=null) {
+          btService.acceptAndConnect=true
+          if(D) Log.i(TAG, "onNewIntent NfcHelper found remoteBtAddress="+remoteBtAddress+" acceptAndConnect="+btService.acceptAndConnect)
+
+          // play audio notification (as earliest possible feedback for nfc activity)
+          val mediaPlayer = MediaPlayer.create(context, R.raw.textboxbloop8bit) // non-alert
+          if(mediaPlayer!=null)
+            mediaPlayer.start
+
+
+          // visually indicate to both users, that a connect attempt is taking place
+          // mainViewUpdate  // think this is not required here, because nobody is yet connected
+
+          // todo: show some sort of "bt-connect-ProgressDialog" as indication that a connection is being build up
+
+          def remoteBluetoothDevice = mBluetoothAdapter.getRemoteDevice(remoteBtAddress)
+          if(remoteBluetoothDevice!=null) {
+            if(mBluetoothAdapter.getAddress > remoteBluetoothDevice.getAddress) {
+              // our local btAddr is > than the remote btAddr: we become the actor and we will bt-connect
+              // our activity may still be in onPause mode due to NFC activity: sleep a bit before 
+              new Thread() {
+                override def run() {
+                  try { Thread.sleep(500); } catch { case ex:Exception => }
+                  if(D) Log.i(TAG, "onNewIntent runOnUiThread connecting...")
+                  val secure=true
+                  btService.connect(remoteBluetoothDevice, secure)
+                }
+              }.start                        
+
+            } else {
+              // our local btAddr is < than the remote btAddr: we just wait for a bt-connect request
+              if(D) Log.i(TAG, "onNewIntent passively waiting for incoming connect request...")
+
+              // our activity may still be in onPause mode due to NFC activity: sleep a bit before 
+              new Thread() {
+                override def run() {
+                  try { Thread.sleep(500); } catch { case ex:Exception => }
+                  if(D) Log.i(TAG, "onNewIntent runOnUiThread update user...")
+                  context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
+                    override def run() {
+                      if(userHint1View!=null)
+                        userHint1View.setText("waiting for "+remoteBluetoothDevice.getName+" "+remoteBluetoothDevice.getAddress)
+                      if(userHint2View!=null)
+                        userHint2View.setText("")
+                      if(userHint3View!=null)
+                        userHint3View.setText("")
+
+                      // todo: show little round progress bar
+                    }
+                  })
+                  
+                  // todo: what if no connection ever comes in? we will have 'waiting for ...' displayed
+                }
+              }.start                        
+            }
+          }
+        }
       }
     }
   }
@@ -552,7 +610,8 @@ class AnyMimeActivity extends Activity {
         whichButton match {
           case DialogInterface.BUTTON_POSITIVE =>
             // disconnect the active transmission
-            btService.stopActiveConnection()
+            if(btService!=null)
+              btService.stopActiveConnection()
           case DialogInterface.BUTTON_NEGATIVE =>
             // do nothing, continue the transission
         }
@@ -571,9 +630,9 @@ class AnyMimeActivity extends Activity {
     if(btService!=null && btService.state==RFCommHelperService.STATE_CONNECTED) {
       // ask the user to confirm before disconnecting active transmission
       offerUserToDisconnect
-      // activity will not be closed
+      // activity will not be closed here
     } else {
-      // this activity will be closed
+      // this activity will be closed here
       super.onBackPressed 
     }
 	}
@@ -648,48 +707,48 @@ class AnyMimeActivity extends Activity {
       // setup an intent filter for all MIME based dispatches
       val ndef = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED)
       try {
-        if(D) Log.i(TAG, "setup nfc ndef.addDataType...")
+        if(D) Log.i(TAG, "nfcBtServiceSetup ndef.addDataType...")
         ndef.addDataType("*/*")
-        //if(D) Log.i(TAG, "setup nfc ndef.addDataType done")
+        //if(D) Log.i(TAG, "nfcBtServiceSetup ndef.addDataType done")
       } catch {
         case e: MalformedMimeTypeException =>
-          Log.e(TAG, "setup ndef.addDataType MalformedMimeTypeException")
+          Log.e(TAG, "nfcBtServiceSetup ndef.addDataType MalformedMimeTypeException")
           throw new RuntimeException("fail", e)
       }
       nfcFilters = Array(ndef)
 
       // Setup a tech list for all NfcF tags
-      if(D) Log.i(TAG, "setup setup a tech list for all NfcF tags...")
+      if(D) Log.i(TAG, "nfcBtServiceSetup setup a tech list for all NfcF tags...")
       nfcTechLists = Array(Array(classOf[NfcF].getName))
 
       // embed our btaddr in a new NdefMessage to be used via enableForegroundNdefPush in onResume
       val btAddress = mBluetoothAdapter.getAddress
-      if(D) Log.i(TAG, "setup btAddress="+btAddress)
+      if(D) Log.i(TAG, "nfcBtServiceSetup btAddress="+btAddress)
       if(btAddress==null) {
         val errstr = "Bluetooth address is not available. Nfc setup failed."
-        Log.e(TAG, "setup "+errstr)
+        Log.e(TAG, "nfcBtServiceSetup "+errstr)
         Toast.makeText(this, errstr, Toast.LENGTH_LONG).show
       } else {
         nfcForegroundPushMessage = new NdefMessage(Array(NfcHelper.newTextRecord("bt="+btAddress, Locale.ENGLISH, true)))
         nfcActionWanted = true  // enableForegroundNdefPush will happen in onResume
       }
     } else {
-      if(D) Log.i(TAG, "setup NOT setting up NFC")
+      if(D) Log.i(TAG, "nfcBtServiceSetup NOT setting up NFC")
     }
 
-    if(D) Log.i(TAG, "setup startService('RFCommHelperService') ...")
+    if(D) Log.i(TAG, "nfcBtServiceSetup startService('RFCommHelperService') ...")
     val serviceIntent = new Intent(this, classOf[RFCommHelperService])
     //startService(serviceIntent)   // call this only, to keep service active after onDestroy()/unbindService()
 
     serviceConnection = new ServiceConnection { 
       def onServiceConnected(className:ComponentName, rawBinder:IBinder) { 
-        if(D) Log.i(TAG, "setup onServiceConnected localBinder.getService ...")
+        if(D) Log.i(TAG, "nfcBtServiceSetup onServiceConnected localBinder.getService ...")
         btService = rawBinder.asInstanceOf[RFCommHelperService#LocalBinder].getService
         if(btService==null) {
-          Log.e(TAG, "setup onServiceConnected no interface to service, btService==null")
+          Log.e(TAG, "nfcBtServiceSetup onServiceConnected no interface to service, btService==null")
           Toast.makeText(context, "Error - failed to get service interface from binder", Toast.LENGTH_LONG).show
         } else {
-          if(D) Log.i(TAG, "setup onServiceConnected got btService")
+          if(D) Log.i(TAG, "nfcBtServiceSetup onServiceConnected got btService")
           
           btService.context = context
           btService.activityMsgHandler = msgFromServiceHandler
@@ -700,25 +759,26 @@ class AnyMimeActivity extends Activity {
             var acceptOnlySecureConnectRequests = true
             //if(prefSettings!=null)
             //  acceptOnlySecureConnectRequests = prefSettings.getBoolean("acceptOnlySecureConnectRequests",true)
-            if(D) Log.i(TAG, "setup  btService.start acceptOnlySecureConnectReq="+acceptOnlySecureConnectRequests+" ...")
+            if(D) Log.i(TAG, "nfcBtServiceSetup btService.start acceptOnlySecureConnectReq="+acceptOnlySecureConnectRequests+" ...")
             btService.start(acceptOnlySecureConnectRequests)
           }
 
           mainViewUpdate          
         }
       } 
+
       def onServiceDisconnected(className:ComponentName) { 
-        if(D) Log.i(TAG, "setup onServiceDisconnected")
+        if(D) Log.i(TAG, "nfcBtServiceSetup onServiceDisconnected btService = null")
         btService = null
       } 
     } 
 
     if(serviceConnection!=null) {
-      if(D) Log.i(TAG, "setup bindService ...")
+      if(D) Log.i(TAG, "nfcBtServiceSetup bindService ...")
       bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-      if(D) Log.i(TAG, "setup bindService done")
+      if(D) Log.i(TAG, "nfcBtServiceSetup bindService done")
     } else {
-      if(D) Log.i(TAG, "setup onCreate bindService failed")
+      if(D) Log.i(TAG, "nfcBtServiceSetup onCreate bindService failed")
     }
   }
 
@@ -792,7 +852,7 @@ class AnyMimeActivity extends Activity {
           if(firstBtActor) {
             if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN firstBtActor CAN BT DISCONNECT")
             if(btService==null) {
-              Log.e(TAG, "handleMessage MESSAGE_YOURTURN btService=null cannot call cancel()")
+              Log.e(TAG, "handleMessage MESSAGE_YOURTURN btService=null cannot call stopActiveConnection()")
             }
             else {
               btService.stopActiveConnection()
@@ -821,9 +881,13 @@ class AnyMimeActivity extends Activity {
           val mConnectingDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mConnectingDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage CONNECTION_START: "+mConnectingDeviceName+" addr="+mConnectingDeviceAddr)
-          if(userHint1View!=null) {
+          if(userHint1View!=null)
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
-          }
+          if(userHint2View!=null)
+            userHint2View.setText("")
+          if(userHint3View!=null)
+            userHint3View.setText("")
+          // todo: show little round progress bar
 
         case RFCommHelperService.CONNECTION_FAILED =>
           // a connect attempt failed
@@ -1097,7 +1161,7 @@ class AnyMimeActivity extends Activity {
 
   private def mainViewUpdate() {
     if(btService==null) {
-      if(D) Log.i(TAG, "mainViewUpdate")
+      if(D) Log.i(TAG, "mainViewUpdate btService==null")
     } else {
       if(D) Log.i(TAG, "mainViewUpdate btService.acceptAndConnect="+btService.acceptAndConnect)
     }
