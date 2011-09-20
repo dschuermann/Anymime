@@ -149,6 +149,7 @@ class AnyMimeActivity extends Activity {
   private var userHint1View:TextView = null
   private var userHint2View:TextView = null
   private var userHint3View:TextView = null
+  private var simpleProgressBarView:ProgressBar = null
   private var progressBarView:ProgressBar = null
   private var quickBarView:HorizontalScrollView = null
 
@@ -213,6 +214,7 @@ class AnyMimeActivity extends Activity {
     userHint1View = findViewById(R.id.userHint).asInstanceOf[TextView]
     userHint2View = findViewById(R.id.userHint2).asInstanceOf[TextView]
     userHint3View = findViewById(R.id.userHint3).asInstanceOf[TextView]
+    simpleProgressBarView = findViewById(R.id.simpleProgressBar).asInstanceOf[ProgressBar]
     progressBarView = findViewById(R.id.progressBar).asInstanceOf[ProgressBar]
     quickBarView = findViewById(R.id.quickBar).asInstanceOf[HorizontalScrollView]
     if(quickBarView!=null)
@@ -425,7 +427,7 @@ class AnyMimeActivity extends Activity {
               // our activity may still be in onPause mode due to NFC activity: sleep a bit before 
               new Thread() {
                 override def run() {
-                  try { Thread.sleep(500); } catch { case ex:Exception => }
+                  try { Thread.sleep(100); } catch { case ex:Exception => }
                   if(D) Log.i(TAG, "onNewIntent runOnUiThread connecting...")
                   val secure=true
                   btService.connect(remoteBluetoothDevice, secure)
@@ -439,22 +441,23 @@ class AnyMimeActivity extends Activity {
               // our activity may still be in onPause mode due to NFC activity: sleep a bit before 
               new Thread() {
                 override def run() {
-                  try { Thread.sleep(500); } catch { case ex:Exception => }
+                  try { Thread.sleep(100); } catch { case ex:Exception => }
                   if(D) Log.i(TAG, "onNewIntent runOnUiThread update user...")
                   context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
                     override def run() {
                       if(userHint1View!=null)
                         userHint1View.setText("waiting for "+remoteBluetoothDevice.getName+" "+remoteBluetoothDevice.getAddress)
+                      // show a little round progress bar
                       if(userHint2View!=null)
-                        userHint2View.setText("")
+                        userHint2View.setVisibility(View.GONE)
                       if(userHint3View!=null)
-                        userHint3View.setText("")
-
-                      // todo: show little round progress bar
+                        userHint3View.setVisibility(View.GONE)
+                      if(simpleProgressBarView!=null)
+                        simpleProgressBarView.setVisibility(View.VISIBLE)
                     }
                   })
                   
-                  // todo: what if no connection ever comes in? we will have 'waiting for ...' displayed
+                  // todo: what if no connection can be ever established? we will have 'waiting for ...' displayed forever
                 }
               }.start                        
             }
@@ -883,11 +886,13 @@ class AnyMimeActivity extends Activity {
           if(D) Log.i(TAG, "handleMessage CONNECTION_START: "+mConnectingDeviceName+" addr="+mConnectingDeviceAddr)
           if(userHint1View!=null)
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
+          // show a little round progress bar
           if(userHint2View!=null)
-            userHint2View.setText("")
+            userHint2View.setVisibility(View.GONE)
           if(userHint3View!=null)
-            userHint3View.setText("")
-          // todo: show little round progress bar
+            userHint3View.setVisibility(View.GONE)
+          if(simpleProgressBarView!=null)
+            simpleProgressBarView.setVisibility(View.VISIBLE)
 
         case RFCommHelperService.CONNECTION_FAILED =>
           // a connect attempt failed
@@ -1202,6 +1207,7 @@ class AnyMimeActivity extends Activity {
         userHint2View.setText("Ready to send "+numberOfFilesToSend+" files from '"+selectedSlotName+"'")
       else
         userHint2View.setText("Ready to send "+numberOfFilesToSend+" files from slot "+(selectedSlot+1))
+      userHint2View.setVisibility(View.VISIBLE)
     }
 
     if(userHint3View!=null) {
@@ -1215,8 +1221,10 @@ class AnyMimeActivity extends Activity {
         userHint3View.setTextSize(15)  // normal size
         userHint3View.setText("NFC disabled - must connect manually")
       }
+      userHint3View.setVisibility(View.VISIBLE)
     }
-
+    if(simpleProgressBarView!=null)
+      simpleProgressBarView.setVisibility(View.GONE)
     if(progressBarView!=null) {
       progressBarView.setMax(100)
       progressBarView.setProgress(0)
@@ -1233,13 +1241,18 @@ class AnyMimeActivity extends Activity {
 
     if(userHint1View!=null)
       userHint1View.setText("")
-    if(userHint2View!=null)
+    if(userHint2View!=null) {
       userHint2View.setText("")
+      userHint2View.setVisibility(View.VISIBLE)
+    }
     if(userHint3View!=null) {
       userHint3View.setTypeface(null, 0);  // not bold
       userHint3View.setTextSize(15)  // normal size
       userHint3View.setText("")
+      userHint3View.setVisibility(View.VISIBLE)
     }
+    if(simpleProgressBarView!=null)
+      simpleProgressBarView.setVisibility(View.GONE)
     if(progressBarView!=null) {
       progressBarView.setMax(100)
       progressBarView.setProgress(0)

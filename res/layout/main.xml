@@ -181,12 +181,15 @@
   >
     <!-- layout_marginBottom moves this view up above the vertical center -->
 
+<!--
+      android:fillViewport="true"
+        android:fillViewport="true"
+-->
     <RelativeLayout
       android:id="@+id/main"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_centerHorizontal="true"
-      android:fillViewport="true"
       android:paddingLeft="8dp"
       android:paddingRight="8dp"
     >
@@ -232,6 +235,23 @@
           android:gravity="center"
           android:layout_marginBottom="5dp"
         />
+
+        <!-- simple progress bar -->
+        <LinearLayout 
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_centerInParent="true"
+          android:gravity="center"
+          android:layout_gravity="center"
+        >
+          <ProgressBar 
+            android:id="@+id/simpleProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+          />
+        </LinearLayout>
+
       </LinearLayout>
     </RelativeLayout>
   </LinearLayout>

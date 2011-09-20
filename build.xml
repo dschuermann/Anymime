@@ -65,10 +65,10 @@
     -->
     <setup />
 
-    <import file="build-scala.xml"/>
 <!--
-    <import file="build-scala-nolib.xml"/>
+    <import file="build-scala.xml"/>
 -->
+    <import file="build-scala-nolib.xml"/>
 
     <!-- Converts this project's .class files into .dex files -->
     <target name="-dex" depends="compile, scala-compile, scala-shrink">
