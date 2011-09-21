@@ -261,11 +261,34 @@ class AnyMimeActivity extends Activity {
       showSelectedFiles
     }
 
+/*
+    // todo: this is now supposed to call the history
     AndrTools.buttonCallback(this, R.id.buttonReceivedFiles) { () =>
       if(D) Log.i(TAG, "onClick buttonReceivedFiles")
       val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
       val bundle = new Bundle()
       bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
+      // hand over .asc file from most recent delivery
+      if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
+        val iterator = arrayListSelectedFileStrings.iterator 
+        while(iterator.hasNext) {
+          val fileString = iterator.next
+          if(fileString.endsWith(".asc")) {
+            bundle.putString("sendKeyFile", fileString)
+            // break
+          }
+        }
+      }
+      intent.putExtras(bundle)
+      startActivity(intent)
+    }
+*/
+    // todo: this is now supposed to call the history
+    AndrTools.buttonCallback(this, R.id.buttonReceivedFiles) { () =>
+      if(D) Log.i(TAG, "onClick buttonReceivedFiles")
+      val intent = new Intent(context, classOf[ShowReceivedFilesHistoryActivity])
+      val bundle = new Bundle()
+      //bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
       // hand over .asc file from most recent delivery
       if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
         val iterator = arrayListSelectedFileStrings.iterator 
@@ -929,7 +952,7 @@ class AnyMimeActivity extends Activity {
             val durationSeconds = (System.currentTimeMillis - startTime) / 1000
             if(durationSeconds>0) {
               kbytesPerSecond = (progressBytes/durationSeconds)/1024
-              if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond+" ##################################")
+              //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
               if(kbytesPerSecond>0) {
                 userHint3View.setTypeface(null, 0);  // un-bold
                 userHint3View.setTextSize(15)  // normal size
@@ -978,7 +1001,7 @@ class AnyMimeActivity extends Activity {
 
           Toast.makeText(getApplicationContext, "Received "+receivedFileUriStringArrayList.size+" files, sent "+numberOfSentFiles+" files", Toast.LENGTH_LONG).show
           if(D) Log.i(TAG, "handleMessage DEVICE_DISCONNECT: call ShowReceivedFilesPopupActivity receivedFileUriStringArrayList.size="+receivedFileUriStringArrayList.size)
-          persistArrayList(receivedFileUriStringArrayList, "receivedFileUris")
+          //persistArrayList(receivedFileUriStringArrayList, "receivedFileUris")
 
           receiveFilesHistoryLength = receiveFilesHistory.add(System.currentTimeMillis, 
                                                               mDisconnectedDeviceName, 

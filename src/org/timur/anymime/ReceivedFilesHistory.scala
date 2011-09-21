@@ -44,7 +44,7 @@ class ReceiveFilesHistory() {
   private val D = true
 
   val history_length = 20
-  private val historyQueue = new scala.collection.mutable.Queue[HistoryEntry]
+  val historyQueue = new scala.collection.mutable.Queue[HistoryEntry]
 
   private val PREFS_SETTINGS = "org.timur.anymime.historyQueue"
   private var prefSettings:SharedPreferences = null
@@ -88,23 +88,27 @@ class ReceiveFilesHistory() {
     return historyQueue.size
   }
 
+  def historyEntryToCommaSeparatedString(historyEntry:HistoryEntry) :String = {
+    var stringBuilder = new StringBuilder()
+    stringBuilder append ""+historyEntry.date
+    stringBuilder append ","
+    stringBuilder append historyEntry.btName
+    stringBuilder append ","
+    stringBuilder append ""+historyEntry.kbs
+    for(filename <- historyEntry.arrayOfFiles) {
+      stringBuilder append ","
+      stringBuilder append ""+filename
+    }
+    return stringBuilder.toString
+  }
+
   def store() :Int = {
     // prepare access to prefSettings
     if(prefSettingsEditor==null)
       return -1
     var loop=0
     for(historyEntry <- historyQueue) {
-      var stringBuilder = new StringBuilder()
-      stringBuilder append ""+historyEntry.date
-      stringBuilder append ","
-      stringBuilder append historyEntry.btName
-      stringBuilder append ","
-      stringBuilder append ""+historyEntry.kbs
-      for(filename <- historyEntry.arrayOfFiles) {
-        stringBuilder append ","
-        stringBuilder append ""+filename
-      }
-      val storeString = stringBuilder.toString
+      val storeString = historyEntryToCommaSeparatedString(historyEntry)
       if(D) Log.i(TAG, "persistArrayList loop="+loop+" storeString="+storeString)
       prefSettingsEditor.putString(""+loop,storeString)
       prefSettingsEditor.commit

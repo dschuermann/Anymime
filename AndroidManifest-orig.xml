@@ -46,6 +46,11 @@
               android:configChanges="orientation|keyboardHidden" />
 
 
+    <activity android:name=".ShowReceivedFilesHistoryActivity"
+              android:label="Received files history"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden" />
+
     <activity android:name=".ShowReceivedFilesPopupActivity"
               android:label="Received files"
               android:theme="@android:style/Theme.Dialog"
