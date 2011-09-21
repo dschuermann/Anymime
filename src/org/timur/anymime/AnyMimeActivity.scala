@@ -228,30 +228,6 @@ class AnyMimeActivity extends Activity {
 
     getArrayListSelectedFileStrings
 
-/*
-    {
-      // reading the list of most recently received files
-      val commaSeparatedString = prefSettings.getString("receivedFileUris", null)
-      if(commaSeparatedString!=null) {
-        val resultArray = commaSeparatedString split ","
-        if(resultArray!=null) {
-          if(D) Log.i(TAG,"onCreate prefSettings receivedFileUriStringArrayList resultArray.size="+resultArray.size)
-          receivedFileUriStringArrayList.clear
-          for(filePathString <- resultArray) {
-            if(filePathString!=null) {
-              receivedFileUriStringArrayList add filePathString
-            }
-          }
-        }
-      }
-      if(receivedFileUriStringArrayList==null) {
-        if(D) Log.i(TAG,"onCreate receivedFileUriStringArrayList == null")
-      } else {
-        if(D) Log.i(TAG,"onCreate receivedFileUriStringArrayList.size="+receivedFileUriStringArrayList.size)
-      }
-    }
-*/
-
     receiveFilesHistoryLength = receiveFilesHistory.load(context)
 
     // all clickable areas
@@ -261,35 +237,12 @@ class AnyMimeActivity extends Activity {
       showSelectedFiles
     }
 
-/*
-    // todo: this is now supposed to call the history
-    AndrTools.buttonCallback(this, R.id.buttonReceivedFiles) { () =>
-      if(D) Log.i(TAG, "onClick buttonReceivedFiles")
-      val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
-      val bundle = new Bundle()
-      bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
-      // hand over .asc file from most recent delivery
-      if(selectedFileStringsArrayList!=null && selectedFileStringsArrayList.size>0) {
-        val iterator = selectedFileStringsArrayList.iterator 
-        while(iterator.hasNext) {
-          val fileString = iterator.next
-          if(fileString.endsWith(".asc")) {
-            bundle.putString("sendKeyFile", fileString)
-            // break
-          }
-        }
-      }
-      intent.putExtras(bundle)
-      startActivity(intent)
-    }
-*/
-    // todo: this is now supposed to call the history
+    // received files history
     AndrTools.buttonCallback(this, R.id.buttonReceivedFiles) { () =>
       if(D) Log.i(TAG, "onClick buttonReceivedFiles")
       val intent = new Intent(context, classOf[ShowReceivedFilesHistoryActivity])
-      val bundle = new Bundle()
-      //bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
       // hand over .asc file from most recent delivery
+      val bundle = new Bundle()
       if(selectedFileStringsArrayList!=null && selectedFileStringsArrayList.size>0) {
         val iterator = selectedFileStringsArrayList.iterator 
         while(iterator.hasNext) {
@@ -331,6 +284,12 @@ class AnyMimeActivity extends Activity {
     AndrTools.buttonCallback(this, R.id.applogo) { () =>
       if(D) Log.i(TAG, "onClick applogoView")
       showDialog(DIALOG_ABOUT)
+    }
+
+    AndrTools.buttonCallback(this, R.id.main) { () =>
+      if(D) Log.i(TAG, "onClick applogoView")
+      val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
+      startActivityForResult(intent, REQUEST_EDIT_SELECTED_FILES) // -> onActivityResult()
     }
 
     AndrTools.buttonCallback(this, progressBarView) { () =>

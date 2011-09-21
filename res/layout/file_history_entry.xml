@@ -51,8 +51,7 @@
     android:layout_height="wrap_content"
     android:textSize="18sp"
     android:textColor="#eee"
-    android:layout_below="@id/date"
-    android:layout_toRightOf="@id/number"
+    android:layout_toRightOf="@id/date"
     android:padding="4dp"
   />
 
@@ -62,7 +61,6 @@
     android:layout_height="wrap_content"
     android:textSize="18sp"
     android:textColor="#eee"
-    android:layout_below="@id/date"
     android:layout_toRightOf="@id/name"
     android:padding="4dp"
   />
@@ -73,8 +71,7 @@
     android:layout_height="wrap_content"
     android:textSize="18sp"
     android:textColor="#eee"
-    android:layout_below="@id/name"
-    android:layout_toRightOf="@id/number"
+    android:layout_toRightOf="@id/kbs"
     android:padding="4dp"
   />
 

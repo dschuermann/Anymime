@@ -28,15 +28,16 @@ import java.text.DateFormat
 import scala.collection.mutable.HashMap
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import android.view.View
-import android.content.SharedPreferences
-import android.widget.TextView
-import android.widget.ImageView
-import android.widget.ArrayAdapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import android.widget.TextView
+import android.widget.ImageView
+import android.widget.ArrayAdapter
+import android.telephony.TelephonyManager
 
 class FileHistoryAdapter(context:Context, messageResourceId:Int)
   extends ArrayAdapter[String](context, messageResourceId) {
@@ -46,10 +47,15 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
 
   private var msgList = new ArrayList[String]()
 
-  val curLang = Locale.getDefault.getLanguage
-  val iso3Country = context.getResources.getConfiguration().locale.getISO3Country
-  val locale = new Locale(curLang,iso3Country)
-  if(D) Log.i(TAG, "curLang="+curLang+" iso3Country="+iso3Country+" locale="+locale)
+  private val curLang = Locale.getDefault.getLanguage
+  private val iso3Country = context.getResources.getConfiguration.locale.getISO3Country
+  private val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE).asInstanceOf[TelephonyManager]
+  private val countryCode = telephonyManager.getSimCountryIso
+  private var locale = new Locale(curLang,iso3Country)
+  // do the following, so one can have english be selected as UI-language and still see date+time in the format of the SIM-country
+  if(countryCode.length>0 && countryCode!=iso3Country)
+    locale = new Locale(countryCode,countryCode)
+  if(D) Log.i(TAG, "curLang="+curLang+" iso3Country="+iso3Country+" countryCode="+countryCode+" locale="+locale)
 
   override def clear() {
     msgList.clear
