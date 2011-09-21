@@ -73,38 +73,12 @@ class ShowReceivedFilesHistoryActivity extends ListActivity {
   		finish
       return
     }
-/*
-    val receivedFilesUriStringArrayList = bundle.getStringArrayList("listOfUriStrings")
-    if(receivedFilesUriStringArrayList==null) {
-      Log.e(TAG, "onCreate() from 'listOfUriStrings' receivedFilesUriStringArrayList==null")
-  		Toast.makeText(this, "No received files available", Toast.LENGTH_LONG).show
-  		finish
-      return
-    }
-    if(receivedFilesUriStringArrayList.size<1) {
-      Log.e(TAG, "onCreate() receivedFilesUriStringArrayList.size<1")
-  		Toast.makeText(this, "No received files available", Toast.LENGTH_LONG).show
-  		finish
-      return
-    }
-
-    val fileListAdapter = new FileListAdapter(this, R.layout.file_list_entry)
-		setListAdapter(fileListAdapter)
-
-    val iterator = receivedFilesUriStringArrayList.iterator 
-    while(iterator.hasNext) {
-      var filePathString = iterator.next 
-      if(filePathString.startsWith("file:"))
-        filePathString = filePathString.substring(5)
-      fileListAdapter.add(filePathString)
-    }
-    fileListAdapter.notifyDataSetChanged
-*/
 
     val fileHistoryAdapter = new FileHistoryAdapter(this, R.layout.file_history_entry)
 		setListAdapter(fileHistoryAdapter)
 
     receiveFilesHistoryLength = receiveFilesHistory.load(context)
+    // todo: loop umgekehrt, damit der neuste eintrag oben erscheint
     for(historyEntry <- receiveFilesHistory.historyQueue) {
       val historyEntryString = receiveFilesHistory.historyEntryToCommaSeparatedString(historyEntry)
       if(D) Log.i(TAG, "onCreate() historyEntryString="+historyEntryString)
@@ -112,28 +86,32 @@ class ShowReceivedFilesHistoryActivity extends ListActivity {
     }
     fileHistoryAdapter.notifyDataSetChanged
 
-
     sendKeyFilePath = bundle.getString("sendKeyFile")
-
-/*
-    val opentype = bundle.getString("opentype")
-    if(opentype!=null && opentype=="auto") {
-      // auto close activity after 10 seconds timeout
-      new Thread() {
-        override def run() {
-          try { Thread.sleep(15000); } catch { case ex:Exception => }
-          if(userInteractionCount==0)
-            finish
-        }
-      }.start                        
-
-      otherName = bundle.getString("otherName")
-    }
-*/
   }
 
 	override def onListItemClick(listView:ListView, view:View, position:Int, id:Long) :Unit = {
 		super.onListItemClick(listView, view, position, id);
+/*
+      // todo: implement: onClick -> open ShowReceivedFilesPopupActivity
+      // use this code:
+
+      val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
+      val bundle = new Bundle()
+      bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
+      // hand over .asc file from most recent delivery
+      if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
+        val iterator = arrayListSelectedFileStrings.iterator 
+        while(iterator.hasNext) {
+          val fileString = iterator.next
+          if(fileString.endsWith(".asc")) {
+            bundle.putString("sendKeyFile", fileString)
+            // break
+          }
+        }
+      }
+      intent.putExtras(bundle)
+      startActivity(intent)
+*/
 
 /*
     userInteractionCount+=1

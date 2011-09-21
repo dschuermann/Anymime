@@ -102,22 +102,30 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
         if(dateView != null) {
           val calendar = Calendar.getInstance()
           calendar.setTimeInMillis(date)
-          //val date = cal.getTime()
-          //mHour = date.getHours();
-          //mMinute = date.getMinutes();
+          val gettime = calendar.getTime()
+          //mHour = gettime.getHours();
+          //mMinute = gettime.getMinutes();
 
-          dateView.setText(""+calendar.toString)
+          dateView.setText(""+gettime.toString)     // todo: this is not yet the desired date format
         }
 
         if(nameView != null)
           nameView.setText(btName)
 
         if(kbsView != null)
-          kbsView.setText(""+kbs)
+          kbsView.setText(""+kbs+" KB/s")
       }
     }
 
     return view
+  }
+
+  override def add(msg:String) {
+    msgList.add(msg)
+  }
+
+  override def remove(msg:String) {
+    msgList.remove(msg)
   }
 }
 
