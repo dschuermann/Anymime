@@ -34,6 +34,7 @@ import android.widget.Toast
 import android.widget.ListView
 import android.widget.TextView
 import android.view.Window
+import android.view.View
 
 class ShowPgpFingerprintActivity extends Activity {
   private val TAG = "ShowPgpFingerprintActivity"
@@ -65,11 +66,20 @@ class ShowPgpFingerprintActivity extends Activity {
     val text1View = 
     showFileFingerprint(findViewById(R.id.text1).asInstanceOf[TextView], filePathNameString, fileNameString)
 
+    var displayingSendKey=false
     val bundle = intent.getExtras
     if(bundle!=null) {
       val sendKeyFilePath = bundle.getString("sendKeyFile")
-      if(sendKeyFilePath!=null)
+      if(sendKeyFilePath!=null) {
         showFileFingerprint(findViewById(R.id.text2).asInstanceOf[TextView], sendKeyFilePath, null)
+        displayingSendKey=true
+      }
+    }
+    if(D) Log.i(TAG, "displayingSendKey="+displayingSendKey)
+    if(!displayingSendKey) {
+      findViewById(R.id.title1).asInstanceOf[TextView].setText("Selected key fingerprint")
+      findViewById(R.id.title2).asInstanceOf[TextView].setVisibility(View.GONE)
+      findViewById(R.id.text2).asInstanceOf[TextView].setVisibility(View.GONE)
     }
   }
 

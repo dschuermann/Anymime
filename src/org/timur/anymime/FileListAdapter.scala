@@ -62,7 +62,7 @@ class FileListAdapter(context:Context, messageResourceId:Int)
 
     var view = setView
     if(view == null) {
-      if(D) Log.i(TAG, "getView position="+position+" inflate a new view")
+      //if(D) Log.i(TAG, "getView position="+position+" inflate a new view")
       val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE).asInstanceOf[LayoutInflater]
       if(layoutInflater!=null) {
         view = layoutInflater.inflate(messageResourceId, null)
@@ -75,7 +75,7 @@ class FileListAdapter(context:Context, messageResourceId:Int)
       return null
     }
 
-    if(D) Log.i(TAG, "getView("+position+") view!=null")
+    //if(D) Log.i(TAG, "getView("+position+") view!=null")
     val visibleTextView = view.findViewById(R.id.visibleText).asInstanceOf[TextView]
     if(visibleTextView != null) {
       val idxLastSlash = pathFileString.lastIndexOf("/")
