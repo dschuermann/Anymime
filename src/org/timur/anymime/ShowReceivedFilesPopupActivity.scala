@@ -153,7 +153,8 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
       bundle.putString("anymimeOtherName", otherName)
 
       // hand over .asc file from most recent delivery
-      bundle.putString("sendKeyFile", sendKeyFilePath)
+      if(sendKeyFilePath!=null)
+        bundle.putString("sendKeyFile", sendKeyFilePath)
 
       processFileIntent.putExtras(bundle)
       if(D) Log.i(TAG, "onListItemClick startActivity processFileIntent="+processFileIntent)

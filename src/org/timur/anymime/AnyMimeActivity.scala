@@ -96,7 +96,7 @@ import android.provider.MediaStore.Images
 import android.provider.MediaStore.Images.Media
 
 import android.media.MediaPlayer
-import android.os.SystemClock
+//import android.os.SystemClock
 
 import android.app.PendingIntent
 import android.content.IntentFilter
@@ -142,6 +142,9 @@ class AnyMimeActivity extends Activity {
   private var prefSettings:SharedPreferences = null
   private var prefSettingsEditor:SharedPreferences.Editor = null
 
+  private val receiveFilesHistory = new ReceiveFilesHistory()
+  private var receiveFilesHistoryLength=0
+
 	private var slowAnimation:Animation = null
 //private var fastAnimation:Animation = null
   private var rootView:View = null
@@ -163,8 +166,9 @@ class AnyMimeActivity extends Activity {
   private var selectedSlotName = ""
   private var initiatedConnection:Boolean = false
 
-  @volatile var startTime:Long = 0
-  @volatile var receivedAnyData:Boolean = false
+  @volatile private var startTime:Long = 0
+  @volatile private var receivedAnyData:Boolean = false
+  private var kbytesPerSecond:Long=0
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
@@ -224,6 +228,7 @@ class AnyMimeActivity extends Activity {
 
     getArrayListSelectedFileStrings
 
+/*
     {
       // reading the list of most recently received files
       val commaSeparatedString = prefSettings.getString("receivedFileUris", null)
@@ -245,6 +250,9 @@ class AnyMimeActivity extends Activity {
         if(D) Log.i(TAG,"onCreate receivedFileUriStringArrayList.size="+receivedFileUriStringArrayList.size)
       }
     }
+*/
+
+    receiveFilesHistoryLength = receiveFilesHistory.load(context)
 
     // all clickable areas
 
@@ -920,7 +928,8 @@ class AnyMimeActivity extends Activity {
           if(userHint3View!=null) {
             val durationSeconds = (System.currentTimeMillis - startTime) / 1000
             if(durationSeconds>0) {
-              val kbytesPerSecond = (progressBytes/durationSeconds)/1024
+              kbytesPerSecond = (progressBytes/durationSeconds)/1024
+              if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond+" ##################################")
               if(kbytesPerSecond>0) {
                 userHint3View.setTypeface(null, 0);  // un-bold
                 userHint3View.setTextSize(15)  // normal size
@@ -970,6 +979,13 @@ class AnyMimeActivity extends Activity {
           Toast.makeText(getApplicationContext, "Received "+receivedFileUriStringArrayList.size+" files, sent "+numberOfSentFiles+" files", Toast.LENGTH_LONG).show
           if(D) Log.i(TAG, "handleMessage DEVICE_DISCONNECT: call ShowReceivedFilesPopupActivity receivedFileUriStringArrayList.size="+receivedFileUriStringArrayList.size)
           persistArrayList(receivedFileUriStringArrayList, "receivedFileUris")
+
+          receiveFilesHistoryLength = receiveFilesHistory.add(System.currentTimeMillis, 
+                                                              mDisconnectedDeviceName, 
+                                                              kbytesPerSecond, 
+                                                              receivedFileUriStringArrayList.toArray(new Array[String](0)) )
+          receiveFilesHistoryLength = receiveFilesHistory.store()
+
           // run ShowReceivedFilesPopupActivity hand over receivedFileUriStringArrayList
           // this will show the list of receive files and allow the user to start intents on the individual files
           try { Thread.sleep(100); } catch { case ex:Exception => }
