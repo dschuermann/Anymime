@@ -33,46 +33,20 @@
     android:textSize="18sp"
     android:textColor="#eee"
     android:padding="4dp"
+    android:layout_marginTop="6dp"
   />
 
   <TextView
-    android:id="@+id/date"
+    android:id="@+id/data"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:textSize="18sp"
-    android:textColor="#eee"
     android:layout_toRightOf="@id/number"
-    android:padding="4dp"
-  />
-
-  <TextView
-    android:id="@+id/name"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
     android:textSize="18sp"
     android:textColor="#eee"
-    android:layout_toRightOf="@id/date"
     android:padding="4dp"
-  />
-
-  <TextView
-    android:id="@+id/kbs"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textSize="18sp"
-    android:textColor="#eee"
-    android:layout_toRightOf="@id/name"
-    android:padding="4dp"
-  />
-
-  <TextView
-    android:id="@+id/fileInfo"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textSize="18sp"
-    android:textColor="#eee"
-    android:layout_toRightOf="@id/kbs"
-    android:padding="4dp"
+    android:lineSpacingExtra="4dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
   />
 
   <!--full data string (invisible) -->

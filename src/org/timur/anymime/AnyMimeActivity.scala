@@ -915,7 +915,7 @@ class AnyMimeActivity extends Activity {
               if(kbytesPerSecond>0) {
                 userHint3View.setTypeface(null, 0);  // un-bold
                 userHint3View.setTextSize(15)  // normal size
-                userHint3View.setText(""+(progressBytes/1024)+" KB "+durationSeconds+"s "+kbytesPerSecond+" KB/s")
+                userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
               }
             }
           }

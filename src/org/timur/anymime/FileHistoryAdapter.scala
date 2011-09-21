@@ -46,6 +46,7 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
   private val D = true
 
   private var msgList = new ArrayList[String]()
+  private val calendar = Calendar.getInstance
 
   private val curLang = Locale.getDefault.getLanguage
   private val iso3Country = context.getResources.getConfiguration.locale.getISO3Country
@@ -90,24 +91,10 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
     if(D) Log.i(TAG, "getView("+position+") fullString="+fullString)
 
     val numberView = view.findViewById(R.id.number).asInstanceOf[TextView]
-    if(numberView != null)
-      numberView.setText("")
+    numberView.setText("")
 
-    val dateView = view.findViewById(R.id.date).asInstanceOf[TextView]
-    if(dateView != null)
-      dateView.setText("")
-
-    val nameView = view.findViewById(R.id.name).asInstanceOf[TextView]
-    if(nameView != null)
-      nameView.setText("")
-
-    val kbsView = view.findViewById(R.id.kbs).asInstanceOf[TextView]
-    if(kbsView != null)
-      kbsView.setText("")
-      
-    val fileInfoView = view.findViewById(R.id.fileInfo).asInstanceOf[TextView]
-    if(fileInfoView != null)
-      fileInfoView.setText("")
+    val dataView = view.findViewById(R.id.data).asInstanceOf[TextView]
+    dataView.setText("")
 
     val invisibleTextView = view.findViewById(R.id.invisibleText).asInstanceOf[TextView]
     if(invisibleTextView != null) {
@@ -120,26 +107,13 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
         val kbs = java.lang.Long.parseLong(resultArray(2), 10)
         val arrayOfFiles = resultArray.drop(3)
 
-        if(numberView != null) {
-          numberView.setText(""+(position+1)+".")
-        }
+        calendar.setTimeInMillis(date)
+        val gettime = calendar.getTime
+        val formattedDateString = DateFormat.getDateInstance(DateFormat.MEDIUM,locale).format(gettime).replaceAll(" ","\u00A0")
+        val formattedTimeString = DateFormat.getTimeInstance(DateFormat.MEDIUM,locale).format(gettime).replaceAll(" ","\u00A0")
 
-        if(dateView != null) {
-          val calendar = Calendar.getInstance()
-          calendar.setTimeInMillis(date)
-          val gettime = calendar.getTime()
-          val currentDateTimeString = DateFormat.getDateTimeInstance(DateFormat.MEDIUM,DateFormat.MEDIUM,locale).format(gettime);
-          dateView.setText(currentDateTimeString)
-        }
-
-        if(nameView != null)
-          nameView.setText(btName)
-
-        if(kbsView != null)
-          kbsView.setText(""+kbs+" KB/s")
-          
-        if(fileInfoView != null)
-          fileInfoView.setText(""+arrayOfFiles.size+" files")
+        numberView.setText(""+(position+1)+".")
+        dataView.setText(formattedDateString+" "+formattedTimeString+"   "+arrayOfFiles.size+"\u00A0files   "+kbs+"\u00A0KB/s   "+btName.replaceAll(" ","\u00A0"))
       }
     }
 
