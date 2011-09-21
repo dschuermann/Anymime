@@ -22,6 +22,8 @@ package org.timur.anymime
 
 import java.util.ArrayList
 import java.util.Calendar
+import java.util.Locale
+import java.text.DateFormat
 
 import scala.collection.mutable.HashMap
 
@@ -43,6 +45,11 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
   private val D = true
 
   private var msgList = new ArrayList[String]()
+
+  val curLang = Locale.getDefault.getLanguage
+  val iso3Country = context.getResources.getConfiguration().locale.getISO3Country
+  val locale = new Locale(curLang,iso3Country)
+  if(D) Log.i(TAG, "curLang="+curLang+" iso3Country="+iso3Country+" locale="+locale)
 
   override def clear() {
     msgList.clear
@@ -76,6 +83,10 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
 
     if(D) Log.i(TAG, "getView("+position+") fullString="+fullString)
 
+    val numberView = view.findViewById(R.id.number).asInstanceOf[TextView]
+    if(numberView != null)
+      numberView.setText("")
+
     val dateView = view.findViewById(R.id.date).asInstanceOf[TextView]
     if(dateView != null)
       dateView.setText("")
@@ -87,6 +98,10 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
     val kbsView = view.findViewById(R.id.kbs).asInstanceOf[TextView]
     if(kbsView != null)
       kbsView.setText("")
+      
+    val fileInfoView = view.findViewById(R.id.fileInfo).asInstanceOf[TextView]
+    if(fileInfoView != null)
+      fileInfoView.setText("")
 
     val invisibleTextView = view.findViewById(R.id.invisibleText).asInstanceOf[TextView]
     if(invisibleTextView != null) {
@@ -97,16 +112,18 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
         val date = java.lang.Long.parseLong(resultArray(0), 10)
         val btName = resultArray(1)
         val kbs = java.lang.Long.parseLong(resultArray(2), 10)
-        //val arrayOfFiles = resultArray.drop(3)
+        val arrayOfFiles = resultArray.drop(3)
+
+        if(numberView != null) {
+          numberView.setText(""+(position+1)+".")
+        }
 
         if(dateView != null) {
           val calendar = Calendar.getInstance()
           calendar.setTimeInMillis(date)
           val gettime = calendar.getTime()
-          //mHour = gettime.getHours();
-          //mMinute = gettime.getMinutes();
-
-          dateView.setText(""+gettime.toString)     // todo: this is not yet the desired date format
+          val currentDateTimeString = DateFormat.getDateTimeInstance(DateFormat.MEDIUM,DateFormat.MEDIUM,locale).format(gettime);
+          dateView.setText(currentDateTimeString)
         }
 
         if(nameView != null)
@@ -114,6 +131,9 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
 
         if(kbsView != null)
           kbsView.setText(""+kbs+" KB/s")
+          
+        if(fileInfoView != null)
+          fileInfoView.setText(""+arrayOfFiles.size+" files")
       }
     }
 

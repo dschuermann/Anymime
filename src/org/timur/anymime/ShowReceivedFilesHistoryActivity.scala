@@ -33,7 +33,7 @@ import android.util.Log
 import android.view.Window
 import android.view.View
 import android.widget.ArrayAdapter
-//import android.widget.Toast
+import android.widget.Toast
 import android.widget.ListView
 
 class ShowReceivedFilesHistoryActivity extends ListActivity {
@@ -69,11 +69,12 @@ class ShowReceivedFilesHistoryActivity extends ListActivity {
       return
     }
 
+    getListView().setStackFromBottom(true)
+
     val fileHistoryAdapter = new FileHistoryAdapter(this, R.layout.file_history_entry)
 		setListAdapter(fileHistoryAdapter)
 
     receiveFilesHistoryLength = receiveFilesHistory.load(context)
-    // todo: loop umgekehrt, damit der neuste eintrag oben erscheint
     for(historyEntry <- receiveFilesHistory.historyQueue) {
       val historyEntryString = receiveFilesHistory.historyEntryToCommaSeparatedString(historyEntry)
       if(D) Log.i(TAG, "onCreate() historyEntryString="+historyEntryString)
@@ -99,37 +100,24 @@ class ShowReceivedFilesHistoryActivity extends ListActivity {
 
     // process historyEntryString = date,btname,kbs,listOfFiles...
     val resultArray = historyEntryString split ","
-    val date = resultArray(0)
-    val name = resultArray(1)
-    val kbs = resultArray(2)
+    val fileUriArray = resultArray drop 3
 
-/*    
-    val idxFirstComma  = historyEntryString.indexOf(",")
-    val idxSecondComma = historyEntryString.substring(idxFirstComma+1).indexOf(",")
-    val idxThirdComma  = historyEntryString.substring(idxFirstComma+1+idxSecondComma+1).indexOf(",")
-    val date = 
-		val listOfFilesString = historyEntryString.substring(idxFirstComma+1+idxSecondComma+1+idxThirdComma+1)
-    if(D) Log.i(TAG, "onListItemClick listOfFilesString="+listOfFilesString)
-
-    // convert comma-separated listOfFilesString into ArrayList
-    val resultArray = listOfFilesString split ","
-*/
-    resultArray drop 3
     val fileStringsArrayList = new ArrayList[String]()
-    if(resultArray!=null) {
-      for(filePathString <- resultArray)
+    if(fileUriArray!=null) {
+      for(filePathString <- fileUriArray)
         if(filePathString!=null)
           fileStringsArrayList add filePathString.trim
-    }
 
-    val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
-    val bundle = new Bundle()
-    bundle.putString("date", date)
-    bundle.putString("name", name)
-    bundle.putStringArrayList("listOfUriStrings", fileStringsArrayList)
-    bundle.putString("sendKeyFile", sendKeyFilePath)
-    intent.putExtras(bundle)
-    startActivity(intent)
+      val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
+      val bundle = new Bundle()
+      bundle.putString("date", resultArray(0))
+      bundle.putString("name", resultArray(1))
+      bundle.putString("kbs", resultArray(2))
+      bundle.putStringArrayList("listOfUriStrings", fileStringsArrayList)
+      bundle.putString("sendKeyFile", sendKeyFilePath)
+      intent.putExtras(bundle)
+      startActivity(intent)
+    }
 	}
 }
 
