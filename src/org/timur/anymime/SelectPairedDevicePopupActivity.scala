@@ -43,47 +43,76 @@ class SelectPairedDevicePopupActivity extends ListActivity {
   private val TAG = "SelectPairedDevicePopupActivity"
   private val D = true
 
+  private val REQUEST_BT_SETTINGS = 1
+  private val pairedDevicesArrayListOfStrings = new java.util.ArrayList[String]()
+  private val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter
+
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
-
     if(D) Log.i(TAG, "onCreate()")
 
-    val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter
     if(mBluetoothAdapter == null) {
       Log.e(TAG, "onCreate mBluetoothAdapter not available")
       Toast.makeText(this, "Bluetooth not available", Toast.LENGTH_LONG).show
       return
     }
 
+    setContentView(R.layout.bt_select)
+
+    getPairedDevices
+    val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, pairedDevicesArrayListOfStrings)
+		setListAdapter(arrayAdapter)
+
+    AndrTools.buttonCallback(this, R.id.buttonCancel) { () =>
+      if(D) Log.i(TAG, "onClick buttonCancel")
+      finish
+    }
+
+    AndrTools.buttonCallback(this, R.id.buttonBt) { () =>
+      if(D) Log.i(TAG, "onClick buttonBt")
+      val bluetoothSettingsIntent = new Intent
+      bluetoothSettingsIntent.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
+      startActivityForResult(bluetoothSettingsIntent, REQUEST_BT_SETTINGS) // -> onActivityResult()
+    }
+  }
+
+  def getPairedDevices() {
+    pairedDevicesArrayListOfStrings.clear
     val pairedDevicesSet = mBluetoothAdapter.getBondedDevices
     if(pairedDevicesSet.size<1) {
       Log.e(TAG, "onCreate pairedDevicesSet.size<1")
       Toast.makeText(this, "No paired Bluetooth devices available", Toast.LENGTH_LONG).show
-      return
-    }
+    } else {
+		  // Create an ArrayAdapter that will make the Strings above appear in the ListView
+      val pairedDevicesArrayListOfBluetoothDevices = new ArrayList[BluetoothDevice](pairedDevicesSet)
+      if(pairedDevicesArrayListOfBluetoothDevices==null) {
+        Log.e(TAG, "onCreate pairedDevicesArrayListOfBluetoothDevices==null")
+        Toast.makeText(this, "Could not create pairedDevicesArrayListOfBluetoothDevices", Toast.LENGTH_LONG).show
+        return
+      }
 
-		// Create an ArrayAdapter that will make the Strings above appear in the ListView
-    val pairedDevicesArrayListOfBluetoothDevices = new ArrayList[BluetoothDevice](pairedDevicesSet)
-    if(pairedDevicesArrayListOfBluetoothDevices==null) {
-      Log.e(TAG, "onCreate pairedDevicesArrayListOfBluetoothDevices==null")
-      Toast.makeText(this, "Could not create pairedDevicesArrayListOfBluetoothDevices", Toast.LENGTH_LONG).show
-      return
-    }
-
-    val pairedDevicesArrayListOfStrings = new java.util.ArrayList[String]()
-    val iterator = pairedDevicesArrayListOfBluetoothDevices.iterator 
-    while(iterator.hasNext) {
-      val device = iterator.next
-      if(device!=null) {
-        //if(D) Log.i(TAG, "updateDevicesView ADD paired="+device.getName)
-        if(device.getName!=null && device.getName.size>0) {
-          pairedDevicesArrayListOfStrings.add(device.getName+"\n"+device.getAddress)
+      val iterator = pairedDevicesArrayListOfBluetoothDevices.iterator 
+      while(iterator.hasNext) {
+        val device = iterator.next
+        if(device!=null) {
+          //if(D) Log.i(TAG, "updateDevicesView ADD paired="+device.getName)
+          if(device.getName!=null && device.getName.size>0) {
+            pairedDevicesArrayListOfStrings.add(device.getName+"\n"+device.getAddress)
+          }
         }
       }
     }
-    
-    val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, pairedDevicesArrayListOfStrings)
-		setListAdapter(arrayAdapter)
+  }
+
+  override def onActivityResult(requestCode:Int, resultCode:Int, intent:Intent) {
+    if(D) Log.i(TAG, "onActivityResult resultCode="+resultCode+" requestCode="+requestCode)
+    requestCode match {
+      case REQUEST_BT_SETTINGS =>
+        if(D) Log.i(TAG, "onActivityResult - REQUEST_BT_SETTINGS")
+        getPairedDevices
+        val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, pairedDevicesArrayListOfStrings)
+		    setListAdapter(arrayAdapter)
+    }
   }
 
 	override def onListItemClick(listView:ListView, view:View, position:Int, id:Long) {

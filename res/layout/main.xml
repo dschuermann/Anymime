@@ -19,7 +19,6 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  android:id="@+id/main"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
   android:background="@drawable/backrepeat"
@@ -57,7 +56,6 @@
     android:padding="2dp"
   >
     <RelativeLayout
-      android:id="@+id/main"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_centerHorizontal="true"
@@ -169,7 +167,6 @@
 
   <!-- main -->
   <LinearLayout
-    android:id="@+id/main"
 	  android:layout_width="540dip"
 	  android:layout_height="match_parent"
     android:layout_below="@+id/header"
@@ -182,7 +179,6 @@
     <!-- layout_marginBottom moves this view up above the vertical center -->
 
     <RelativeLayout
-      android:id="@+id/main"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_centerHorizontal="true"
@@ -194,7 +190,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/layer_list"
+        android:background="@drawable/layer_list_dark"
       >
         <ImageView
           android:id="@+id/radioLogo"

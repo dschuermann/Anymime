@@ -147,7 +147,7 @@ class AnyMimeActivity extends Activity {
 
 	private var slowAnimation:Animation = null
 //private var fastAnimation:Animation = null
-  private var rootView:View = null
+  private var mainView:View = null
   private var radioLogoView:ImageView = null
   private var userHint1View:TextView = null
   private var userHint2View:TextView = null
@@ -213,7 +213,7 @@ class AnyMimeActivity extends Activity {
       }
     }
 
-    rootView = findViewById(R.id.main)
+    mainView = findViewById(R.id.main)
     radioLogoView = findViewById(R.id.radioLogo).asInstanceOf[ImageView]
     userHint1View = findViewById(R.id.userHint).asInstanceOf[TextView]
     userHint2View = findViewById(R.id.userHint2).asInstanceOf[TextView]
@@ -1191,6 +1191,9 @@ class AnyMimeActivity extends Activity {
       }
     }
 
+    if(mainView!=null)
+      mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_dark))
+
     if(userHint1View!=null) {
       // get free space on SD-card
       val statFs = new StatFs(Environment.getExternalStorageDirectory().getPath())
@@ -1233,26 +1236,32 @@ class AnyMimeActivity extends Activity {
 
   private def mainViewBluetooth() {
     //if(D) Log.i(TAG, "mainViewBluetooth")
-    if(radioLogoView!=null)
+    if(radioLogoView!=null) {
       radioLogoView.setImageResource(R.drawable.bluetooth)
-
-    if(radioLogoView!=null)
     	radioLogoView.setAnimation(null)
+    }
+    
+    if(mainView!=null)
+      mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
 
     if(userHint1View!=null)
       userHint1View.setText("")
+
     if(userHint2View!=null) {
       userHint2View.setText("")
       userHint2View.setVisibility(View.VISIBLE)
     }
+
     if(userHint3View!=null) {
       userHint3View.setTypeface(null, 0);  // not bold
       userHint3View.setTextSize(15)  // normal size
       userHint3View.setText("")
       userHint3View.setVisibility(View.VISIBLE)
     }
+
     if(simpleProgressBarView!=null)
       simpleProgressBarView.setVisibility(View.GONE)
+
     if(progressBarView!=null) {
       progressBarView.setMax(100)
       progressBarView.setProgress(0)
