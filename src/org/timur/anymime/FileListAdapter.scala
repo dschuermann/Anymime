@@ -21,6 +21,7 @@
 package org.timur.anymime
 
 import java.util.ArrayList
+import java.io.File
 
 import scala.collection.mutable.HashMap
 
@@ -79,10 +80,14 @@ class FileListAdapter(context:Context, messageResourceId:Int)
     val visibleTextView = view.findViewById(R.id.visibleText).asInstanceOf[TextView]
     if(visibleTextView != null) {
       val idxLastSlash = pathFileString.lastIndexOf("/")
-      val visibleMsg = if(idxLastSlash>=0) pathFileString.substring(idxLastSlash+1) else pathFileString
+      var visibleMsg = if(idxLastSlash>=0) pathFileString.substring(idxLastSlash+1) else pathFileString
+      // if the file does not exist (anymore), we must visualize that
+      val file = new File(pathFileString)
+      val fileLength = file.length
+      if(D) Log.i(TAG, "getView position="+position+" pathFileString="+pathFileString+" fileLength="+fileLength+" ########################")
+      if(fileLength<1) 
+        visibleMsg += " (not\u00A0found)"
       visibleTextView.setText(visibleMsg)
-
-      // todo: if pathFileString does not exist (anymore) we must visualize that
 
       val iconView = view.findViewById(R.id.icon).asInstanceOf[ImageView]
       if(iconView != null) {
