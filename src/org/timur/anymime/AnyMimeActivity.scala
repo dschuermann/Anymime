@@ -874,6 +874,8 @@ class AnyMimeActivity extends Activity {
           val mConnectingDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mConnectingDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage CONNECTION_START: "+mConnectingDeviceName+" addr="+mConnectingDeviceAddr)
+          if(radioLogoView!=null)
+            radioLogoView.setImageResource(R.drawable.bluetooth)
           if(userHint1View!=null)
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
           // show a little round progress bar
@@ -1217,7 +1219,7 @@ class AnyMimeActivity extends Activity {
       else {
         userHint3View.setTypeface(null, 0);  // not bold
         userHint3View.setTextSize(15)  // normal size
-        userHint3View.setText("NFC disabled - must connect manually")
+        userHint3View.setText("NFC disabled - manual connect required")
       }
       userHint3View.setVisibility(View.VISIBLE)
     }

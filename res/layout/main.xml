@@ -170,10 +170,10 @@
   <!-- main -->
   <LinearLayout
     android:id="@+id/main"
+	  android:layout_width="540dip"
+	  android:layout_height="match_parent"
     android:layout_below="@+id/header"
     android:layout_above="@+id/footer"
-	  android:layout_width="600dip"
-	  android:layout_height="match_parent"
 	  android:orientation="vertical"
     android:gravity="center_vertical"
     android:layout_centerHorizontal="true"
@@ -202,8 +202,11 @@
           android:layout_width="match_parent"
           android:layout_height="36dip"
           android:gravity="center"
-          android:layout_marginBottom="5dp"
+          android:layout_marginTop="4dp"
+          android:layout_marginBottom="8dp"
         />
+
+        <!-- todo: would like to use larger font, if the screen is big -->
         <TextView
           android:id="@+id/userHint"
           android:layout_width="match_parent"
@@ -211,7 +214,7 @@
           android:textSize="15sp"
           android:textColor="#eee"
           android:gravity="center"
-          android:layout_marginBottom="5dp"
+          android:layout_marginBottom="8dp"
         />
         <TextView
           android:id="@+id/userHint2"
@@ -220,7 +223,7 @@
           android:textSize="15sp"
           android:textColor="#eee"
           android:gravity="center"
-          android:layout_marginBottom="5dp"
+          android:layout_marginBottom="8dp"
         />
         <TextView
           android:id="@+id/userHint3"
@@ -229,7 +232,7 @@
           android:textSize="15sp"
           android:textColor="#eee"
           android:gravity="center"
-          android:layout_marginBottom="5dp"
+          android:layout_marginBottom="8dp"
         />
 
         <!-- simple progress bar -->

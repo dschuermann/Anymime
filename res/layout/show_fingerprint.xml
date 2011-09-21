@@ -24,59 +24,66 @@
   android:padding="12dip"
   android:fillViewport="true" 
 >
-  <ScrollView
-    android:layout_width="fill_parent"
+  <LinearLayout
+    android:id="@+id/footer"
+    android:layout_width="540dip"
     android:layout_height="wrap_content"
+    android:orientation="vertical"
   >
-    <LinearLayout
-	    android:layout_width="fill_parent"
+    <ScrollView
+      android:layout_width="fill_parent"
       android:layout_height="wrap_content"
-	    android:orientation="vertical"
     >
-      <TextView
-        android:id="@+id/title1"
-        android:layout_width="fill_parent"
+      <LinearLayout
+	      android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:textColor="#bbf"
-        android:gravity="center_horizontal"
-        android:text="Received key fingerprint"
-        android:layout_marginBottom="2dp"
-      />
-      <TextView
-        android:id="@+id/text1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:textSize="26sp"
-        android:textColor="#fff"
-        android:typeface="monospace"
-        android:textStyle="bold"
-        android:gravity="center_horizontal"
-        android:layout_marginBottom="16dp"
-      />
+	      android:orientation="vertical"
+      >
+        <TextView
+          android:id="@+id/title1"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:textSize="20sp"
+          android:textColor="#bbf"
+          android:gravity="center_horizontal"
+          android:text="Received key fingerprint"
+          android:layout_marginBottom="2dp"
+        />
+        <TextView
+          android:id="@+id/text1"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent"
+          android:textSize="26sp"
+          android:textColor="#fff"
+          android:typeface="monospace"
+          android:textStyle="bold"
+          android:gravity="center_horizontal"
+          android:layout_marginBottom="16dp"
+        />
 
-      <TextView
-        android:id="@+id/title2"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:textColor="#aae"
-        android:gravity="center_horizontal"
-        android:text="Sent key fingerprint"
-        android:layout_marginBottom="2dp"
-      />
-      <TextView
-        android:id="@+id/text2"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:textSize="26sp"
-        android:textColor="#fff"
-        android:typeface="monospace"
-        android:textStyle="bold"
-        android:gravity="center_horizontal"
-        android:layout_marginBottom="12dp"
-      />
-    </LinearLayout>
-  </ScrollView>
+        <TextView
+          android:id="@+id/title2"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:textSize="20sp"
+          android:textColor="#aae"
+          android:gravity="center_horizontal"
+          android:text="Sent key fingerprint"
+          android:layout_marginBottom="2dp"
+        />
+        <TextView
+          android:id="@+id/text2"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent"
+          android:textSize="26sp"
+          android:textColor="#fff"
+          android:typeface="monospace"
+          android:textStyle="bold"
+          android:gravity="center_horizontal"
+          android:layout_marginBottom="12dp"
+        />
+      </LinearLayout>
+    </ScrollView>
+  </LinearLayout>
 </RelativeLayout>
 

@@ -53,7 +53,8 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
   private val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE).asInstanceOf[TelephonyManager]
   private val countryCode = telephonyManager.getSimCountryIso
   private var locale = new Locale(curLang,iso3Country)
-  // do the following, so one can have english be selected as UI-language and still see date+time in the format of the SIM-country
+
+  // do the following, so one can have english be selected as UI-language and still see date+time in the format of the SIM home-country
   if(countryCode.length>0 && countryCode!=iso3Country)
     locale = new Locale(countryCode,countryCode)
   if(D) Log.i(TAG, "curLang="+curLang+" iso3Country="+iso3Country+" countryCode="+countryCode+" locale="+locale)
