@@ -157,7 +157,7 @@ class AnyMimeActivity extends Activity {
   private var quickBarView:HorizontalScrollView = null
 
   @volatile private var blobDeliverId:Long = 0
-  private var arrayListSelectedFileStrings = new ArrayList[String]()
+  private var selectedFileStringsArrayList = new ArrayList[String]()
   private var receivedFileUriStringArrayList = new ArrayList[String]()
   private var numberOfSentFiles = 0
 
@@ -269,8 +269,8 @@ class AnyMimeActivity extends Activity {
       val bundle = new Bundle()
       bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
       // hand over .asc file from most recent delivery
-      if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
-        val iterator = arrayListSelectedFileStrings.iterator 
+      if(selectedFileStringsArrayList!=null && selectedFileStringsArrayList.size>0) {
+        val iterator = selectedFileStringsArrayList.iterator 
         while(iterator.hasNext) {
           val fileString = iterator.next
           if(fileString.endsWith(".asc")) {
@@ -290,8 +290,8 @@ class AnyMimeActivity extends Activity {
       val bundle = new Bundle()
       //bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
       // hand over .asc file from most recent delivery
-      if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
-        val iterator = arrayListSelectedFileStrings.iterator 
+      if(selectedFileStringsArrayList!=null && selectedFileStringsArrayList.size>0) {
+        val iterator = selectedFileStringsArrayList.iterator 
         while(iterator.hasNext) {
           val fileString = iterator.next
           if(fileString.endsWith(".asc")) {
@@ -687,12 +687,12 @@ class AnyMimeActivity extends Activity {
   }
 
   private def showSelectedFiles() {
-    // call ShowSelectedFilesActivity and hand over arrayListSelectedFileStrings
+    // call ShowSelectedFilesActivity and hand over selectedFileStringsArrayList
     val intent = new Intent(context, classOf[ShowSelectedFilesActivity])
     val bundle = new Bundle()
-    bundle.putStringArrayList("selectedFilesStringArrayList", arrayListSelectedFileStrings)
+    bundle.putStringArrayList("selectedFilesStringArrayList", selectedFileStringsArrayList)
     intent.putExtras(bundle)
-    if(D) Log.i(TAG, "showSelectedFiles arrayListSelectedFileStrings="+arrayListSelectedFileStrings)
+    if(D) Log.i(TAG, "showSelectedFiles selectedFileStringsArrayList="+selectedFileStringsArrayList)
     startActivityForResult(intent, REQUEST_EDIT_SELECTED_FILES) // -> onActivityResult()
   }
 
@@ -702,7 +702,7 @@ class AnyMimeActivity extends Activity {
     if(selectedSlot<0 || selectedSlot>ShowSelectedSlotActivity.MAX_SLOTS)
       selectedSlot = 0
     if(D) Log.i(TAG, "getArrayListSelectedFileStrings selectedSlot="+selectedSlot)
-      arrayListSelectedFileStrings.clear
+      selectedFileStringsArrayList.clear
     selectedSlotName = prefSettings.getString("fileSlotName"+selectedSlot, "")
 
     // read the lists of selected files
@@ -716,7 +716,7 @@ class AnyMimeActivity extends Activity {
           if(D) Log.i(TAG,"getArrayListSelectedFileStrings prefSettings selectedFilesStringArrayList size="+resultArray.size)
           for(filePathString <- resultArray) {
             if(filePathString!=null)
-              arrayListSelectedFileStrings add filePathString.trim
+              selectedFileStringsArrayList add filePathString.trim
           }
         }
       }
@@ -856,7 +856,7 @@ class AnyMimeActivity extends Activity {
                 if(D) Log.i(TAG, "handleMessage firstBtActor=true")
                 
                 // auto-delivery: send selected files (we are the 1st actor)
-                deliverFileArray(arrayListSelectedFileStrings)
+                deliverFileArray(selectedFileStringsArrayList)
               } else {
                 if(D) Log.i(TAG, "handleMessage firstBtActor=false")
                 // todo: new ReceiverIdleCheckThread().start
@@ -894,8 +894,8 @@ class AnyMimeActivity extends Activity {
             mainViewUpdate          
 
           } else {
-            if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN deliverFileArray("+arrayListSelectedFileStrings+")")
-            deliverFileArray(arrayListSelectedFileStrings)
+            if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN deliverFileArray("+selectedFileStringsArrayList+")")
+            deliverFileArray(selectedFileStringsArrayList)
           }
 
         case RFCommHelperService.MESSAGE_USERHINT1 =>
@@ -1018,8 +1018,8 @@ class AnyMimeActivity extends Activity {
           bundle.putString("opentype", "auto") // activity will auto-close after about 15s if not used
           bundle.putString("otherName", mDisconnectedDeviceName)
           // hand over .asc file from most recent delivery
-          if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
-            val iterator = arrayListSelectedFileStrings.iterator 
+          if(selectedFileStringsArrayList!=null && selectedFileStringsArrayList.size>0) {
+            val iterator = selectedFileStringsArrayList.iterator 
             while(iterator.hasNext) {
               val fileString = iterator.next
               if(fileString.endsWith(".asc")) {
@@ -1134,9 +1134,9 @@ class AnyMimeActivity extends Activity {
   }
 */
 
-  private def deliverFileArray(arrayListSelectedFileStrings:ArrayList[String]) {
+  private def deliverFileArray(selectedFileStringsArrayList:ArrayList[String]) {
     numberOfSentFiles = 0
-    if(arrayListSelectedFileStrings==null || arrayListSelectedFileStrings.size<1) {
+    if(selectedFileStringsArrayList==null || selectedFileStringsArrayList.size<1) {
       Log.e(TAG, "deliverFileArray no files to send")
       mainViewUpdate
 
@@ -1164,7 +1164,7 @@ class AnyMimeActivity extends Activity {
           try { Thread.sleep(100); } catch { case ex:Exception => }
 
           try {
-            val iterator = arrayListSelectedFileStrings.iterator 
+            val iterator = selectedFileStringsArrayList.iterator 
             while(iterator.hasNext) {
               val fileString = iterator.next
               if(fileString!=null) {
@@ -1239,7 +1239,7 @@ class AnyMimeActivity extends Activity {
     }
 
     if(userHint2View!=null) {
-      val numberOfFilesToSend = if(arrayListSelectedFileStrings==null) 0 else arrayListSelectedFileStrings.size
+      val numberOfFilesToSend = if(selectedFileStringsArrayList==null) 0 else selectedFileStringsArrayList.size
       if(numberOfFilesToSend<1)
         userHint2View.setText("No files selected for delivery")
       else if(selectedSlotName!=null && selectedSlotName.length>0)

@@ -30,16 +30,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.KeyEvent
 import android.view.Window
 import android.view.View
-import android.widget.CheckBox
 import android.widget.ArrayAdapter
-import android.widget.Toast
+//import android.widget.Toast
 import android.widget.ListView
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.webkit.MimeTypeMap
 
 class ShowReceivedFilesHistoryActivity extends ListActivity {
   private val TAG = "ShowReceivedFilesHistoryActivity"
@@ -90,31 +85,7 @@ class ShowReceivedFilesHistoryActivity extends ListActivity {
   }
 
 	override def onListItemClick(listView:ListView, view:View, position:Int, id:Long) :Unit = {
-		super.onListItemClick(listView, view, position, id);
-/*
-      // todo: implement: onClick -> open ShowReceivedFilesPopupActivity
-      // use this code:
-
-      val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
-      val bundle = new Bundle()
-      bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
-      // hand over .asc file from most recent delivery
-      if(arrayListSelectedFileStrings!=null && arrayListSelectedFileStrings.size>0) {
-        val iterator = arrayListSelectedFileStrings.iterator 
-        while(iterator.hasNext) {
-          val fileString = iterator.next
-          if(fileString.endsWith(".asc")) {
-            bundle.putString("sendKeyFile", fileString)
-            // break
-          }
-        }
-      }
-      intent.putExtras(bundle)
-      startActivity(intent)
-*/
-
-/*
-    userInteractionCount+=1
+		super.onListItemClick(listView, view, position, id)
 
 		// Get the item that was clicked
 		val obj = getListAdapter.getItem(position)
@@ -123,50 +94,42 @@ class ShowReceivedFilesHistoryActivity extends ListActivity {
 		  return
 		}
 
-    // process fileUriString
-		var fileUriString = obj.toString
-		if(fileUriString.startsWith("file:"))
-		  fileUriString = fileUriString.substring(5)
-    if(D) Log.i(TAG, "onListItemClick fileUriString="+fileUriString)
-    try {
-      val selectedUri = Uri.fromFile(new File(fileUriString))
-      if(D) Log.i(TAG, "onListItemClick fileUriString="+fileUriString+" selectedUri="+selectedUri)
-      val processFileIntent = new Intent(Intent.ACTION_VIEW)
-      val fileUriStringLower = fileUriString.toLowerCase
-      val lastIdxOfDot = fileUriStringLower.lastIndexOf(".")
-      val extension = if(lastIdxOfDot>=0) fileUriStringLower.substring(lastIdxOfDot+1) else null
-      if(extension!=null) {
-        val mimeTypeMap = MimeTypeMap.getSingleton()
-        var mimeTypeFromExtension = mimeTypeMap.getMimeTypeFromExtension(extension)
-        if(extension=="asc") mimeTypeFromExtension="application/pgp"
-        if(D) Log.i(TAG, "onListItemClick extension="+extension+" mimeType="+mimeTypeFromExtension)
-        processFileIntent.setDataAndType(selectedUri,mimeTypeFromExtension)
+		val historyEntryString = obj.toString
+    if(D) Log.i(TAG, "onListItemClick historyEntryString="+historyEntryString)
 
-      } else {
-        if(D) Log.i(TAG, "onListItemClick extension=null mimeType=* / *")
-        processFileIntent.setDataAndType(selectedUri,"* / *")
-      }
+    // process historyEntryString = date,btname,kbs,listOfFiles...
+    val resultArray = historyEntryString split ","
+    val date = resultArray(0)
+    val name = resultArray(1)
+    val kbs = resultArray(2)
 
-      val bundle = new Bundle()
+/*    
+    val idxFirstComma  = historyEntryString.indexOf(",")
+    val idxSecondComma = historyEntryString.substring(idxFirstComma+1).indexOf(",")
+    val idxThirdComma  = historyEntryString.substring(idxFirstComma+1+idxSecondComma+1).indexOf(",")
+    val date = 
+		val listOfFilesString = historyEntryString.substring(idxFirstComma+1+idxSecondComma+1+idxThirdComma+1)
+    if(D) Log.i(TAG, "onListItemClick listOfFilesString="+listOfFilesString)
 
-      // hint the name of the bt device, may for example be used as the default filename when uploading a pgp file
-      bundle.putString("anymimeOtherName", otherName)
-
-      // hand over .asc file from most recent delivery
-      if(sendKeyFilePath!=null)
-        bundle.putString("sendKeyFile", sendKeyFilePath)
-
-      processFileIntent.putExtras(bundle)
-      if(D) Log.i(TAG, "onListItemClick startActivity processFileIntent="+processFileIntent)
-      startActivity(Intent.createChooser(processFileIntent,"Apply action..."))
-
-    } catch {
-      case ex:Exception =>
-        Log.e(TAG, "onListItemClick startActivity fileUriString="+fileUriString,ex)
-        val errMsg = ex.getMessage
-        Toast.makeText(this, errMsg, Toast.LENGTH_LONG).show
-    }
+    // convert comma-separated listOfFilesString into ArrayList
+    val resultArray = listOfFilesString split ","
 */
+    resultArray drop 3
+    val fileStringsArrayList = new ArrayList[String]()
+    if(resultArray!=null) {
+      for(filePathString <- resultArray)
+        if(filePathString!=null)
+          fileStringsArrayList add filePathString.trim
+    }
+
+    val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
+    val bundle = new Bundle()
+    bundle.putString("date", date)
+    bundle.putString("name", name)
+    bundle.putStringArrayList("listOfUriStrings", fileStringsArrayList)
+    bundle.putString("sendKeyFile", sendKeyFilePath)
+    intent.putExtras(bundle)
+    startActivity(intent)
 	}
 }
 
