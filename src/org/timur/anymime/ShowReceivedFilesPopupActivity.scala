@@ -96,6 +96,12 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
 
     sendKeyFilePath = bundle.getString("sendKeyFile")
 
+    otherName = bundle.getString("otherName")   // from AnyMimeActivity when the files were just received
+    if(otherName==null) {
+      otherName = bundle.getString("name")      // from ShowReceivedFilesHistoryActivity
+      // we could also read: date + kbs
+    }
+
     val opentype = bundle.getString("opentype")
     if(opentype!=null && opentype=="auto") {
       // auto close activity after 10 seconds timeout
@@ -106,8 +112,6 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
             finish
         }
       }.start                        
-
-      otherName = bundle.getString("otherName")
     }
   }
 
