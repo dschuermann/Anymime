@@ -19,8 +19,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.timur.anymime"
-    android:versionCode="5"
-    android:versionName="0.88 - $buildtime">
+    android:versionCode="6"
+    android:versionName="0.91 - $buildtime">
 
   <application android:icon="@drawable/app_icon"
                android:label="@string/app_name"
@@ -64,7 +64,7 @@
               android:label="Files selected for delivery"
               android:configChanges="orientation|keyboardHidden" />
 
-
+<!--
     <activity android:name=".UploadPgpFilesPopupActivity"
               android:label="Upload PGP key"
               android:theme="@android:style/Theme.Dialog"
@@ -76,6 +76,19 @@
         <data android:mimeType="application/pgp"/>
       </intent-filter>
     </activity>
+
+    <activity android:name=".ShowPgpFingerprintActivity"
+              android:label="Show Fingerprint"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:mimeType="application/pgp"/>
+      </intent-filter>
+    </activity>
+-->
 
 <!-- not yet implemented -->
 <!--
@@ -105,18 +118,6 @@
       </intent-filter>
     </activity>
 
-    <activity android:name=".ShowPgpFingerprintActivity"
-              android:label="Show Fingerprint"
-              android:theme="@android:style/Theme.Dialog"
-              android:configChanges="orientation|keyboardHidden">
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-        <data android:mimeType="application/pgp"/>
-      </intent-filter>
-    </activity>
-
 
     <activity android:name=".FileDialog"
               android:label="File select"
@@ -142,13 +143,15 @@
 
   <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11" />
 
-  <uses-permission android:name="android.permission.VIBRATE"/>
+  <!--uses-permission android:name="android.permission.VIBRATE"/-->
   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
   <uses-permission android:name="android.permission.BLUETOOTH" />
   <uses-permission android:name="android.permission.NFC" />
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
 
   <!-- for scp upload only -->
+<!--
   <uses-permission android:name="android.permission.INTERNET" />
+-->
 </manifest>
 

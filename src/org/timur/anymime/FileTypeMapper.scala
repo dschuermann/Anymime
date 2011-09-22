@@ -29,9 +29,6 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.Drawable
 
-import com.jcraft.jsch.JSch
-import com.jcraft.jsch.ChannelSftp
-
 object FileTypeMapper {
   private val TAG = "FileTypeMapper"
   private val D = true
