@@ -396,8 +396,10 @@ class AnyMimeActivity extends Activity {
         // possible, as a result of NfcAdapter.ACTION_NDEF_DISCOVERED
         val remoteBtAddress = NfcHelper.checkForNdefAction(context, intent, btService, mBluetoothAdapter)
         if(remoteBtAddress!=null) {
-          btService.acceptAndConnect=true
           if(D) Log.i(TAG, "onNewIntent NfcHelper found remoteBtAddress="+remoteBtAddress+" acceptAndConnect="+btService.acceptAndConnect)
+
+          // we must set this flag to true, because the nfcservice has put our activity temprarily to onSleep
+          btService.acceptAndConnect=true
 
           // play audio notification (as earliest possible feedback for nfc activity)
           val mediaPlayer = MediaPlayer.create(context, R.raw.textboxbloop8bit) // non-alert
@@ -415,23 +417,27 @@ class AnyMimeActivity extends Activity {
             if(mBluetoothAdapter.getAddress > remoteBluetoothDevice.getAddress) {
               // our local btAddr is > than the remote btAddr: we become the actor and we will bt-connect
               // our activity may still be in onPause mode due to NFC activity: sleep a bit before 
+/*
               new Thread() {
                 override def run() {
                   try { Thread.sleep(100); } catch { case ex:Exception => }
-                  if(D) Log.i(TAG, "onNewIntent runOnUiThread connecting...")
+*/
+                  if(D) Log.i(TAG, "onNewIntent NdefAction connecting...")
                   val secure=true
                   btService.connect(remoteBluetoothDevice, secure)
+/*
                 }
               }.start                        
-
+*/
             } else {
               // our local btAddr is < than the remote btAddr: we just wait for a bt-connect request
               if(D) Log.i(TAG, "onNewIntent passively waiting for incoming connect request...")
-
+/*
               // our activity may still be in onPause mode due to NFC activity: sleep a bit before 
               new Thread() {
                 override def run() {
                   try { Thread.sleep(100); } catch { case ex:Exception => }
+*/
                   if(D) Log.i(TAG, "onNewIntent runOnUiThread update user...")
                   context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
                     override def run() {
@@ -446,10 +452,11 @@ class AnyMimeActivity extends Activity {
                         simpleProgressBarView.setVisibility(View.VISIBLE)
                     }
                   })
-                  
+/*
                   // todo: what if no connection can be ever established? we will have 'waiting for ...' displayed forever
                 }
               }.start                        
+*/
             }
           }
         }
