@@ -64,47 +64,6 @@
               android:label="Files selected for delivery"
               android:configChanges="orientation|keyboardHidden" />
 
-<!--
-    <activity android:name=".UploadPgpFilesPopupActivity"
-              android:label="Upload PGP key"
-              android:theme="@android:style/Theme.Dialog"
-              android:configChanges="orientation|keyboardHidden">
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-        <data android:mimeType="application/pgp"/>
-      </intent-filter>
-    </activity>
-
-    <activity android:name=".ShowPgpFingerprintActivity"
-              android:label="Show Fingerprint"
-              android:theme="@android:style/Theme.Dialog"
-              android:configChanges="orientation|keyboardHidden">
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-        <data android:mimeType="application/pgp"/>
-      </intent-filter>
-    </activity>
--->
-
-<!-- not yet implemented -->
-<!--
-    <activity android:name=".PgpKeySigningPopupActivity"
-              android:label="Sign PGP key"
-              android:theme="@android:style/Theme.Dialog"
-              android:configChanges="orientation|keyboardHidden">
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-        <data android:mimeType="application/pgp"/>
-      </intent-filter>
-    </activity>
--->
-
     <activity android:name=".DisplayTextFileActivity"
               android:label="Display text file"
               android:theme="@android:style/Theme.Dialog"
