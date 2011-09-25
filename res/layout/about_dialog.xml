@@ -109,7 +109,7 @@
         android:layout_marginBottom="2dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="3rd party components being used: Google Protobuf, JCraft JSch + JZLib, Teambox file icons"
+        android:text="3rd party components being used: Google Protobuf, Teambox file icons"
       />
 
       <Button
