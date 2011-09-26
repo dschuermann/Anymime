@@ -113,7 +113,10 @@ class RFCommHelperService extends android.app.Service {
   @volatile private var activeConnectedThread:ConnectedThread = null
   private var blobTaskId = 0
   private var receivedFileFolderString:String = null
-  private var bytesWritten=0
+
+  // todo: naming of these variables not fully correct
+  private var bytesWritten = 0
+  private var totalSend = 0
 
   class LocalBinder extends android.os.Binder {
     def getService = RFCommHelperService.this
@@ -286,7 +289,7 @@ class RFCommHelperService extends android.app.Service {
       }
   }
 
-  def processIncomingBlob(btMessage:BtShare.Message, fromAddr:String, downloadPath:String, bluetoothDevice:BluetoothDevice)(readCodedInputStream:() => Array[Byte]) {
+  def processIncomingBlob(btMessage:BtShare.Message, fromAddr:String, downloadPath:String, remoteDevice:BluetoothDevice)(readCodedInputStream:() => Array[Byte]) {
     val mime = btMessage.getArg1
     var originalFilename = btMessage.getArg2
     originalFilename = originalFilename.replaceAll(" ","_")
@@ -319,17 +322,16 @@ class RFCommHelperService extends android.app.Service {
 
       // receive loop
       var bytesRead=0
-      //var bytesWritten=0
       var fileWritten=0
       if(activityMsgHandler!=null) {
-        activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Download").sendToTarget
+        activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Download from "+remoteDevice.getName).sendToTarget
         activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT2, -1, -1, originalFilename).sendToTarget
 
         val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_DELIVER_PROGRESS)
         val bundle = new Bundle
         //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
         bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 0)
-        bundle.putLong(RFCommHelperService.DELIVER_BYTES, 0)
+        //bundle.putLong(RFCommHelperService.DELIVER_BYTES, 0)
         bundle.putString(RFCommHelperService.DELIVER_TYPE, "receive")
         msg.setData(bundle)
         activityMsgHandler.sendMessage(msg)
@@ -354,7 +356,7 @@ class RFCommHelperService extends android.app.Service {
             val bundle = new Bundle
             //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
             bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 100)
-            bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten)
+            bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
             bundle.putString(RFCommHelperService.DELIVER_TYPE, "receive")
             msg.setData(bundle)
             activityMsgHandler.sendMessage(msg)
@@ -367,7 +369,7 @@ class RFCommHelperService extends android.app.Service {
             //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
             val divider = if(contentLength>=100) contentLength/100 else 1
             bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, (fileWritten/divider).asInstanceOf[Int])
-            bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten)
+            bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
             bundle.putString(RFCommHelperService.DELIVER_TYPE, "receive")
             msg.setData(bundle)
             activityMsgHandler.sendMessage(msg)
@@ -972,12 +974,13 @@ class RFCommHelperService extends android.app.Service {
   class ConnectedSendThread(sendQueue:scala.collection.mutable.Queue[Any], var codedOutputStream:CodedOutputStream, socket:BluetoothSocket) extends Thread {
     //if(D) Log.i(TAG, "ConnectedSendThread start")
     var running = false
-    var totalSend = 0
     var blobId:Long = 0
     var contentLength:Long = 0
     var progressLastStep:Long = 0
     val activityManager = if(context!=null) context.getSystemService(Context.ACTIVITY_SERVICE).asInstanceOf[ActivityManager] else null
     val memoryInfo = new ActivityManager.MemoryInfo
+
+    totalSend = 0
 
     def meminfo() {
       if(D) Log.i(TAG, "ConnectedSendThread meminfo: codedOutputStream="+codedOutputStream)
@@ -1028,7 +1031,7 @@ class RFCommHelperService extends android.app.Service {
                 val bundle = new Bundle
                 //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
                 bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 100)
-                bundle.putLong(RFCommHelperService.DELIVER_BYTES, totalSend)
+                bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
                 bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
                 if(D) Log.i(TAG, "ConnectedSendThread run totalSend="+totalSend+" done ######################")
                 msg.setData(bundle)
@@ -1041,7 +1044,7 @@ class RFCommHelperService extends android.app.Service {
                 //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
                 if(contentLength/100>=1)
                   bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, (fileSend/(contentLength/100)).asInstanceOf[Int] )
-                bundle.putLong(RFCommHelperService.DELIVER_BYTES, totalSend)
+                bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
                 bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
                 if(D) Log.i(TAG, "ConnectedSendThread run totalSend="+totalSend+" ######################")
                 msg.setData(bundle)
