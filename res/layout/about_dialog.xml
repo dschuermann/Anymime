@@ -85,7 +85,7 @@
         android:layout_marginBottom="2dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="This application has been open sourced under GPL3"
+        android:text="This application has been open sourced under GPL"
       />
 
       <TextView
