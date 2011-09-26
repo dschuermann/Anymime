@@ -116,9 +116,10 @@ class AnyMimeActivity extends Activity {
   private val blobDeliverChunkSize = 10*1024
   private val DIALOG_ABOUT = 2
 
-  private val REQUEST_ENABLE_BT = 3
-  private val REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO = 5
-  private val REQUEST_EDIT_SELECTED_FILES = 6
+  private val REQUEST_ENABLE_BT = 1
+  private val REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO = 2
+  private val REQUEST_READ_CURRENT_SLOT = 3
+  private val REQUEST_READ_SELECTED_SLOT_ADD_FILE = 4
 
   private val mimeTypeMap = MimeTypeMap.getSingleton()
 
@@ -178,6 +179,21 @@ class AnyMimeActivity extends Activity {
     requestWindowFeature(Window.FEATURE_NO_TITLE);
     setContentView(R.layout.main)
     //setContentView(new BGView(this))    // renderscript
+
+/*
+          var filePathNameString:String = null
+          val intent = getIntent
+          if(intent!=null) {
+            val fileUri = intent.getData
+            if(fileUri!=null) {
+              filePathNameString = fileUri.getPath
+              if(filePathNameString!=null && filePathNameString.length>0) {
+                val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
+                startActivityForResult(intent, REQUEST_READ_SELECTED_SLOT_ADD_FILE) // -> onActivityResult()
+              }
+            }
+          }
+*/
 
     audioConfirmSound = MediaPlayer.create(context, R.raw.textboxbloop8bit)
 
@@ -287,9 +303,9 @@ class AnyMimeActivity extends Activity {
     }
 
     AndrTools.buttonCallback(this, R.id.main) { () =>
-      if(D) Log.i(TAG, "onClick applogoView")
+      if(D) Log.i(TAG, "onClick mainView")
       val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
-      startActivityForResult(intent, REQUEST_EDIT_SELECTED_FILES) // -> onActivityResult()
+      startActivityForResult(intent, REQUEST_READ_CURRENT_SLOT) // -> onActivityResult()
     }
 
     AndrTools.buttonCallback(this, progressBarView) { () =>
@@ -521,9 +537,16 @@ class AnyMimeActivity extends Activity {
           }
         }
 
-      case REQUEST_EDIT_SELECTED_FILES =>
+      case REQUEST_READ_CURRENT_SLOT =>
         getArrayListSelectedFileStrings
         mainViewUpdate
+
+      case REQUEST_READ_SELECTED_SLOT_ADD_FILE =>
+        getArrayListSelectedFileStrings
+        mainViewUpdate
+        // todo: add file to current list
+        showSelectedFiles
+        // tmtmtm
     }
   }
 
@@ -647,7 +670,7 @@ class AnyMimeActivity extends Activity {
     bundle.putStringArrayList("selectedFilesStringArrayList", selectedFileStringsArrayList)
     intent.putExtras(bundle)
     if(D) Log.i(TAG, "showSelectedFiles selectedFileStringsArrayList="+selectedFileStringsArrayList)
-    startActivityForResult(intent, REQUEST_EDIT_SELECTED_FILES) // -> onActivityResult()
+    startActivityForResult(intent, REQUEST_READ_CURRENT_SLOT) // -> onActivityResult()
   }
 
   private def getArrayListSelectedFileStrings() {

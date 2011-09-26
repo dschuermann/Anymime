@@ -102,8 +102,6 @@ class ShowSelectedFilesActivity extends Activity {
       // todo: send a toast "no files yet selected" 
     }
 
-    // todo: alle nicht (mehr) vorhandenen/auffindbaren files mit "not found" kennzeichnen
-    
     listView = findViewById(R.id.selectedFilesList).asInstanceOf[ListView]
     if(listView==null) {
       // todo: raus
