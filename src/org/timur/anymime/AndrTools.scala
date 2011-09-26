@@ -29,18 +29,30 @@ object AndrTools {
   private val TAG = "AndrTools"
   private val D = true
 
-  def buttonCallback(activity:Activity, resId:Int)(buttonAction:() => Unit) { 
+  def buttonCallback(activity:Activity, resId:Int)(buttonAction:() => Unit) {
     val button = activity.findViewById(resId)
     buttonCallback(activity:Activity, button)(buttonAction)
   }
 
-  def buttonCallback(activity:Activity, button:View)(buttonAction:() => Unit) { 
+  def buttonCallback(activity:Activity, button:View)(buttonAction:() => Unit) {
     if(D) Log.i(TAG, "buttonCallback button="+button)
     if(button!=null) {
       button.setOnClickListener(new View.OnClickListener() {
         override def onClick(view:View) { 
           if(D) Log.i(TAG, "buttonCallback call buttonAction")
           buttonAction()
+        }
+      })
+    }
+  }
+
+
+  def runOnUiThread(context:Context)(action:() => Unit) {
+    //if(D) Log.i(TAG, "runOnUiThread context="+context)
+    if(context!=null) {
+      context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
+        override def run() {
+          action()
         }
       })
     }

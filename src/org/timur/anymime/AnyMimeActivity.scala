@@ -327,7 +327,7 @@ class AnyMimeActivity extends Activity {
       // we got no NFC, do not offer it
     }
 
-    mainViewUpdate
+    //mainViewUpdate
     activityResumed = true
     if(btService!=null) {
       btService.acceptAndConnect = true
@@ -361,8 +361,13 @@ class AnyMimeActivity extends Activity {
 
   override def onDestroy() {
     if(D) Log.i(TAG, "onDestroy")
-    if(btService!=null)
+    if(btService!=null) {
+      btService.stopActiveConnection
+      btService.stopAcceptThread
       btService.context = null
+    } else {
+      Log.e(TAG, "handleMessage MESSAGE_YOURTURN btService=null cannot call stopActiveConnection")
+    }
     if(serviceConnection!=null) {
       unbindService(serviceConnection)
       // note: our service will exit here, since we DID NOT use startService in front of bindService
@@ -390,7 +395,7 @@ class AnyMimeActivity extends Activity {
   }
 
   override def onNewIntent(intent: Intent) {
-    if(D) Log.i(TAG, "onNewIntent Discovered tag with intent: " + intent)
+    //if(D) Log.i(TAG, "onNewIntent Discovered tag with intent: " + intent)
     if(android.os.Build.VERSION.SDK_INT>=10) {
       if(mNfcAdapter!=null && mNfcAdapter.isEnabled) {
         // possible, as a result of NfcAdapter.ACTION_NDEF_DISCOVERED
@@ -417,46 +422,29 @@ class AnyMimeActivity extends Activity {
             if(mBluetoothAdapter.getAddress > remoteBluetoothDevice.getAddress) {
               // our local btAddr is > than the remote btAddr: we become the actor and we will bt-connect
               // our activity may still be in onPause mode due to NFC activity: sleep a bit before 
-/*
-              new Thread() {
-                override def run() {
-                  try { Thread.sleep(100); } catch { case ex:Exception => }
-*/
-                  if(D) Log.i(TAG, "onNewIntent NdefAction connecting...")
-                  val secure=true
-                  btService.connect(remoteBluetoothDevice, secure)
-/*
-                }
-              }.start                        
-*/
+              if(D) Log.i(TAG, "onNewIntent NdefAction connecting...")
+              val secure=true
+              btService.connect(remoteBluetoothDevice, secure)
+
             } else {
               // our local btAddr is < than the remote btAddr: we just wait for a bt-connect request
-              if(D) Log.i(TAG, "onNewIntent passively waiting for incoming connect request...")
-/*
-              // our activity may still be in onPause mode due to NFC activity: sleep a bit before 
-              new Thread() {
-                override def run() {
-                  try { Thread.sleep(100); } catch { case ex:Exception => }
-*/
-                  if(D) Log.i(TAG, "onNewIntent runOnUiThread update user...")
-                  context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
-                    override def run() {
-                      if(userHint1View!=null)
-                        userHint1View.setText("waiting for "+remoteBluetoothDevice.getName+" "+remoteBluetoothDevice.getAddress)
-                      // show a little round progress bar
-                      if(userHint2View!=null)
-                        userHint2View.setVisibility(View.GONE)
-                      if(userHint3View!=null)
-                        userHint3View.setVisibility(View.GONE)
-                      if(simpleProgressBarView!=null)
-                        simpleProgressBarView.setVisibility(View.VISIBLE)
-                    }
-                  })
-/*
-                  // todo: what if no connection can be ever established? we will have 'waiting for ...' displayed forever
-                }
-              }.start                        
-*/
+              if(D) Log.i(TAG, "onNewIntent passively waiting for incoming connect request... mSecureAcceptThread="+btService.mSecureAcceptThread)
+
+              //if(D) Log.i(TAG, "onNewIntent runOnUiThread update user... context="+context)
+              AndrTools.runOnUiThread(context) { () =>
+                if(radioLogoView!=null)
+                  radioLogoView.setImageResource(R.drawable.bluetooth)
+                if(userHint1View!=null)
+                  userHint1View.setText("waiting for "+remoteBluetoothDevice.getName+" "+remoteBluetoothDevice.getAddress)
+                // show a little round progress bar
+                if(userHint2View!=null)
+                  userHint2View.setVisibility(View.GONE)
+                if(userHint3View!=null)
+                  userHint3View.setVisibility(View.GONE)
+                if(simpleProgressBarView!=null)
+                  simpleProgressBarView.setVisibility(View.VISIBLE)
+              }
+
             }
           }
         }
@@ -611,7 +599,7 @@ class AnyMimeActivity extends Activity {
           case DialogInterface.BUTTON_POSITIVE =>
             // disconnect the active transmission
             if(btService!=null)
-              btService.stopActiveConnection()
+              btService.stopActiveConnection
           case DialogInterface.BUTTON_NEGATIVE =>
             // do nothing, continue the transission
         }
@@ -763,7 +751,7 @@ class AnyMimeActivity extends Activity {
             btService.start(acceptOnlySecureConnectRequests)
           }
 
-          mainViewUpdate          
+          mainViewUpdate    // todo: ???
         }
       } 
 
@@ -852,14 +840,18 @@ class AnyMimeActivity extends Activity {
           if(firstBtActor) {
             if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN firstBtActor CAN BT DISCONNECT")
             if(btService==null) {
-              Log.e(TAG, "handleMessage MESSAGE_YOURTURN btService=null cannot call stopActiveConnection()")
-            }
-            else {
-              btService.stopActiveConnection()
+              Log.e(TAG, "handleMessage MESSAGE_YOURTURN btService=null cannot call stopActiveConnection")
+            } else {
+              btService.stopActiveConnection
             }
             mainViewUpdate          
 
           } else {
+            // on start, we received files from the other side
+            // todo: if the activity does not run in the foreground now, switching to sending files may NOT work
+            //       because we may never receive MESSAGE_YOURTURN
+            //       solution: we got to move the whole deliverFileArray + deliverFile + deliver code into the service
+
             if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN deliverFileArray("+selectedFileStringsArrayList+")")
             deliverFileArray(selectedFileStringsArrayList)
           }
@@ -867,6 +859,7 @@ class AnyMimeActivity extends Activity {
         case RFCommHelperService.MESSAGE_USERHINT1 =>
           def writeMessage = msg.obj.asInstanceOf[String]
           if(userHint1View!=null && writeMessage!=null) {
+            if(D) Log.i(TAG, "MESSAGE_USERHINT1 userHint1View.setText")
             userHint1View.setText(writeMessage)
           }
 
@@ -883,8 +876,10 @@ class AnyMimeActivity extends Activity {
           if(D) Log.i(TAG, "handleMessage CONNECTION_START: "+mConnectingDeviceName+" addr="+mConnectingDeviceAddr)
           if(radioLogoView!=null)
             radioLogoView.setImageResource(R.drawable.bluetooth)
-          if(userHint1View!=null)
+          if(userHint1View!=null) {
+            if(D) Log.i(TAG, "CONNECTION_START userHint1View.setText")
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
+          }
           // show a little round progress bar
           if(userHint2View!=null)
             userHint2View.setVisibility(View.GONE)
@@ -1043,11 +1038,10 @@ class AnyMimeActivity extends Activity {
     } catch { case ex:Exception =>
       Log.e(TAG, "deliver ",ex)
       val errMsg = "deliver "+ex.getMessage
-      context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
-        override def run() { 
-          Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
-        }
-      })
+
+      AndrTools.runOnUiThread(context) { () =>
+        Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
+      }
       return -2
     }
   }
@@ -1073,15 +1067,11 @@ class AnyMimeActivity extends Activity {
             Log.e(TAG, "deliverFile file.getCanonicalPath()="+file.getCanonicalPath()+" FileNotFoundException "+fnfex)
             val errMsg = "File not found "+file.getCanonicalPath()
 
-            context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
-              override def run() { 
-	              if(radioLogoView!=null)
-                	radioLogoView.setAnimation(null)
-                if(userHint2View!=null) {
-                  userHint2View.setText(errMsg)
-                }
-              }
-            })
+            AndrTools.runOnUiThread(context) { () =>
+              if(radioLogoView!=null)
+              	radioLogoView.setAnimation(null)
+              Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
+            }
         }
       }
     }
@@ -1118,17 +1108,16 @@ class AnyMimeActivity extends Activity {
     } else {
       new Thread() {
         override def run() {
-          context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
-            override def run() {
-              // todo: don't animate the radio log, but maybe some tx/tx-LED
-              //if(radioLogoView!=null && fastAnimation!=null)
-              //	radioLogoView.setAnimation(fastAnimation)
-              if(userHint1View!=null) {
-                userHint1View.setText("Upload")
-                userHint1View.postInvalidate()
-              }
+          AndrTools.runOnUiThread(context) { () =>
+            // don't animate the radio log, but todo: maybe animate some tx/tx-LED
+            //if(radioLogoView!=null && fastAnimation!=null)
+            //	radioLogoView.setAnimation(fastAnimation)
+            if(userHint1View!=null) {
+              if(D) Log.i(TAG, "deliverFileArray userHint1View.setText")
+              userHint1View.setText("Upload")
+              //userHint1View.postInvalidate()
             }
-          })
+          }
           try { Thread.sleep(100); } catch { case ex:Exception => }
 
           try {
@@ -1160,7 +1149,7 @@ class AnyMimeActivity extends Activity {
           // send special token to indicate the other side is becoming the actor
           if(D) Log.i(TAG, "handleMessage MESSAGE_STATE_CHANGE: sending 'yourturn'")
           btService.send("yourturn")
-          // note: we expect the other party to start sending files immediately now (and after that to call stopActiveConnection())
+          // note: we expect the other party to start sending files immediately now (and after that to call stopActiveConnection)
           // todo: for the case that nothing happens, we need to disconnect the bt-connection ourselfs
           // solution:
           // 1. capture the current number of received bytes from the service
@@ -1207,6 +1196,7 @@ class AnyMimeActivity extends Activity {
       val sdAvailSize = statFs.getAvailableBlocks().asInstanceOf[Long] * statFs.getBlockSize().asInstanceOf[Long]
       val str = Formatter.formatFileSize(this, sdAvailSize)
       userHint1View.setText(str+" free media to receive files")
+      //userHint1View.postInvalidate()
     }
 
     if(userHint2View!=null) {
@@ -1218,6 +1208,7 @@ class AnyMimeActivity extends Activity {
       else
         userHint2View.setText("Ready to send "+numberOfFilesToSend+" files from slot "+(selectedSlot+1))
       userHint2View.setVisibility(View.VISIBLE)
+      //userHint2View.postInvalidate()
     }
 
     if(userHint3View!=null) {
@@ -1232,6 +1223,7 @@ class AnyMimeActivity extends Activity {
         userHint3View.setText("NFC disabled - manual connect required")
       }
       userHint3View.setVisibility(View.VISIBLE)
+      //userHint3View.postInvalidate()
     }
     if(simpleProgressBarView!=null)
       simpleProgressBarView.setVisibility(View.GONE)
@@ -1251,8 +1243,10 @@ class AnyMimeActivity extends Activity {
     if(mainView!=null)
       mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
 
-    if(userHint1View!=null)
+    if(userHint1View!=null) {
+      if(D) Log.i(TAG, "mainViewBluetooth userHint1View.setText clr")
       userHint1View.setText("")
+    }
 
     if(userHint2View!=null) {
       userHint2View.setText("")

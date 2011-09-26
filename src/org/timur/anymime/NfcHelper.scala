@@ -30,7 +30,6 @@ import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.media.MediaPlayer
 
 import java.nio.charset.Charset
 import java.util.Locale
@@ -56,7 +55,7 @@ object NfcHelper {
 
   // as a result of NfcAdapter.ACTION_NDEF_DISCOVERED
   def checkForNdefAction(context:Context, intent:Intent, btService:RFCommHelperService, mBluetoothAdapter:BluetoothAdapter) :String = {
-    if(D) Log.i(TAG, "checkForNdefAction intent="+intent)
+    //if(D) Log.i(TAG, "checkForNdefAction intent="+intent)
 
     if(intent==null || intent.getAction!=NfcAdapter.ACTION_NDEF_DISCOVERED) {
       if(D) Log.i(TAG, "checkForNdefAction intent.getAction!=ACTION_NDEF_DISCOVERED -> ABORT")

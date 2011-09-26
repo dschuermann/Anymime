@@ -99,7 +99,7 @@ class RFCommHelperService extends android.app.Service {
 
   private val NAME_SECURE = "AnyMime"
   private val MY_UUID_SECURE   = UUID.fromString("fa87c0d0-afac-11de-9991-0800200c9a66")
-  @volatile private var mSecureAcceptThread:AcceptThread = null
+  @volatile /*private*/ var mSecureAcceptThread:AcceptThread = null
 
   //private val NAME_INSECURE = "AnyMimeInsecure"
   //private val MY_UUID_INSECURE = UUID.fromString("8ce255c0-200a-11e0-9992-0800200c9a66")
@@ -211,9 +211,17 @@ class RFCommHelperService extends android.app.Service {
       activeConnectedThread.cancel
       activeConnectedThread = null
     }
-
+    
     System.gc
     setState(RFCommHelperService.STATE_LISTEN)   // will send MESSAGE_STATE_CHANGE to activity
+  }
+
+  def stopAcceptThread() = synchronized {
+    if(D) Log.i(TAG, "stopAcceptThread mSecureAcceptThread="+mSecureAcceptThread)
+    if(mSecureAcceptThread != null) {
+      mSecureAcceptThread.cancel
+      mSecureAcceptThread = null
+    }
   }
 
   def send(cmd:String, message:String=null, toAddr:String=null) = synchronized {
@@ -500,7 +508,7 @@ class RFCommHelperService extends android.app.Service {
     System.gc    
   }
 
-  private class AcceptThread(secure:Boolean=true) extends Thread {
+  /*private*/ class AcceptThread(secure:Boolean=true) extends Thread {
     if(D) Log.i(TAG, "AcceptThread")
     private var mSocketType: String = /*if(secure)*/ "Secure" /*else "Insecure"*/
     private var mmServerSocket: BluetoothServerSocket = null
@@ -552,24 +560,36 @@ class RFCommHelperService extends android.app.Service {
 
         if(socket != null) {
           // a bt connection is technically possible and can be accepted
-/* */
           // note: this is where we can decide to acceptAndConnect - or not
           // todo: acceptAndConnect can be false here, while it is set to true in the activity (CRAZY!)
           if(!acceptAndConnect) {
-            if(D) Log.i(TAG, "AcceptThread - denying incoming connect request, acceptAndConnect="+acceptAndConnect)
+            if(D) Log.i(TAG, "AcceptThread - denying incoming connect request, acceptAndConnect="+acceptAndConnect+" context="+context)
             // hangup
             socket.close
 
-            if(context!=null)
+            if(context!=null) {
               context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
                 override def run() { 
                   // we want to show our appname, this toast will appear if Anymime is running in background
                   Toast.makeText(context, "Bluetooth connect request is being denied. "+
-                                          "Run Anymime in the foreground to accept connections.", Toast.LENGTH_LONG).show
+                                          "Run Anymime main screen in foreground to accept connections.", Toast.LENGTH_LONG).show
                 }
               })
+            } else {
+              // ...
+            }
+
+            try { Thread.sleep(100); } catch { case ex:Exception => }
+            if(D) Log.i(TAG, "AcceptThread - after denying +100 ms acceptAndConnect="+acceptAndConnect)
+            try { Thread.sleep(100); } catch { case ex:Exception => }
+            if(D) Log.i(TAG, "AcceptThread - after denying +200 ms acceptAndConnect="+acceptAndConnect)
+            try { Thread.sleep(300); } catch { case ex:Exception => }
+            if(D) Log.i(TAG, "AcceptThread - after denying +500 ms acceptAndConnect="+acceptAndConnect)
+            try { Thread.sleep(300); } catch { case ex:Exception => }
+            if(D) Log.i(TAG, "AcceptThread - after denying +800 ms acceptAndConnect="+acceptAndConnect)
+
+
           } else 
-/* */
           {
             // activity is not paused
             RFCommHelperService.this synchronized {
