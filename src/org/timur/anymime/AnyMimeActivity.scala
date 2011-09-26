@@ -129,6 +129,7 @@ class AnyMimeActivity extends Activity {
   private var btService:RFCommHelperService = null
   private var mBtAdapter:BluetoothAdapter = null
   private var mConnectedDeviceAddr:String = null
+  private var mConnectedDeviceName:String = null
   private var firstBtActor = false
   private var mNfcAdapter:NfcAdapter = null
   private var nfcActionWanted = false
@@ -159,6 +160,7 @@ class AnyMimeActivity extends Activity {
 
   @volatile private var blobDeliverId:Long = 0
   private var selectedFileStringsArrayList = new ArrayList[String]()
+  private var addFilePathNameString:String = null
   private var receivedFileUriStringArrayList = new ArrayList[String]()
   private var numberOfSentFiles = 0
 
@@ -176,24 +178,9 @@ class AnyMimeActivity extends Activity {
     val packageInfo = getPackageManager.getPackageInfo(getPackageName, 0)
     if(D) Log.i(TAG, "onCreate versionName="+packageInfo.versionName)
     context = this
-    requestWindowFeature(Window.FEATURE_NO_TITLE);
+    requestWindowFeature(Window.FEATURE_NO_TITLE)
     setContentView(R.layout.main)
     //setContentView(new BGView(this))    // renderscript
-
-/*
-          var filePathNameString:String = null
-          val intent = getIntent
-          if(intent!=null) {
-            val fileUri = intent.getData
-            if(fileUri!=null) {
-              filePathNameString = fileUri.getPath
-              if(filePathNameString!=null && filePathNameString.length>0) {
-                val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
-                startActivityForResult(intent, REQUEST_READ_SELECTED_SLOT_ADD_FILE) // -> onActivityResult()
-              }
-            }
-          }
-*/
 
     audioConfirmSound = MediaPlayer.create(context, R.raw.textboxbloop8bit)
 
@@ -315,6 +302,21 @@ class AnyMimeActivity extends Activity {
 
     checkLayout
 	  mainViewUpdate
+
+    // have we been started with a file being handed over (say from OI File Manager?)
+    val intent = getIntent
+    if(intent!=null) {
+      val fileUri = intent.getData
+      if(fileUri!=null && fileUri.getPath!=null) {
+        addFilePathNameString = fileUri.getPath.trim
+        if(addFilePathNameString!=null && addFilePathNameString.length>0) {
+          if(D) Log.i(TAG, "onCreate adding file from intent.getData.getPath="+addFilePathNameString)
+          // yes, we have been started with a file being handed over - user must select the slot where this new file should be added
+          val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
+          startActivityForResult(intent, REQUEST_READ_SELECTED_SLOT_ADD_FILE) // -> onActivityResult()
+        }
+      }
+    }
   }
 
   override def onStart() {
@@ -343,7 +345,6 @@ class AnyMimeActivity extends Activity {
       // we got no NFC, do not offer it
     }
 
-    //mainViewUpdate
     activityResumed = true
     if(btService!=null) {
       btService.acceptAndConnect = true
@@ -395,6 +396,7 @@ class AnyMimeActivity extends Activity {
 
   private def checkLayout() {
     // we don't want to show the applogo if the height is very low (nexus one in landscape mode)
+    // this shall be called by onCreate and by onConfigurationChanged
     val display = getWindowManager.getDefaultDisplay
     if(D) Log.i(TAG, "checkLayout height="+display.getHeight)
     val headerView = findViewById(R.id.header)
@@ -544,9 +546,13 @@ class AnyMimeActivity extends Activity {
       case REQUEST_READ_SELECTED_SLOT_ADD_FILE =>
         getArrayListSelectedFileStrings
         mainViewUpdate
-        // todo: add file to current list
-        showSelectedFiles
+
         // tmtmtm
+        // todo: add file to current list
+        selectedFileStringsArrayList add addFilePathNameString
+
+        persistArrayListSelectedFileStrings
+        showSelectedFiles
     }
   }
 
@@ -700,11 +706,32 @@ class AnyMimeActivity extends Activity {
     }
   }
 
+  private def persistArrayListSelectedFileStrings() {
+    if(prefSettings!=null && prefSettingsEditor!=null) {
+      val selectedSlotString = prefSettings.getString("selectedSlot", null)
+      selectedSlot = if(selectedSlotString!=null) selectedSlotString.toInt else 0
+      if(selectedSlot<0 || selectedSlot>ShowSelectedSlotActivity.MAX_SLOTS)
+        selectedSlot = 0
+
+      val iterator = selectedFileStringsArrayList.iterator 
+      var stringBuilder = new StringBuilder()
+      while(iterator.hasNext) {
+        if(stringBuilder.size>0)
+          stringBuilder append ","
+        stringBuilder append iterator.next
+      }
+      if(D) Log.i(TAG, "persistArrayListSelectedFileStrings stringBuilder="+stringBuilder.toString)
+      prefSettingsEditor.putString("fileSlot"+selectedSlot,stringBuilder.toString)
+      prefSettingsEditor.commit
+    }
+  }
+
   private def nfcBtServiceSetup() {
     // we call this not before we know bluetooth is available and fully activated
     if(D) Log.i(TAG, "nfcBtServiceSetup...")
 
     mConnectedDeviceAddr = null
+    mConnectedDeviceName = null
     firstBtActor = false
 
     // setup NFC (only for Android 2.3.3+ and only if NFC hardware is available)
@@ -823,7 +850,7 @@ class AnyMimeActivity extends Activity {
               //if(radioLogoView!=null && fastAnimation!=null)
               //	radioLogoView.setAnimation(fastAnimation)
 
-              if(D) Log.i(TAG, "RFCommHelperService.STATE_CONNECTED: reset startTime --------------------------------")
+              //if(D) Log.i(TAG, "RFCommHelperService.STATE_CONNECTED: reset startTime --------------------------------")
               startTime = System.currentTimeMillis
               receivedAnyData = false
 
@@ -848,7 +875,7 @@ class AnyMimeActivity extends Activity {
         case RFCommHelperService.MESSAGE_DEVICE_NAME =>
           // note: MESSAGE_DEVICE_NAME is immediately followed by a MESSAGE_STATE_CHANGE/STATE_CONNECTED message
           mConnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
-          val mConnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
+          mConnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           val mConnectedSocketType = msg.getData.getString(RFCommHelperService.SOCKET_TYPE)
           if(D) Log.i(TAG, "handleMessage MESSAGE_DEVICE_NAME="+mConnectedDeviceName+" addr="+mConnectedDeviceAddr)
           // show toast only, if we did not initiate the connection
@@ -856,8 +883,8 @@ class AnyMimeActivity extends Activity {
             Toast.makeText(getApplicationContext, ""+mConnectedDeviceName+" has connected", Toast.LENGTH_LONG).show
 
         case RFCommHelperService.MESSAGE_YOURTURN =>
-          if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN reset startTime ---------------------------------------------")
-          startTime = System.currentTimeMillis
+          //if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN reset startTime ---------------------------------------------")
+          //startTime = System.currentTimeMillis
           if(progressBarView!=null)
             progressBarView.setProgress(0)
           if(firstBtActor) {
@@ -918,7 +945,8 @@ class AnyMimeActivity extends Activity {
           if(D) Log.i(TAG, "handleMessage CONNECTION_FAILED: ["+mDisconnectedDeviceName+"] addr="+mDisconnectedDeviceAddr)
           if(radioLogoView!=null)
           	radioLogoView.setAnimation(null)
-          mConnectedDeviceAddr=null
+          mConnectedDeviceAddr = null
+          mConnectedDeviceName = null
           initiatedConnection = false
           mainViewUpdate
 
@@ -926,7 +954,7 @@ class AnyMimeActivity extends Activity {
           val progressType = msg.getData.getString(RFCommHelperService.DELIVER_TYPE) // "receive" or "send"
           if(!receivedAnyData && progressType!=null && progressType=="receive") {
             receivedAnyData = true
-            startTime = System.currentTimeMillis
+            //startTime = System.currentTimeMillis
           }
           //val deliverId = msg.getData.getLong(RFCommHelperService.DELIVER_ID)
           val progressPercent = msg.getData.getInt(RFCommHelperService.DELIVER_PROGRESS)
@@ -937,10 +965,10 @@ class AnyMimeActivity extends Activity {
           if(userHint3View!=null) {
             val durationSeconds = (System.currentTimeMillis - startTime) / 1000
             if(durationSeconds>0) {
-              kbytesPerSecond = (progressBytes/durationSeconds)/1024
+              kbytesPerSecond = (progressBytes/1024)/durationSeconds
               //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
               if(kbytesPerSecond>0) {
-                userHint3View.setTypeface(null, 0);  // un-bold
+                userHint3View.setTypeface(null, 0)  // un-bold
                 userHint3View.setTextSize(15)  // normal size
                 userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
               }
@@ -965,6 +993,7 @@ class AnyMimeActivity extends Activity {
           if(radioLogoView!=null)
           	radioLogoView.setAnimation(null)
           mConnectedDeviceAddr=null
+          mConnectedDeviceName=null
 
           // audio notification for disconnect
           if(audioConfirmSound!=null)
@@ -997,7 +1026,7 @@ class AnyMimeActivity extends Activity {
 
           // run ShowReceivedFilesPopupActivity hand over receivedFileUriStringArrayList
           // this will show the list of receive files and allow the user to start intents on the individual files
-          try { Thread.sleep(100); } catch { case ex:Exception => }
+          try { Thread.sleep(100) } catch { case ex:Exception => }
           val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
           val bundle = new Bundle()
           bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
@@ -1107,7 +1136,7 @@ class AnyMimeActivity extends Activity {
     override def run() {
       while connected {
         receiverActivityFlag = false
-        try { Thread.sleep(10000); } catch { case ex:Exception => }
+        try { Thread.sleep(10000) } catch { case ex:Exception => }
         if(!receiverActivityFlag)
           force hangup
       }
@@ -1137,11 +1166,10 @@ class AnyMimeActivity extends Activity {
             //	radioLogoView.setAnimation(fastAnimation)
             if(userHint1View!=null) {
               if(D) Log.i(TAG, "deliverFileArray userHint1View.setText")
-              userHint1View.setText("Upload")
-              //userHint1View.postInvalidate()
+              userHint1View.setText("Upload to "+mConnectedDeviceName)
             }
           }
-          try { Thread.sleep(100); } catch { case ex:Exception => }
+          try { Thread.sleep(100) } catch { case ex:Exception => }
 
           try {
             val iterator = selectedFileStringsArrayList.iterator 
@@ -1219,7 +1247,6 @@ class AnyMimeActivity extends Activity {
       val sdAvailSize = statFs.getAvailableBlocks().asInstanceOf[Long] * statFs.getBlockSize().asInstanceOf[Long]
       val str = Formatter.formatFileSize(this, sdAvailSize)
       userHint1View.setText(str+" free media to receive files")
-      //userHint1View.postInvalidate()
     }
 
     if(userHint2View!=null) {
@@ -1231,7 +1258,6 @@ class AnyMimeActivity extends Activity {
       else
         userHint2View.setText("Ready to send "+numberOfFilesToSend+" files from slot "+(selectedSlot+1))
       userHint2View.setVisibility(View.VISIBLE)
-      //userHint2View.postInvalidate()
     }
 
     if(userHint3View!=null) {
@@ -1241,12 +1267,11 @@ class AnyMimeActivity extends Activity {
         userHint3View.setText("NFC ready: Tap devices to share")   
       }
       else {
-        userHint3View.setTypeface(null, 0);  // not bold
+        userHint3View.setTypeface(null, 0)  // not bold
         userHint3View.setTextSize(15)  // normal size
         userHint3View.setText("NFC disabled - manual connect required")
       }
       userHint3View.setVisibility(View.VISIBLE)
-      //userHint3View.postInvalidate()
     }
     if(simpleProgressBarView!=null)
       simpleProgressBarView.setVisibility(View.GONE)
@@ -1277,7 +1302,7 @@ class AnyMimeActivity extends Activity {
     }
 
     if(userHint3View!=null) {
-      userHint3View.setTypeface(null, 0);  // not bold
+      userHint3View.setTypeface(null, 0)  // not bold
       userHint3View.setTextSize(15)  // normal size
       userHint3View.setText("")
       userHint3View.setVisibility(View.VISIBLE)
