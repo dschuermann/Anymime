@@ -338,7 +338,7 @@ class ShowSelectedFilesActivity extends Activity {
             if(selectedPath==null)
               selectedPath = selectFileUri.getPath    // FILE Manager
 
-            // todo: don't add selectedPath if already in selectedFilesStringArrayList
+            // todo: don't add selectedPath if already in selectedFilesStringArrayList (?)
 
             Log.e(TAG, "REQUEST_SELECT_FILE add="+selectedPath)
             fileListAdapter add selectedPath

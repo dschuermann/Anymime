@@ -196,7 +196,7 @@ class AnyMimeActivity extends Activity {
     // If the adapter is null, then Bluetooth is not supported (mBluetoothAdapter must not be null, even if turned off)
     if(mBluetoothAdapter == null) {
       if(D) Log.i(TAG, "onCreate mBluetoothAdapter not available")
-      Toast.makeText(this, "Bluetooth not available", Toast.LENGTH_LONG).show
+      Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show
       finish
       return
     }
@@ -303,7 +303,7 @@ class AnyMimeActivity extends Activity {
     checkLayout
 	  mainViewUpdate
 
-    // have we been started with a file being handed over (say from OI File Manager?)
+    // have we been started with a file being handed over (say from OI File Manager)?
     val intent = getIntent
     if(intent!=null) {
       val fileUri = intent.getData
@@ -314,6 +314,7 @@ class AnyMimeActivity extends Activity {
           // yes, we have been started with a file being handed over - user must select the slot where this new file should be added
           val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
           startActivityForResult(intent, REQUEST_READ_SELECTED_SLOT_ADD_FILE) // -> onActivityResult()
+          Toast.makeText(this, "Select where to add "+fileUri.getLastPathSegment, Toast.LENGTH_LONG).show
         }
       }
     }

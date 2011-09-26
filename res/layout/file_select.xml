@@ -61,7 +61,6 @@
           android:layout_marginLeft="2dip"
           android:layout_marginRight="2dip"
           android:paddingBottom="6dp"
-          android:visibility="gone"
         />
         <Button
           android:id="@+id/buttonAdd"
