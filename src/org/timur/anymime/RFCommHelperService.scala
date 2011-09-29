@@ -466,9 +466,10 @@ class RFCommHelperService extends android.app.Service {
     val secondsStrings = if(seconds<10) "0"+seconds else ""+seconds
     var dynName = "" + nowCalendar.get(Calendar.YEAR) + monthString + dayOfMonthString + "-" + hourOfDayString + minuteString + secondsStrings + "-" + btNameString
     val downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-    receivedFileFolderString = downloadPath+"/"+"anymime-"+dynName
+    if(downloadPath!=null)
+      receivedFileFolderString = downloadPath+"/"+"anymime-"+dynName
 
-    if(D) Log.i(TAG, "connected done, receivedFileFolderString="+receivedFileFolderString)
+    if(D) Log.i(TAG, "connected done, receivedFileFolderString="+receivedFileFolderString+" downloadPath="+downloadPath)
   }
 
   // private methods
@@ -785,8 +786,9 @@ class RFCommHelperService extends android.app.Service {
         return true
 
       } else if(cmd.equals("blob")) {
-        //if(D) Log.i(TAG, "processBtMessage receive blob mime="+arg1)
-        processIncomingBlob(btMessage, fromAddr, receivedFileFolderString, connectedBluetoothDevice)(readCodedInputStream)
+        if(D) Log.i(TAG, "processBtMessage receive blob mime="+arg1+" receivedFileFolderString="+receivedFileFolderString)
+        if(receivedFileFolderString!=null)
+          processIncomingBlob(btMessage, fromAddr, receivedFileFolderString, connectedBluetoothDevice)(readCodedInputStream)
         return true
       }
 

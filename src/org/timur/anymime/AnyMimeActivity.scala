@@ -170,7 +170,7 @@ class AnyMimeActivity extends Activity {
   private var initiatedConnection:Boolean = false
 
   @volatile private var startTime:Long = 0
-  @volatile private var receivedAnyData:Boolean = false
+  //@volatile private var receivedAnyData:Boolean = false
   private var kbytesPerSecond:Long=0
 
   override def onCreate(savedInstanceState:Bundle) {
@@ -853,7 +853,7 @@ class AnyMimeActivity extends Activity {
 
               //if(D) Log.i(TAG, "RFCommHelperService.STATE_CONNECTED: reset startTime --------------------------------")
               startTime = System.currentTimeMillis
-              receivedAnyData = false
+              //receivedAnyData = false
 
               firstBtActor = false
               if(mConnectedDeviceAddr!=null && mConnectedDeviceAddr<mBluetoothAdapter.getAddress) {
@@ -953,22 +953,22 @@ class AnyMimeActivity extends Activity {
 
         case RFCommHelperService.MESSAGE_DELIVER_PROGRESS =>
           val progressType = msg.getData.getString(RFCommHelperService.DELIVER_TYPE) // "receive" or "send"
-          if(!receivedAnyData && progressType!=null && progressType=="receive") {
-            receivedAnyData = true
-            //startTime = System.currentTimeMillis
-          }
+          //if(!receivedAnyData && progressType!=null && progressType=="receive") {
+          //  receivedAnyData = true
+          //}
           //val deliverId = msg.getData.getLong(RFCommHelperService.DELIVER_ID)
           val progressPercent = msg.getData.getInt(RFCommHelperService.DELIVER_PROGRESS)
           //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS: progressPercent="+progressPercent)
           if(progressBarView!=null)
             progressBarView.setProgress(progressPercent)
           val progressBytes = msg.getData.getLong(RFCommHelperService.DELIVER_BYTES)
-          if(userHint3View!=null) {
-            val durationSeconds = (System.currentTimeMillis - startTime) / 1000
-            if(durationSeconds>0) {
-              kbytesPerSecond = (progressBytes/1024)/durationSeconds
-              //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
-              if(kbytesPerSecond>0) {
+          val durationSeconds = (System.currentTimeMillis - startTime) / 1000
+          if(durationSeconds>0) {
+            val newKbytesPerSecond = (progressBytes/1024)/durationSeconds
+            //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
+            if(newKbytesPerSecond>0 || kbytesPerSecond==0) {
+              kbytesPerSecond = newKbytesPerSecond
+              if(userHint3View!=null) {
                 userHint3View.setTypeface(null, 0)  // un-bold
                 userHint3View.setTextSize(15)  // normal size
                 userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
