@@ -9,8 +9,6 @@ It allows you to easily and quickly establish ad-hoc two-way file exchange sessi
 Info
 ----
 
-(please note: this application is not yet released to the Android market)
-
 Download Android apk: [https://market.android.com/details?id=org.timur.anymime](https://market.android.com/details?id=org.timur.anymime)
 
 App home page: [http://timur.mobi/anymime/](http://timur.mobi/anymime/)
@@ -23,24 +21,21 @@ Source code is licensed under the GNU General Public License, Version 3:
 
 - Google prototype
 
-- JQuest jsch + jzlib
-
 - Teambox file-icons
   https://github.com/teambox/Free-file-icons
 
 - FileDialog
   https://code.google.com/p/android-file-dialog/
 
-Initial adjustments
--------------------
+Prepare to build
+----------------
 
 Building requires Android SDK version-11, JDK 6, Scala 2.8.1 + Ant 1.8.2
 
 $ cp local.properties.sample local.properties
 
 - Adjust SDK path settings in "local.properties"
-
-- Do not commit "local.properties" back to git
+  (Do not commit "local.properties" back to git)
 
 Building from source
 --------------------

@@ -72,16 +72,21 @@ class ShowSelectedFilesActivity extends Activity {
     if(D) Log.i(TAG, "onCreate")
     context = this
 
-    val customTitleSupported = requestWindowFeature(Window.FEATURE_CUSTOM_TITLE)
-
+    var customTitleSupported = false
+    if(android.os.Build.VERSION.SDK_INT<11) {
+      // honeycomb issue (3.0 + 3.1)
+      customTitleSupported = requestWindowFeature(Window.FEATURE_CUSTOM_TITLE)
+    }
+    
     setContentView(R.layout.file_select)
 
-    if(customTitleSupported)
+    if(customTitleSupported) {
       getWindow.setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.custom_title)
-    mTitleLeftView = findViewById(R.id.title_left_text).asInstanceOf[TextView]
-    mTitleRightView = findViewById(R.id.title_right_text).asInstanceOf[TextView]
-    if(mTitleLeftView!=null)
-      mTitleLeftView.setText("Files for delivery")
+      mTitleLeftView = findViewById(R.id.title_left_text).asInstanceOf[TextView]
+      mTitleRightView = findViewById(R.id.title_right_text).asInstanceOf[TextView]
+      if(mTitleLeftView!=null)
+        mTitleLeftView.setText("Files for delivery")
+    }
 
     selectedFilesStringArrayList = null
     val intent = getIntent
