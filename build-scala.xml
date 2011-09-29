@@ -63,19 +63,19 @@
     </target>
 
     <target name="-shrink-if-test">
-<!-- -->
+<!--  -->
         <echo
             message="Checking if Scala libraries are installed on emulator or device..." />
         <exec executable="${adb}" failonerror="false" outputproperty="adb.out">
             <arg line="${adb.device.arg}" />
-            <arg line="shell echo '$BOOTCLASSPATH'" />
+            <arg line="shell echo '$_BOOTCLASSPATH'" />
         </exec>
         <condition property="framework.isavailable">
             <contains string="${adb.out}" substring="/data/framework/scala-" />
         </condition>
         <echo message="BOOTCLASSPATH=${adb.out}" taskname="adb" />
 <!-- -->
-      <!--property name="framework.isavailable" value="true" /-->
+      <!--property name="framework.isavailable" value="false" /-->
       <!-- set true: no scala framework jar files in apk -->
     </target>
 
