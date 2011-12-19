@@ -35,17 +35,16 @@ object AndrTools {
   }
 
   def buttonCallback(activity:Activity, button:View)(buttonAction:() => Unit) {
-    if(D) Log.i(TAG, "buttonCallback button="+button)
+    //if(D) Log.i(TAG, "buttonCallback button="+button)
     if(button!=null) {
       button.setOnClickListener(new View.OnClickListener() {
         override def onClick(view:View) { 
-          if(D) Log.i(TAG, "buttonCallback call buttonAction")
+          //if(D) Log.i(TAG, "buttonCallback call buttonAction")
           buttonAction()
         }
       })
     }
   }
-
 
   def runOnUiThread(context:Context)(action:() => Unit) {
     //if(D) Log.i(TAG, "runOnUiThread context="+context)

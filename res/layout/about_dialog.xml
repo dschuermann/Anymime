@@ -19,7 +19,7 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:id="@+id/buttonLayout"
-  android:layout_width="420px"
+  android:layout_width="480px"
   android:layout_height="wrap_content"
   android:orientation="vertical"
   android:padding="12dip"
@@ -38,7 +38,7 @@
 
     <LinearLayout 
       android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
+      android:layout_height="fill_parent"
       android:orientation="vertical"
       android:gravity="fill"
       android:layout_centerHorizontal="true"
@@ -46,20 +46,20 @@
       <TextView
         android:id="@+id/aboutText"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_marginTop="6px"
         android:layout_marginBottom="0px"
         android:textColor="#eef"
         android:textStyle="bold"
         android:textSize="21sp"
-        android:text="Anymime for Android"
+        android:text="About: Anymime"
       />
 
       <!-- at runtime this will be filled with android:versionName from the manifest and build date+time -->
       <TextView
         android:id="@+id/aboutVersion"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_marginTop="8px"
         android:layout_marginBottom="0px"
         android:textColor="#eef"
@@ -69,7 +69,7 @@
       <TextView
         android:id="@+id/aboutCopyright"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_marginTop="0px"
         android:layout_marginBottom="8dp"
         android:textColor="#eef"
@@ -80,39 +80,37 @@
       <TextView
         android:id="@+id/aboutText4"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="This application has been open sourced under GPL"
+        android:text="Open sourced under GPL"
       />
 
       <TextView
         android:id="@+id/aboutText4"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
         android:text="github.com/mehrvarz/Anymime"
       />
 
-
-
       <TextView
         android:id="@+id/aboutText4"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="3rd party components being used: Google Protobuf, Teambox file icons"
+        android:text="3rd party components: Google Protobuf, Teambox file icons"
       />
 
-      <Button
+      <!--Button
         android:id="@+id/buttonPromoteSMS"
         android:text="Send download link via SMS"
         android:layout_width="fill_parent"
@@ -122,10 +120,9 @@
         style="@style/dialogTextAppearence.Button"
         android:layout_marginTop="8dp"
         android:visibility="gone"
-      />
-      <!-- todo: Send download link via email -->
+      /-->
 
-      <Button
+      <!--Button
         android:id="@+id/buttonClose"
         android:text="Close"
         android:layout_width="fill_parent"
@@ -134,10 +131,9 @@
         android:padding="10dip"
         android:layout_marginTop="18dp"
         style="@style/dialogTextAppearence.Button"
-      />
+      /-->
 
     </LinearLayout>
   </ScrollView>
 </LinearLayout>
-
 

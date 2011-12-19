@@ -32,7 +32,7 @@
         <srcfiles dir="${resource.dir}" />
     </uptodate>
 
-    <target name="scala-compile" depends="compile"
+    <target name="scala-compile" depends="-compile"
         description="Compiles project's .scala files into .class files"
         if="myapp.containsScala" unless="do.not.compile">
         <condition property="logging" value="verbose" else="none">
@@ -46,16 +46,16 @@
             level="info" taskname="scalac" />
         <scalac
             srcdir="${source.dir}" includes="**/*.scala"
-            destdir="${out.classes.dir}"
+            destdir="${out.classes.absolute.dir}"
             bootclasspathref="android.target.classpath"
             logging="${logging}" addparams="${scalac.addparams}"
             classpath="${extensible.classpath}"
             classpathref="jar.libs.ref">
             <src path="${gen.absolute.dir}" />
-            <src refid="project.libraries.src" />
+            <src refid="project.libraries.libs" />
             <classpath>
                 <pathelement location="${scala-library.jar}" />
-                <pathelement location="${out.classes.dir}" />
+                <pathelement location="${out.classes.absolute.dir}" />
                 <fileset dir="${extensible.libs.classpath}" includes="*.jar" />
             </classpath>
         </scalac>
@@ -63,7 +63,7 @@
     </target>
 
     <target name="-shrink-if-test">
-<!--  -->
+<!-- -->
         <echo
             message="Checking if Scala libraries are installed on emulator or device..." />
         <exec executable="${adb}" failonerror="false" outputproperty="adb.out">
@@ -75,7 +75,7 @@
         </condition>
         <echo message="BOOTCLASSPATH=${adb.out}" taskname="adb" />
 <!-- -->
-      <!--property name="framework.isavailable" value="false" /-->
+      <!--property name="framework.isavailable" value="true" /-->
       <!-- set true: no scala framework jar files in apk -->
     </target>
 
@@ -129,7 +129,7 @@
                   <fileset dir="${jar.libs.dir}" includes="*.jar" />      <!-- -->
               </pathconvert>
               <proguard-helper property="injars" prefix="-injars"
-                  path="${out.classes.dir}${path.separator}${injars.libs.path}" />
+                  path="${out.classes.absolute.dir}${path.separator}${injars.libs.path}" />
         <proguard-helper property="outjars" prefix="-outjars"
             path="${myapp.jar}" />
         <pathconvert property="libraryjars.path" refid="android.target.classpath" />
@@ -225,7 +225,7 @@
                 <arg value="--dex" />
                 <arg value="--output=${intermediate.dex.file}" />
                 <extra-parameters />
-                <arg line="${verbose.option}" />
+                <!--arg line="${verbose.option}" /-->
                 <arg path="${dex.input}" />
                 <path refid="out.dex.jar.input.ref" />
                 <external-libs />

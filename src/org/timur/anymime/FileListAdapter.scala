@@ -81,10 +81,10 @@ class FileListAdapter(context:Context, messageResourceId:Int)
     if(visibleTextView != null) {
       val idxLastSlash = pathFileString.lastIndexOf("/")
       var visibleMsg = if(idxLastSlash>=0) pathFileString.substring(idxLastSlash+1) else pathFileString
-      // if the file does not exist (anymore), we must visualize that
+      // if the file does not exist (anymore), we add " (not found)"
       val file = new File(pathFileString)
       val fileLength = file.length
-      if(D) Log.i(TAG, "getView position="+position+" pathFileString="+pathFileString+" fileLength="+fileLength+" ########################")
+      if(D) Log.i(TAG, "getView position="+position+" pathFileString="+pathFileString+" fileLength="+fileLength)
       if(fileLength<1) 
         visibleMsg += " (not\u00A0found)"
       visibleTextView.setText(visibleMsg)

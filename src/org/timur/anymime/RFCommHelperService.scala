@@ -24,6 +24,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -33,6 +34,7 @@ import java.util.UUID
 import java.util.LinkedList
 import java.util.ArrayList
 import java.util.Calendar
+import java.net.InetSocketAddress
 
 import android.app.Activity
 import android.app.ActivityManager
@@ -53,8 +55,11 @@ import android.media.MediaPlayer
 import android.provider.Settings
 import android.widget.Toast
 
+import android.webkit.MimeTypeMap
+
 import com.google.protobuf.CodedOutputStream
 import com.google.protobuf.CodedInputStream
+
 
 object RFCommHelperService {
   val STATE_NONE = 0       // doing nothing
@@ -106,13 +111,16 @@ class RFCommHelperService extends android.app.Service {
   //@volatile private var mInsecureAcceptThread:AcceptThread = null
 
   private val mAdapter = BluetoothAdapter.getDefaultAdapter
-  private var myBtName = mAdapter.getName
-  private var myBtAddr = mAdapter.getAddress
+  private var myBtName = if(mAdapter!=null) mAdapter.getName else null
+  private var myBtAddr = if(mAdapter!=null) mAdapter.getAddress else null
+  if(D) Log.i(TAG, "constructor myBtName="+myBtName+" myBtAddr="+myBtAddr+" mAdapter="+mAdapter+" ################################")
   @volatile private var sendMsgCounter:Long = 0
   @volatile private var mConnectThread:ConnectThread = null
   @volatile private var activeConnectedThread:ConnectedThread = null
   private var blobTaskId = 0
   private var receivedFileFolderString:String = null
+
+  private var firstActor = false
 
   // todo: naming of these variables not fully correct
   private var bytesWritten = 0
@@ -149,10 +157,17 @@ class RFCommHelperService extends android.app.Service {
     setState(RFCommHelperService.STATE_LISTEN)   // this will send MESSAGE_STATE_CHANGE
 
     // in case bt was turned on after app start
-    if(myBtName==null)
+    if(myBtName==null) {
       myBtName = mAdapter.getName
-    if(myBtAddr==null)
+      if(myBtName==null)
+        myBtName = "unknown"  // tmtmtm
+    }
+    if(myBtAddr==null) {
       myBtAddr = mAdapter.getAddress
+      if(myBtAddr==null)
+        myBtAddr = "unknown"  // tmtmtm
+    }
+    if(D) Log.i(TAG, "start myBtName="+myBtName+" myBtAddr="+myBtAddr+" mAdapter="+mAdapter+" ################################")
 
     // Start the thread to listen on a BluetoothServerSocket
     if(mSecureAcceptThread == null) {
@@ -176,9 +191,16 @@ class RFCommHelperService extends android.app.Service {
     if(D) Log.i(TAG, "start: done")
   }
 
+  var selectedFileStringsArrayList:ArrayList[String] = null
+
+  def setSendFiles(setSelectedFileStringsArrayList:ArrayList[String]) {
+    selectedFileStringsArrayList = setSelectedFileStringsArrayList
+    if(D) Log.i(TAG, "setSendFiles() "+selectedFileStringsArrayList)
+  }
+
   // called by the activity: options menu "connect" -> onActivityResult() -> connectDevice()
   // called by the activity: as a result of NfcAdapter.ACTION_NDEF_DISCOVERED
-  def connect(newRemoteDevice:BluetoothDevice, secure:Boolean=true, reportConnectState:Boolean=true) :Unit = synchronized {
+  def connectBt(newRemoteDevice:BluetoothDevice, secure:Boolean=true, reportConnectState:Boolean=true) :Unit = synchronized {
     if(newRemoteDevice==null) {
       Log.e(TAG, "connect() newRemoteDevice==null, give up")
       return
@@ -200,8 +222,7 @@ class RFCommHelperService extends android.app.Service {
     mConnectThread.start
   }
 
-  // called by onDestroy()
-  // called by activity (on MESSAGE_YOURTURN)
+  // called by onDestroy() + by activity (on MESSAGE_YOURTURN)
   def stopActiveConnection() = synchronized {
     if(D) Log.i(TAG, "stopActiveConnection mConnectThread="+mConnectThread+" activeConnectedThread="+activeConnectedThread+" mSecureAcceptThread="+mSecureAcceptThread)
 
@@ -227,7 +248,8 @@ class RFCommHelperService extends android.app.Service {
     }
   }
 
-  def send(cmd:String, message:String=null, toAddr:String=null) = synchronized {
+  // called by deliverFileArray only
+  def send(cmd:String, message:String=null, toAddr:String=null, toName:String=null) = synchronized {
     // the idea with synchronized is that no other send() shall take over (will interrupt) an ongoing send()
     var thisSendMsgCounter:Long = 0
     synchronized { 
@@ -240,11 +262,13 @@ class RFCommHelperService extends android.app.Service {
       thisSendMsgCounter = sendMsgCounter
     }
     val myCmd = if(cmd!=null) cmd else "strmsg"
-    if(D) Log.i(TAG, "send myCmd="+myCmd+" message="+message+" toAddr="+toAddr+" sendMsgCounter="+thisSendMsgCounter)
-    if(activeConnectedThread!=null)
-      activeConnectedThread.writeCmdMsg(myCmd,message,toAddr,thisSendMsgCounter)
-
-    if(D) Log.i(TAG, "send myCmd="+myCmd+" DONE")
+    if(activeConnectedThread!=null) {
+      if(D) Log.i(TAG, "send myCmd="+myCmd+" message="+message+" toAddr="+toAddr+" sendMsgCounter="+thisSendMsgCounter)
+      activeConnectedThread.writeCmdMsg(myCmd,message,toAddr,toName,thisSendMsgCounter)
+      //if(D) Log.i(TAG, "send myCmd="+myCmd+" DONE")
+    } else {
+      if(D) Log.e(TAG, "send myCmd="+myCmd+" message="+message+" toAddr="+toAddr+" sendMsgCounter="+thisSendMsgCounter+" NO activeConnectedThread ########")
+    }
   }
 
   def sendData(size:Int, data:Array[Byte], toAddr:String=null) {
@@ -289,7 +313,7 @@ class RFCommHelperService extends android.app.Service {
       }
   }
 
-  def processIncomingBlob(btMessage:BtShare.Message, fromAddr:String, downloadPath:String, remoteDevice:BluetoothDevice)(readCodedInputStream:() => Array[Byte]) {
+  def processIncomingBlob(btMessage:BtShare.Message, fromAddr:String, downloadPath:String, remoteDeviceName:String)(readCodedInputStream:() => Array[Byte]) {
     val mime = btMessage.getArg1
     var originalFilename = btMessage.getArg2
     originalFilename = originalFilename.replaceAll(" ","_")
@@ -324,7 +348,7 @@ class RFCommHelperService extends android.app.Service {
       var bytesRead=0
       var fileWritten=0
       if(activityMsgHandler!=null) {
-        activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Download from "+remoteDevice.getName).sendToTarget
+        activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Download from "+remoteDeviceName).sendToTarget
         activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT2, -1, -1, originalFilename).sendToTarget
 
         val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_DELIVER_PROGRESS)
@@ -407,25 +431,13 @@ class RFCommHelperService extends android.app.Service {
     }
   }
 
-  // called by ConnectedThread.cancel()
-  def disconnect(socket:BluetoothSocket) = synchronized {
-    if(socket!=null) {
-      try {
-        socket.close
-      } catch {
-        case ex: IOException =>
-          Log.e(TAG, "disconnect() socket="+socket+" ex=",ex)
-      }
-    }
-  }
-
   // called by: AcceptThread() -> socket = mmServerSocket.accept()
   // called by: ConnectThread() / activity options menu (or NFC touch) -> connect() -> ConnectThread()
   // called by: ConnectPopupActivity
-  def connected(socket:BluetoothSocket, remoteDevice:BluetoothDevice, socketType:String) :Unit = synchronized {
+  def connectedBt(socket:BluetoothSocket, remoteDevice:BluetoothDevice, socketType:String) :Unit = synchronized {
     // in case of nfc triggered connect: for the device with the bigger btAddr, this is the 1st indication of the connect
-    if(D) Log.i(TAG, "connected, sockettype="+socketType+" remoteDevice="+remoteDevice)
-    if(remoteDevice==null) 
+    if(D) Log.i(TAG, "connectedBt, socket="+socket+" remoteDevice="+remoteDevice+" sockettype="+socketType)
+    if(socket==null || remoteDevice==null) 
       return
 
     val btAddrString = remoteDevice.getAddress
@@ -433,10 +445,36 @@ class RFCommHelperService extends android.app.Service {
     // convert spaces to underlines in btNameString (some android activities, for instance the browser, dont like encoded spaces =%20 in file pathes)
     btNameString = btNameString.replaceAll(" ","_")
 
-    // Start the thread to manage the connection and perform transmissions
-    if(D) Log.i(TAG, "connected, Start ConnectedThread to manage the connection")
-    activeConnectedThread = new ConnectedThread(socket, socketType)
-    activeConnectedThread.start
+    if(D) Log.i(TAG, "connectedBt, Start ConnectedThread to manage the connection")
+    try {
+      // Get the BluetoothSocket input and output streams
+      val mmInStream = socket.getInputStream
+      val mmOutStream = socket.getOutputStream
+
+      // start the thread to handle the streams
+      activeConnectedThread = new ConnectedThread(mmInStream, mmOutStream, socketType, btAddrString, btNameString, () => { 
+        if(D) Log.i(TAG, "connectedBt post-ConnectedThread processing...")
+
+        activeConnectedThread = null
+        //if(D) Log.i(TAG, "connectionLost addrString="+addrString+" nameString="+nameString)
+        // tell the activity that the connection was lost
+        val msg = activityMsgHandler.obtainMessage(RFCommHelperService.DEVICE_DISCONNECT)
+        val bundle = new Bundle
+        bundle.putString(RFCommHelperService.DEVICE_ADDR, btAddrString)
+        bundle.putString(RFCommHelperService.DEVICE_NAME, btNameString)
+        msg.setData(bundle)
+        activityMsgHandler.sendMessage(msg)
+        System.gc    
+
+        socket.close
+        //socket=null
+        if(D) Log.i(TAG, "connectedBt post-ConnectedThread processing done")
+      })
+      activeConnectedThread.start
+    } catch {
+      case e: IOException =>
+        Log.e(TAG, "connectedBt ConnectedThread start temp sockets not created", e)
+    }
 
     // Send the name of the connected device back to the UI Activity
     // note: the main activity may not be active at this moment (but for instance the ConnectPopupActivity)
@@ -452,25 +490,71 @@ class RFCommHelperService extends android.app.Service {
 
     setState(RFCommHelperService.STATE_CONNECTED)
 
-    // create a dynamic folder-name for all files to be received in this connect-session
-    val nowCalendar = Calendar.getInstance
-    val month = nowCalendar.get(Calendar.MONTH) +1
-    val monthString = if(month<10) "0"+month else ""+month
-    val dayOfMonth = nowCalendar.get(Calendar.DAY_OF_MONTH)
-    val dayOfMonthString = if(dayOfMonth<10) "0"+dayOfMonth else ""+dayOfMonth
-    val hourOfDay = nowCalendar.get(Calendar.HOUR_OF_DAY)
-    val hourOfDayString = if(hourOfDay<10) "0"+hourOfDay else ""+hourOfDay
-    val minute = nowCalendar.get(Calendar.MINUTE)
-    val minuteString = if(minute<10) "0"+minute else ""+minute
-    val seconds = nowCalendar.get(Calendar.SECOND)
-    val secondsStrings = if(seconds<10) "0"+seconds else ""+seconds
-    var dynName = "" + nowCalendar.get(Calendar.YEAR) + monthString + dayOfMonthString + "-" + hourOfDayString + minuteString + secondsStrings + "-" + btNameString
-    val downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-    if(downloadPath!=null)
-      receivedFileFolderString = downloadPath+"/"+"anymime-"+dynName
+    firstActor = false
+    if(btAddrString!=null && btAddrString<myBtAddr) {
+      firstActor = true
+      deliverFileArray(remoteDevice.getName, btAddrString, selectedFileStringsArrayList)
+    }
 
-    if(D) Log.i(TAG, "connected done, receivedFileFolderString="+receivedFileFolderString+" downloadPath="+downloadPath)
+    if(D) Log.i(TAG, "connectedBt done")
   }
+
+  def connectedWifi(socket:java.net.Socket, actor:Boolean, p2pCloseFkt:() => Unit) :Unit = synchronized {
+    if(D) Log.i(TAG, "connectedWifi() actor="+actor)
+    if(socket!=null) {
+      firstActor = actor
+
+      val remoteSocketAddr = socket.getRemoteSocketAddress.asInstanceOf[InetSocketAddress]
+      val remoteWifiAddrString = remoteSocketAddr.getAddress.getHostAddress
+      val remoteWifiNameString = remoteSocketAddr.getHostName
+      // convert spaces to underlines in device name (some android activities, for instance the browser, dont like encoded spaces =%20 in file pathes)
+      val myRemoteWifiNameString = remoteWifiNameString.replaceAll(" ","_")
+
+      val mmInStream = socket.getInputStream
+      if(mmInStream!=null) {
+        val mmOutStream = socket.getOutputStream
+        if(mmOutStream!=null) {
+          if(activityMsgHandler!=null) {
+            val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_DEVICE_NAME)
+            val bundle = new Bundle
+            bundle.putString(RFCommHelperService.DEVICE_NAME, myRemoteWifiNameString)
+            bundle.putString(RFCommHelperService.DEVICE_ADDR, remoteWifiAddrString)
+            bundle.putString(RFCommHelperService.SOCKET_TYPE, "wifi")
+            msg.setData(bundle)
+            activityMsgHandler.sendMessage(msg)
+          }
+
+          setState(RFCommHelperService.STATE_CONNECTED)
+
+          activeConnectedThread = new ConnectedThread(mmInStream, mmOutStream, "", remoteWifiAddrString, myRemoteWifiNameString, () => { 
+            if(D) Log.i(TAG, "connectedWifi post-ConnectedThread processing...")
+
+            activeConnectedThread = null
+            //if(D) Log.i(TAG, "connectionLost addrString="+addrString+" nameString="+nameString)
+            // tell the activity that the connection was lost
+            val msg = activityMsgHandler.obtainMessage(RFCommHelperService.DEVICE_DISCONNECT)
+            val bundle = new Bundle
+            bundle.putString(RFCommHelperService.DEVICE_ADDR, remoteWifiAddrString)
+            bundle.putString(RFCommHelperService.DEVICE_NAME, myRemoteWifiNameString)
+            msg.setData(bundle)
+            activityMsgHandler.sendMessage(msg)
+
+            System.gc    
+            p2pCloseFkt() // will close the socket
+            if(D) Log.i(TAG, "connectedWifi post-ConnectedThread processing done")
+          })
+          activeConnectedThread.start
+
+          if(firstActor)
+            deliverFileArray(remoteWifiNameString, remoteWifiAddrString, selectedFileStringsArrayList)
+        }
+      }
+    }
+
+    if(D) Log.i(TAG, "connectedWifi done")
+  }
+
+
 
   // private methods
 
@@ -486,30 +570,7 @@ class RFCommHelperService extends android.app.Service {
       }
     }
   }
-  
-  // called by ConnectedThread() IOException on send()
-  private def connectionLost(socket: BluetoothSocket) {
-    if(D) Log.i(TAG, "connectionLost socket="+socket)
-    if(socket!=null) {
-      val remoteDevice = socket.getRemoteDevice
-      //if(D) Log.i(TAG, "connectionLost remoteDevice="+remoteDevice)
-      if(remoteDevice!=null) {
-        val btAddrString = remoteDevice.getAddress
-        val btNameString = remoteDevice.getName
-        activeConnectedThread = null
-        if(D) Log.i(TAG, "connectionLost btAddrString="+btAddrString+" btNameString="+btNameString)
 
-        // tell the activity that the connection was lost
-        val msg = activityMsgHandler.obtainMessage(RFCommHelperService.DEVICE_DISCONNECT)
-        val bundle = new Bundle
-        bundle.putString(RFCommHelperService.DEVICE_ADDR, btAddrString)
-        bundle.putString(RFCommHelperService.DEVICE_NAME, btNameString)
-        msg.setData(bundle)
-        activityMsgHandler.sendMessage(msg)
-      }
-    }
-    System.gc    
-  }
 
   /*private*/ class AcceptThread(secure:Boolean=true) extends Thread {
     if(D) Log.i(TAG, "AcceptThread")
@@ -583,20 +644,19 @@ class RFCommHelperService extends android.app.Service {
             }
 
             try { Thread.sleep(100); } catch { case ex:Exception => }
-            if(D) Log.i(TAG, "AcceptThread - after denying +100 ms acceptAndConnect="+acceptAndConnect)
+            if(D) Log.i(TAG, "AcceptThread - after denying +100 ms acceptAndConnect="+acceptAndConnect+" ===================")
             try { Thread.sleep(100); } catch { case ex:Exception => }
-            if(D) Log.i(TAG, "AcceptThread - after denying +200 ms acceptAndConnect="+acceptAndConnect)
+            if(D) Log.i(TAG, "AcceptThread - after denying +200 ms acceptAndConnect="+acceptAndConnect+" ===================")
             try { Thread.sleep(300); } catch { case ex:Exception => }
-            if(D) Log.i(TAG, "AcceptThread - after denying +500 ms acceptAndConnect="+acceptAndConnect)
+            if(D) Log.i(TAG, "AcceptThread - after denying +500 ms acceptAndConnect="+acceptAndConnect+" ===================")
             try { Thread.sleep(300); } catch { case ex:Exception => }
-            if(D) Log.i(TAG, "AcceptThread - after denying +800 ms acceptAndConnect="+acceptAndConnect)
+            if(D) Log.i(TAG, "AcceptThread - after denying +800 ms acceptAndConnect="+acceptAndConnect+" ===================")
 
 
-          } else 
-          {
+          } else {
             // activity is not paused
             RFCommHelperService.this synchronized {
-              connected(socket, socket.getRemoteDevice, mSocketType)
+              connectedBt(socket, socket.getRemoteDevice, mSocketType)
             }
           }
         }
@@ -631,10 +691,10 @@ class RFCommHelperService extends android.app.Service {
 /*
       if(secure) {
 */
-        mmSocket = remoteDevice.createRfcommSocketToServiceRecord(MY_UUID_SECURE)
+        mmSocket = remoteDevice.createRfcommSocketToServiceRecord(MY_UUID_SECURE)   // requires pairing
 /*
       } else {
-        mmSocket = remoteDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID_INSECURE)
+        mmSocket = remoteDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID_INSECURE)   // does not require pairing
       }
 */
     } catch {
@@ -643,38 +703,40 @@ class RFCommHelperService extends android.app.Service {
     }
 
     override def run() {
-      if(D) Log.i(TAG, "ConnectThread run SocketType="+mSocketType+" #############################")
+      if(D) Log.i(TAG, "ConnectThread run SocketType="+mSocketType)
       setName("ConnectThread" + mSocketType)
 
       // Always cancel discovery because it will slow down a connection
 /*
       if(mAdapter.isDiscovering) {
-        Log.e(TAG, "ConnectThread run isDiscovering -> cancelDiscovery() ###########################")
+        Log.e(TAG, "ConnectThread run isDiscovering -> cancelDiscovery()")
 */
         mAdapter.cancelDiscovery
 /*
       } else {
-        Log.e(TAG, "ConnectThread run NOT isDiscovering ###########################")
+        Log.e(TAG, "ConnectThread run NOT isDiscovering")
       }
 */
 
       try {
         // This is a blocking call and will only return on a successful connection or an exception
-        if(D) Log.i(TAG, "ConnectThread run connect() #######################################################")
+        if(D) Log.i(TAG, "ConnectThread run connect()")
         mmSocket.connect()
       } catch {
-        case ex: IOException =>
-          Log.e(TAG, "ConnectThread run unable to connect() "+mSocketType+" ex=",ex)
-          var errMsg = ex.getMessage  // tmtmtm
+        case ex:IOException =>
+          Log.e(TAG, "ConnectThread run unable to connect() "+mSocketType+" IOException",ex)
+          var errMsg = ex.getMessage
+/*
           if(errMsg=="Connection reset by peer")
             errMsg = "Connection failed"
+
           if(context!=null)
             context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
               override def run() { 
                 Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
               }
             })
-
+*/
           // Close the socket
           try {
             mmSocket.close
@@ -700,7 +762,7 @@ class RFCommHelperService extends android.app.Service {
       }
 
       // Start the connected thread
-      connected(mmSocket, remoteDevice, mSocketType)
+      connectedBt(mmSocket, remoteDevice, mSocketType)
     }
 
     def cancel() {
@@ -716,42 +778,47 @@ class RFCommHelperService extends android.app.Service {
     }
   }
 
-  class ConnectedThread(var socket:BluetoothSocket, socketType:String) extends Thread {
-    if(D) Log.i(TAG, "ConnectedThread start " + socketType)
-    private var mmInStream:InputStream = null
+
+
+  class ConnectedThread(mmInStream:InputStream, mmOutStream:OutputStream, socketType:String, deviceAddr:String, deviceName:String, socketCloseFkt:() => Unit) extends Thread {
+    //if(D) Log.i(TAG, "ConnectedThread start " + socketType)
     private var codedInputStream:CodedInputStream = null
-    private var mmOutStream:OutputStream = null
     private var mConnectedSendThread:ConnectedSendThread = null
     private val sendQueue = new scala.collection.mutable.Queue[Any]
-
-    var connectedBluetoothDevice:BluetoothDevice = null
-    var connectedBtAddr:String = null
-    var connectedBtName:String = null
     @volatile var running = false     // set true by run(), set false by cancel()
 
     bytesWritten=0
 
-    if(socket!=null) {
-      connectedBluetoothDevice = socket.getRemoteDevice
-      if(connectedBluetoothDevice!=null) {
-        connectedBtAddr = connectedBluetoothDevice.getAddress
-        connectedBtName = connectedBluetoothDevice.getName
-      }
+    // create a dynamic folder-name for all files to be received in this connect-session
+    val nowCalendar = Calendar.getInstance
+    val month = nowCalendar.get(Calendar.MONTH) +1
+    val monthString = if(month<10) "0"+month else ""+month
+    val dayOfMonth = nowCalendar.get(Calendar.DAY_OF_MONTH)
+    val dayOfMonthString = if(dayOfMonth<10) "0"+dayOfMonth else ""+dayOfMonth
+    val hourOfDay = nowCalendar.get(Calendar.HOUR_OF_DAY)
+    val hourOfDayString = if(hourOfDay<10) "0"+hourOfDay else ""+hourOfDay
+    val minute = nowCalendar.get(Calendar.MINUTE)
+    val minuteString = if(minute<10) "0"+minute else ""+minute
+    val seconds = nowCalendar.get(Calendar.SECOND)
+    val secondsStrings = if(seconds<10) "0"+seconds else ""+seconds
+    var dynName = "" + nowCalendar.get(Calendar.YEAR) + monthString + dayOfMonthString + "-" + hourOfDayString + minuteString + secondsStrings + "-" + deviceName
+    val downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath
+    if(downloadPath!=null)
+      receivedFileFolderString = downloadPath+"/"+"anymime-"+dynName
+    if(D) Log.i(TAG, "ConnectedThread start receivedFileFolderString="+receivedFileFolderString+" downloadPath="+downloadPath)
 
-      try {
-        // Get the BluetoothSocket input and output streams
-        mmInStream = socket.getInputStream
-        codedInputStream = CodedInputStream.newInstance(mmInStream)
+    try {
+      codedInputStream = CodedInputStream.newInstance(mmInStream)
+      if(D) Log.i(TAG, "ConnectedThread start mmInStream="+mmInStream+" codedInputStream="+codedInputStream+" mmOutStream="+mmOutStream)
 
-        // start fifo queue delivery via codedOutputStream
-        mmOutStream = socket.getOutputStream
-        mConnectedSendThread = new ConnectedSendThread(sendQueue,CodedOutputStream.newInstance(mmOutStream),socket)
-        mConnectedSendThread.start
-      } catch {
-        case e: IOException =>
-          Log.e(TAG, "ConnectedThread start temp sockets not created", e)
-      }
+      // start fifo queue delivery via codedOutputStream
+      mConnectedSendThread = new ConnectedSendThread(sendQueue,CodedOutputStream.newInstance(mmOutStream))
+      mConnectedSendThread.start
+    } catch {
+      case e: IOException =>
+        Log.e(TAG, "ConnectedThread start temp sockets not created", e)
     }
+
 
     def meminfo() {
       if(D) Log.i(TAG, "ConnectedThread meminfo: sendQueue="+sendQueue)
@@ -764,31 +831,36 @@ class RFCommHelperService extends android.app.Service {
     private def splitString(line:String, delim:List[String]) :List[String] = delim match {
       case head :: tail => 
         val listBuffer = new ListBuffer[String]
-        //if(D) Log.i(TAG, "ConnectedThread run splitString line="+line)
+        //if(D) Log.i(TAG, "splitString line="+line)
         for(addr <- line.split(head).toList) {
           listBuffer += addr
-          //if(D) Log.i(TAG, "ConnectedThread run splitString addr="+addr+" listBuffer.size="+listBuffer.size)
+          //if(D) Log.i(TAG, "splitString addr="+addr+" listBuffer.size="+listBuffer.size)
         }
-        //if(D) Log.i(TAG, "ConnectedThread run splitString listBuffer.size="+listBuffer.size)
+        //if(D) Log.i(TAG, "splitString listBuffer.size="+listBuffer.size)
         return listBuffer.toList
       case Nil => 
         return List(line.trim)
     }
 
     // called by RFCommMultiplexerService.ConnectedThread()
-    private def processBtMessage(cmd:String, arg1:String, fromAddr:String, btMessage:BtShare.Message)(readCodedInputStream:() => Array[Byte]) :Boolean = {
+    private def processBtMessage(cmd:String, arg1:String, fromAddr:String, fromName:String, btMessage:BtShare.Message)(readCodedInputStream:() => Array[Byte]) :Boolean = {
       if(D) Log.i(TAG, "processBtMessage cmd="+cmd+" arg1="+arg1+" fromAddr="+fromAddr)
 
       if(cmd.equals("yourturn")) {
-        val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_YOURTURN)
-        activityMsgHandler.sendMessage(msg)
+        activityMsgHandler.sendMessage(activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_YOURTURN))
         // note that this will not arive in the activity, if another activity is running in front of it
-        return true
 
-      } else if(cmd.equals("blob")) {
+        if(firstActor)
+          stopActiveConnection
+        else
+          deliverFileArray(deviceName, deviceAddr, selectedFileStringsArrayList)
+        return true
+      }
+      
+      if(cmd.equals("blob")) {
         if(D) Log.i(TAG, "processBtMessage receive blob mime="+arg1+" receivedFileFolderString="+receivedFileFolderString)
         if(receivedFileFolderString!=null)
-          processIncomingBlob(btMessage, fromAddr, receivedFileFolderString, connectedBluetoothDevice)(readCodedInputStream)
+          processIncomingBlob(btMessage, fromAddr, receivedFileFolderString, deviceName)(readCodedInputStream)
         return true
       }
 
@@ -806,7 +878,7 @@ class RFCommHelperService extends android.app.Service {
       //if(D) Log.i(TAG, "ConnectedThread processReceivedRawData: read1 cmd="+cmd+" fromName="+fromName+" fromAddr="+fromAddr+" toAddr="+toAddr)
 
       // plug-in app-specific behaviour
-      if(!processBtMessage(cmd, arg1, fromAddr, btMessage) { () =>
+      if(!processBtMessage(cmd, arg1, fromAddr, fromName, btMessage) { () =>
         // this closure is used as readCodedInputStream() from within subclassed clients
         //if(D) Log.i(TAG, "ConnectedThread processReceivedRawData closure from processBtMessage ...")
         var magic=0
@@ -869,12 +941,12 @@ class RFCommHelperService extends android.app.Service {
 
       } catch {
         case ioex:IOException =>
-          if(D) Log.i(TAG, "ConnectedThread run IOException disconnected ("+connectedBtAddr+" "+connectedBtName+") "+ioex)
+          if(D) Log.i(TAG, "ConnectedThread run IOException disconnected "+ioex+" ##############################")
           // "Software caused connection abort" 
           // this is really just a connection failed - why does it seem to get connected at all?
           stopActiveConnection
         case istex:java.lang.IllegalStateException =>
-          Log.e(TAG, "ConnectedThread run IllegalStateException disconnected ("+connectedBtAddr+" "+connectedBtName+") "+istex)
+          Log.e(TAG, "ConnectedThread run IllegalStateException disconnected "+istex)
           stopActiveConnection
       }
 
@@ -889,12 +961,13 @@ class RFCommHelperService extends android.app.Service {
       sendQueue += btMessage
     }
 
-    def writeCmdMsg(cmd:String, message:String, toAddr:String, sendMsgCounter:Long) = synchronized {
-      if(D) Log.i(TAG, "ConnectedThread writeCmdMsg cmd="+cmd+" message="+message+" socket="+socket) //+" toAddr="+toAddr+" myBtName="+myBtName+" myBtAddr="+myBtAddr)
+    // called by send() only
+    def writeCmdMsg(cmd:String, message:String, toAddr:String, toName:String, sendMsgCounter:Long) = synchronized {
+      if(D) Log.i(TAG, "ConnectedThread writeCmdMsg cmd="+cmd+" message="+message)
       val btBuilder = BtShare.Message.newBuilder
                                      .setArgCount(sendMsgCounter)
-                                     .setFromName(myBtName)
-                                     .setFromAddr(myBtAddr)
+                                     .setFromName(toName)    // todo: may not be null
+                                     .setFromAddr(toAddr)    // todo: may not be null
       if(message!=null)
         btBuilder.setArg1(message)     
 
@@ -916,10 +989,10 @@ class RFCommHelperService extends android.app.Service {
       if(sendQueue.size>500) {
         // 500 sendQueue allocations of 10.000 bytes = 500 KB buffer 
         while(sendQueue.size>500) {
-          if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" >500 sleep ... ###")
+          if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" >500 sleep ===================")
           try { Thread.sleep(1000); } catch { case ex:Exception => }
         }
-        if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" after sleep ###")
+        if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" after sleep")
       }
 
       var sendData:Array[Byte] = null
@@ -929,11 +1002,11 @@ class RFCommHelperService extends android.app.Service {
             sendData = new Array[Byte](size)
           } catch {
             case e: java.lang.OutOfMemoryError =>
-              if(D) Log.i(TAG, "ConnectedThread writeData OutOfMemoryError - force System.gc() sendQueue.size="+sendQueue.size+" ######################")
+              if(D) Log.i(TAG, "ConnectedThread writeData OutOfMemoryError - force System.gc() sendQueue.size="+sendQueue.size+" ===================")
               System.gc
               try { Thread.sleep(2000); } catch { case ex:Exception => }
               System.gc
-              if(D) Log.i(TAG, "ConnectedThread writeData OutOfMemoryError - continue after System.gc sendQueue.size="+sendQueue.size+" ######################")
+              if(D) Log.i(TAG, "ConnectedThread writeData OutOfMemoryError - continue after System.gc sendQueue.size="+sendQueue.size)
           }
         }
         Array.copy(data,0,sendData,0,size)
@@ -942,30 +1015,26 @@ class RFCommHelperService extends android.app.Service {
       sendQueue += sendData
     }
 
+    // called by stopActiveConnection()
     def cancel() {
-      // called by stopActiveConnection()
-      if(D) Log.i(TAG, "ConnectedThread cancel() socket="+socket)
+      if(D) Log.i(TAG, "ConnectedThread cancel()")
 
       if(mmInStream != null) {
         try { mmInStream.close } catch { case e: Exception => }
-        mmInStream = null
+        //mmInStream = null
       }
 
       if(mmOutStream != null) {
         try { mmOutStream.close } catch { case e: Exception => }
-        mmOutStream = null
+        //mmOutStream = null
       }
 
       codedInputStream = null
       if(mConnectedSendThread!=null)
         mConnectedSendThread.halt
 
-      if(socket!=null) {
-        disconnect(socket)
-        connectionLost(socket)
-        socket=null
-      }
-
+      if(D) Log.i(TAG, "ConnectedThread -> socketCloseFkt")
+      socketCloseFkt() // call device-type specific socket.close
       running = false
       sendQueue.clear
       System.gc
@@ -973,7 +1042,9 @@ class RFCommHelperService extends android.app.Service {
     }
   }
 
-  class ConnectedSendThread(sendQueue:scala.collection.mutable.Queue[Any], var codedOutputStream:CodedOutputStream, socket:BluetoothSocket) extends Thread {
+
+
+  class ConnectedSendThread(sendQueue:scala.collection.mutable.Queue[Any], var codedOutputStream:CodedOutputStream) extends Thread {
     //if(D) Log.i(TAG, "ConnectedSendThread start")
     var running = false
     var blobId:Long = 0
@@ -988,7 +1059,7 @@ class RFCommHelperService extends android.app.Service {
       if(D) Log.i(TAG, "ConnectedSendThread meminfo: codedOutputStream="+codedOutputStream)
       if(activityManager!=null) {
         activityManager.getMemoryInfo(memoryInfo)
-        if(D) Log.i(TAG, "ConnectedSendThread meminfo: memoryInfo.availMem="+memoryInfo.availMem+" memoryInfo.lowMemory="+memoryInfo.lowMemory+" ######################")
+        if(D) Log.i(TAG, "ConnectedSendThread meminfo: memoryInfo.availMem="+memoryInfo.availMem+" memoryInfo.lowMemory="+memoryInfo.lowMemory)
       }
     }
 
@@ -997,7 +1068,7 @@ class RFCommHelperService extends android.app.Service {
       var progressLastMS:Long = SystemClock.uptimeMillis
       var fileSend:Long = 0
       try {
-        while(codedOutputStream!=null && sendQueue!=null) {
+        while(activeConnectedThread!=null && codedOutputStream!=null && sendQueue!=null) {
           if(sendQueue.size>0) {
             val obj = sendQueue.dequeue
             if(obj.isInstanceOf[BtShare.Message]) {
@@ -1035,7 +1106,7 @@ class RFCommHelperService extends android.app.Service {
                 bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 100)
                 bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
                 bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
-                if(D) Log.i(TAG, "ConnectedSendThread run totalSend="+totalSend+" done ######################")
+                if(D) Log.i(TAG, "ConnectedSendThread run totalSend="+totalSend+" done")
                 msg.setData(bundle)
                 activityMsgHandler.sendMessage(msg)
               }
@@ -1048,7 +1119,7 @@ class RFCommHelperService extends android.app.Service {
                   bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, (fileSend/(contentLength/100)).asInstanceOf[Int] )
                 bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
                 bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
-                if(D) Log.i(TAG, "ConnectedSendThread run totalSend="+totalSend+" ######################")
+                if(D) Log.i(TAG, "ConnectedSendThread run totalSend="+totalSend)
                 msg.setData(bundle)
                 activityMsgHandler.sendMessage(msg)
               }
@@ -1059,16 +1130,15 @@ class RFCommHelperService extends android.app.Service {
         }
       } catch {
         case e: IOException =>
-          if(D) Log.i(TAG, "ConnectedSendThread socket="+socket+" run ex="+e)
+          if(D) Log.i(TAG, "ConnectedSendThread run ex="+e)
           halt
-          //connectionLost(socket)
       }
 
       if(activityManager!=null) {
         activityManager.getMemoryInfo(memoryInfo)
-        if(D) Log.i(TAG, "ConnectedSendThread run pre DONE memoryInfo.availMem="+memoryInfo.availMem+" memoryInfo.lowMemory="+memoryInfo.lowMemory+" ######################")
+        if(D) Log.i(TAG, "ConnectedSendThread run pre DONE memoryInfo.availMem="+memoryInfo.availMem+" memoryInfo.lowMemory="+memoryInfo.lowMemory)
       }
-      if(D) Log.i(TAG, "ConnectedSendThread run DONE")
+      if(D) Log.i(TAG, "ConnectedSendThread run DONE activeConnectedThread="+activeConnectedThread)
     }
 
     def halt() {
@@ -1102,7 +1172,7 @@ class RFCommHelperService extends android.app.Service {
           // we receive: "java.io.IOException: Connection reset by peer"
           // or:         "java.io.IOException: Transport endpoint is not connected"
           var errMsg = ex.getMessage
-          Log.e(TAG, "ConnectedSendThread writeBtShareMessage socket="+socket+" ioexception errMsg="+errMsg, ex)
+          Log.e(TAG, "ConnectedSendThread writeBtShareMessage ioexception errMsg="+errMsg, ex)
           activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, errMsg).sendToTarget
           halt
       }
@@ -1124,11 +1194,165 @@ class RFCommHelperService extends android.app.Service {
         }
       } catch {
         case ioex:IOException =>
-          Log.e(TAG, "ConnectedSendThread writeData socket="+socket+" "+ioex)
+          Log.e(TAG, "ConnectedSendThread writeData "+ioex)
           activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, ioex.getMessage).sendToTarget
           halt
       }
     }
+  }
+
+
+
+  //////////////////////////// file delivery
+
+  private val blobDeliverChunkSize = 10*1024
+  private val mimeTypeMap = MimeTypeMap.getSingleton()
+  var numberOfSentFiles = 0
+  @volatile private var blobDeliverId:Long = 0
+
+  private def deliver(inputStream:InputStream, mime:String, contentLength:Long=0, fileUriString:String) :Int = {
+    if(D) Log.i(TAG, "deliver fileUriString="+fileUriString+" contentLength="+contentLength+" mime="+mime)
+    if(fileUriString==null)
+      return -1
+
+    var filename = fileUriString
+    if(fileUriString!=null) {
+      val idxLastSlash = fileUriString.lastIndexOf("/")
+      if(idxLastSlash>=0)
+        filename = fileUriString.substring(idxLastSlash+1)
+    }
+
+    // send blob in a separate thread (1st it will be queued - then be send via RFCommHelperService.ConnectedSendThread())
+    // data will be received in RFCommHelperService processIncomingBlob()
+    try {
+      var localID:Long = 0
+      synchronized {
+        blobDeliverId+=1
+        localID = blobDeliverId
+      }
+      if(D) Log.i(TAG, "deliver sendBlob, localID="+localID+" mime="+mime)
+      sendBlob(mime, byteString=null, toAddr=null, filename, contentLength, localID)
+
+      // send chunked data
+      val byteChunkData = new Array[Byte](blobDeliverChunkSize)
+      var totalSentBytes:Long = 0
+      var readBytes = inputStream.read(byteChunkData,0,blobDeliverChunkSize)
+      if(D) Log.i(TAG, "deliver read file done readBytes="+readBytes)
+      while(readBytes>0) {
+        sendData(readBytes, byteChunkData) // may block
+        totalSentBytes += readBytes
+        readBytes = inputStream.read(byteChunkData,0,blobDeliverChunkSize)
+      }
+      if(D) Log.i(TAG, "deliver send fileUriString=["+fileUriString+"] done totalSentBytes="+totalSentBytes+" send EOM")
+      sendData(0, byteChunkData) // eom - may block
+      inputStream.close
+      return 0
+
+    } catch { case ex:Exception =>
+      Log.e(TAG, "deliver ",ex)
+      val errMsg = "deliver "+ex.getMessage
+
+      AndrTools.runOnUiThread(context) { () =>
+        Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
+      }
+      return -2
+    }
+  }
+
+  private def deliverFile(file:File) :Int = {
+    if(file!=null) {
+      val fileName = file.getName
+      if(fileName!=null) {
+        try {
+          val lastIdxOfDot = fileName.lastIndexOf(".")
+          val extension = if(lastIdxOfDot>=0) fileName.substring(lastIdxOfDot+1) else null
+          var mimeTypeFromExtension = if(extension!=null) mimeTypeMap.getMimeTypeFromExtension(extension) else "*/*"
+          if(extension=="asc") mimeTypeFromExtension="application/pgp"
+          if(D) Log.i(TAG, "deliverFile name=["+fileName+"] mime="+mimeTypeFromExtension)
+          val fileInputStream = new FileInputStream(file) 
+          if(fileInputStream!=null) {
+            val fileSize = file.length()
+            return deliver(fileInputStream, mimeTypeFromExtension, fileSize, fileName)
+          }
+
+        } catch {
+          case fnfex: java.io.FileNotFoundException =>
+            Log.e(TAG, "deliverFile file.getCanonicalPath()="+file.getCanonicalPath()+" FileNotFoundException "+fnfex)
+            val errMsg = "File not found "+file.getCanonicalPath()
+
+            AndrTools.runOnUiThread(context) { () =>
+              Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
+            }
+        }
+      }
+    }
+    return -1
+  }
+
+  // called by connectedBt(), connectedWifi(), processBtMessage()
+  def deliverFileArray(remoteDeviceName:String, remoteDeviceAddr:String, selectedFileStringsArrayList:ArrayList[String]) {
+    numberOfSentFiles = 0
+    if(selectedFileStringsArrayList==null || selectedFileStringsArrayList.size<1) {
+      Log.e(TAG, "deliverFileArray no files to send selectedFileStringsArrayList="+selectedFileStringsArrayList)
+
+      // send special token to indicate the other side may now become the actor
+      if(D) Log.i(TAG, "handleMessage MESSAGE_STATE_CHANGE: sending 'yourturn'")
+      
+      send("yourturn",null,remoteDeviceAddr,remoteDeviceName)
+      // todo: if the other side does not respond to this, we hang - we need to time out
+      //       we must start a thread to come back every 10 seconds to check if we had received any MESSAGE_DELIVER_PROGRESS msgs in msgFromServiceHandler
+      //       new ReceiverIdleCheckThread().start
+
+    } else {
+      new Thread() {
+        override def run() {
+          AndrTools.runOnUiThread(context) { () =>
+            // don't animate the radio log, but todo: maybe animate some tx/tx-LED
+            //if(radioLogoView!=null && fastAnimation!=null)
+            //	radioLogoView.setAnimation(fastAnimation)
+            if(activityMsgHandler!=null)
+              activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Upload to "+remoteDeviceName).sendToTarget
+          }
+          try { Thread.sleep(100) } catch { case ex:Exception => }
+
+          try {
+            val iterator = selectedFileStringsArrayList.iterator 
+            while(iterator.hasNext) {
+              val fileString = iterator.next
+              if(fileString!=null) {
+                if(D) Log.i(TAG, "deliverFileArray fileString=["+fileString+"] numberOfSentFiles="+numberOfSentFiles)
+
+                val idxLastDot = fileString.lastIndexOf(".")
+                if(idxLastDot<0) {
+                  Log.e(TAG, "deliverFileArray idxLastDot<0 (no file extension)")
+                } else {
+                  val ext = fileString.substring(idxLastDot+1)
+                  //val dstFileName = mBluetoothAdapter.getName+"."+ext
+                  //if(D) Log.i(TAG, "deliverFileArray dstFileName=["+dstFileName+"]")
+                  if(deliverFile(new File(fileString))==0)
+                    numberOfSentFiles += 1
+                }
+              }
+            }
+          } catch {
+            case npex: java.lang.NullPointerException =>
+              Log.e(TAG, "handleMessage MESSAGE_STATE_CHANGE: NullPointerException "+npex)
+              val errMsg = npex.getMessage
+              Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
+          }
+
+          // send special token to indicate the other side is becoming the actor
+          if(D) Log.i(TAG, "handleMessage MESSAGE_STATE_CHANGE: sending 'yourturn'")
+          send("yourturn",null,remoteDeviceAddr,remoteDeviceName)
+          // note: we expect the other party to start sending files immediately now (and after that to call stopActiveConnection)
+          // todo: for the case that nothing happens, we need to disconnect the bt-connection ourselfs
+          // solution:
+          // 1. capture the current number of received bytes from the service
+          // 2. start a dedicated thread to come back in 5 to 10 seconds
+          // 3. if no additional new bytes were received ... hang up
+        }
+      }.start                        
+    } 
   }
 }
 

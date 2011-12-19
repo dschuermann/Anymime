@@ -89,7 +89,7 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
       return null
     }
 
-    if(D) Log.i(TAG, "getView("+position+") fullString="+fullString)
+    //if(D) Log.i(TAG, "getView("+position+") fullString="+fullString)
 
     val numberView = view.findViewById(R.id.number).asInstanceOf[TextView]
     numberView.setText("")

@@ -19,9 +19,10 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/bg"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  android:background="@drawable/backrepeat"
+  android:background="@drawable/background"
 >
   <!-- header -->
   <LinearLayout
@@ -37,8 +38,8 @@
       android:id="@+id/applogo"
       android:src="@drawable/anymime"
       android:layout_width="wrap_content"
-      android:layout_height="76dip"
-      android:paddingTop="8dp"
+      android:layout_height="62dip"
+      android:paddingTop="10dp"
       android:layout_centerInParent="true"
       android:gravity="center"
     />
@@ -47,7 +48,7 @@
   <!-- footer -->
   <LinearLayout
     android:id="@+id/footer"
-    android:layout_width="600dip"
+    android:layout_width="800dip"
     android:layout_height="82dip"
     android:orientation="vertical"
     android:layout_alignParentBottom="true"
@@ -111,6 +112,18 @@
             android:layout_marginLeft="2dip"
             android:layout_marginRight="2dip"
           />
+          <!--Button
+            android:id="@+id/buttonManualConnectOpp"
+            android:text="Transfer OPP"
+            android:textSize="12sp"
+            android:layout_width="100dip"
+            android:layout_height="fill_parent"
+            style="@style/dialogTextAppearence.HighlightButton"
+            android:drawableTop="@android:drawable/ic_menu_upload"
+            android:drawablePadding="0dp"
+            android:layout_marginLeft="2dip"
+            android:layout_marginRight="2dip"
+          /-->
           <Button
             android:id="@+id/buttonSendFiles"
             android:text="Send files"
@@ -135,6 +148,18 @@
             android:layout_marginLeft="2dip"
             android:layout_marginRight="2dip"
           />
+          <!--Button
+            android:id="@+id/buttonRadioSelect"
+            android:text="Radio select"
+            android:textSize="12sp"
+            android:layout_width="100dip"
+            android:layout_height="fill_parent"
+            style="@style/dialogTextAppearence.HighlightButton"
+            android:drawableTop="@android:drawable/ic_menu_preferences"
+            android:drawablePadding="0dp"
+            android:layout_marginLeft="2dip"
+            android:layout_marginRight="2dip"
+          /-->
           <Button
             android:id="@+id/buttonBluetoothSettings"
             android:text="Bluetooth"

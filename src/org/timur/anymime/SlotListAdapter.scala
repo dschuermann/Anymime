@@ -65,8 +65,8 @@ class SlotListAdapter(context:Context, messageResourceId:Int, count:Int)
     if(commaSeparatedString!=null && commaSeparatedString.length>0) {
       val idxFirstComma = commaSeparatedString.indexOf(",")
       if(idxFirstComma>=0) {
-        slotName = commaSeparatedString.substring(0,idxFirstComma)
-        fileList = commaSeparatedString.substring(idxFirstComma+1)
+        slotName = commaSeparatedString.substring(0,idxFirstComma).trim
+        fileList = commaSeparatedString.substring(idxFirstComma+1).trim
       }
     }
 
@@ -86,7 +86,7 @@ class SlotListAdapter(context:Context, messageResourceId:Int, count:Int)
     val iconView = view.findViewById(R.id.icon).asInstanceOf[ImageView]
     if(iconView != null) {
       if(position==selected)
-        iconView.setImageResource(R.drawable.checkmark2)
+        iconView.setImageResource(R.drawable.checkmark)
       else
         iconView.setImageResource(R.drawable.empty)
     }

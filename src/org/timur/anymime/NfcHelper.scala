@@ -54,17 +54,18 @@ object NfcHelper {
   }
 
   // as a result of NfcAdapter.ACTION_NDEF_DISCOVERED
-  def checkForNdefAction(context:Context, intent:Intent, btService:RFCommHelperService, mBluetoothAdapter:BluetoothAdapter) :String = {
-    //if(D) Log.i(TAG, "checkForNdefAction intent="+intent)
+  def checkForNdefAction(context:Context, intent:Intent) :String = {
+    if(D) Log.i(TAG, "checkForNdefAction intent="+intent+" ####")
 
     if(intent==null || intent.getAction!=NfcAdapter.ACTION_NDEF_DISCOVERED) {
-      if(D) Log.i(TAG, "checkForNdefAction intent.getAction!=ACTION_NDEF_DISCOVERED -> ABORT")
+      if(D) Log.i(TAG, "checkForNdefAction intent.getAction(="+intent.getAction+") != ACTION_NDEF_DISCOVERED -> ABORT ####")
+        // note: sometimes we get "android.intent.action.MAIN" here
       return null
     }
 
     def rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
     if(rawMsgs==null || rawMsgs.length<=0) {
-      if(D) Log.i(TAG, "checkForNdefAction no rawMsgs.length -> ABORT")
+      if(D) Log.i(TAG, "checkForNdefAction no rawMsgs.length -> ABORT ####")
       return null
     }
 
@@ -75,7 +76,7 @@ object NfcHelper {
     var ndefRecord = ndefRecords.apply(0)
     if(D) Log.i(TAG, "checkForNdefAction ndefRecord="+ndefRecord)
     if(ndefRecord==null || ndefRecord.getTnf!=NdefRecord.TNF_WELL_KNOWN) {
-      if(D) Log.i(TAG, "checkForNdefAction ndefRecord.getTnf!=NdefRecord.TNF_WELL_KNOWN -> ABORT")
+      if(D) Log.i(TAG, "checkForNdefAction ndefRecord.getTnf!=NdefRecord.TNF_WELL_KNOWN -> ABORT ####")
       return null
     }
 
@@ -92,7 +93,9 @@ object NfcHelper {
     val languageCodeLength = payloadByteArray(0) & 0077
     val result = new String(payloadByteArray, languageCodeLength+1, payloadByteArray.length-languageCodeLength-1, textEncoding)
     if(D) Log.i(TAG, "checkForNdefAction resolveIntent0 textEncoding="+textEncoding+" languageCodeLength="+languageCodeLength+" result="+result)
+    return result
 
+/*
     // btAddress plausibility check
     if(result==null || !result.startsWith("bt=") /*|| result.indexOf(":")!=2*/) {
       if(D) Log.i(TAG, "checkForNdefAction btAddress ["+result+"] plausibility check failed -> ABORT")
@@ -102,6 +105,19 @@ object NfcHelper {
     val btAddress = result.substring(3)
     if(D) Log.i(TAG, "checkForNdefAction verified btAddress="+btAddress)
     return btAddress
+*/
+
+/*
+    // wifiAddress plausibility check
+    if(result==null || !result.startsWith("p2pWifi=") /*|| result.indexOf(":")!=2*/) {
+      if(D) Log.i(TAG, "checkForNdefAction wifiAddress ["+result+"] plausibility check failed -> ABORT ####")
+      return null
+    }
+
+    val wifiAddress = result.substring(8)
+    if(D) Log.i(TAG, "checkForNdefAction verified remote wifiAddress="+wifiAddress)
+    return wifiAddress
+*/
   }
 }
 

@@ -105,9 +105,10 @@ class ShowSelectedSlotActivity extends Activity {
       //if(D) Log.i(TAG, "onCreate slot="+slot+" commaSeparatedString="+commaSeparatedString+" size="+arraySlots(slot).size+" arraySlots(slot)="+arraySlots(slot))
 
       val commaSeparatedString2 = arrayToCommaSeparatedString(arraySlots(slot), true)  // includes slot name at zero position
-      if(D) Log.i(TAG, "onCreate slot="+slot+" commaSeparatedString2="+commaSeparatedString2+" slotName=["+slotName+"]")
-      if(commaSeparatedString2!=null && commaSeparatedString2.size>0)
+      if(commaSeparatedString2!=null && commaSeparatedString2.size>0) {
+        if(D) Log.i(TAG, "onCreate slot="+slot+" commaSeparatedString2="+commaSeparatedString2+" slotName=["+slotName+"]")
         slotListAdapter.add(commaSeparatedString2)
+      }
     }
 
     slotListAdapter.add("")
