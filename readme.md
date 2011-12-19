@@ -19,7 +19,7 @@ Source code is licensed under the GNU General Public License, Version 3:
 
 3rd party components being used
 
-- Google prototype
+- Google protobuf
 
 - Teambox file-icons
   https://github.com/teambox/Free-file-icons
