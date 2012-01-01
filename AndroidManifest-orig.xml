@@ -104,31 +104,71 @@
       </intent-filter>
     </activity>
 
-<!--
-    <activity android:name=".SettingsPopupActivity"
-              android:label="Settings"
-              android:theme="@android:style/Theme.Dialog"
-              android:configChanges="orientation|keyboardHidden" />
--->
 
-    <service android:name=".RFCommHelperService" />
+
+    <activity android:name="ShowPgpFingerprintActivity"
+              android:label="Fingerprint verification"
+              android:configChanges="orientation|keyboardHidden">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:mimeType="text/plain"/>
+        <data android:mimeType="application/pgp"/>
+      </intent-filter>
+    </activity>
+
+    <activity android:name="CameraPreview" 
+              android:label="Optical Verification"
+              android:screenOrientation="landscape">
+    </activity>
+
+    <activity android:name="FingerprintOcrActivity"
+              android:label="Anymime KSP - Fingerprint OCR"
+              android:configChanges="orientation|keyboardHidden">
+    </activity>
+
+
+    <activity android:name="UploadPgpFilesPopupActivity"
+              android:label="SCP key upload"
+              android:theme="@android:style/Theme.Dialog"
+              android:configChanges="orientation|keyboardHidden">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:mimeType="application/pgp"/>
+      </intent-filter>
+    </activity>
+
+    <service android:name="org.timur.rfcomm.RFCommHelperService" />
+    <!--service android:name=".TestP2pService" /-->
+    <service android:name=".FileExchangeService" />
   </application>
 
+
+
   <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11" />
+
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
 
   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
   <uses-permission android:name="android.permission.BLUETOOTH" />
   <uses-permission android:name="android.permission.NFC" />
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
 
     <!-- wifi direct -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-feature android:name="android.hardware.wifi.direct" android:required="true"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!--uses-permission android:name="android.permission.READ_PHONE_STATE" /-->
+
+  <uses-permission android:name="android.permission.CAMERA"/> 
+  <uses-feature android:name="android.hardware.camera" />
+  <uses-feature android:name="android.hardware.camera.autofocus" />
 
 </manifest>
 

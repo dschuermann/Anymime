@@ -32,7 +32,7 @@ import android.widget.TextView
 
 class DisplayTextFileActivity extends Activity {
   private val TAG = "DisplayTextFileActivity"
-  private val D = true
+  private val D = Static.DBGLOG
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)

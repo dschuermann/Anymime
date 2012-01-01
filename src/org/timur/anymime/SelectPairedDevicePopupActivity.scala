@@ -38,10 +38,12 @@ import android.widget.ListView
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 
+import org.timur.rfcomm.AndrTools
+
 class SelectPairedDevicePopupActivity extends ListActivity {
 
   private val TAG = "SelectPairedDevicePopupActivity"
-  private val D = true
+  private val D = Static.DBGLOG
 
   private val REQUEST_BT_SETTINGS = 1
   private val pairedDevicesArrayListOfStrings = new java.util.ArrayList[String]()

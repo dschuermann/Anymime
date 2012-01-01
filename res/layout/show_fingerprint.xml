@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This file is part of AnymimeKSP, a program to help you swap key files
+  wirelessly between mobile devices.
+  Copyright (C) 2011 timur.mehrvarz@gmail.com
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:fillViewport="true"
+  android:gravity="center_horizontal"
+>
+  <Button
+    android:id="@+id/verification"
+    android:text="Camera verification"
+    android:layout_width="246dip"
+    android:layout_height="44dip" 
+    android:textSize="18sp"
+    style="@style/dialogTextAppearence.Button"
+    android:layout_centerHorizontal="true"
+    android:layout_marginBottom="12dip"
+    android:layout_alignParentBottom="true"
+  />
+
+  <LinearLayout
+    android:layout_above="@id/verification"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+  >
+    <LinearLayout
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:layout_margin="0dip"
+      android:gravity="center"
+    >
+      <View
+        android:layout_width="3dip"
+        android:layout_height="fill_parent"
+        android:background="#FFFFFFFF"
+      />
+      <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+      >
+        <View
+          android:layout_width="fill_parent"
+          android:layout_height="3dip"
+          android:background="#FFFFFFFF"
+          android:layout_marginBottom="2dp"
+        />
+        <TextView
+          android:id="@+id/titleReceivedFingerprint"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:textSize="20sp"
+          android:textColor="#bbf"
+          android:gravity="center_horizontal"
+          android:text="Received key fingerprint"
+          android:layout_marginBottom="2dp"
+        />
+        <TextView
+          android:id="@+id/textReceivedFingerprint"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:textSize="26sp"
+          android:textColor="#fff"
+          android:typeface="monospace"
+          android:textStyle="normal"
+          android:gravity="center_horizontal"
+          android:layout_marginBottom="10dp"
+          android:textScaleX="1.3"
+        />
+
+        <TextView
+          android:id="@+id/titleSentFingerprint"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:textSize="20sp"
+          android:textColor="#aae"
+          android:gravity="center_horizontal"
+          android:text="Sent key fingerprint"
+          android:layout_marginTop="5dp"
+          android:layout_marginBottom="2dp"
+        />
+        <TextView
+          android:id="@+id/textSentFingerprint"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:textSize="26sp"
+          android:textColor="#fff"
+          android:typeface="monospace"
+          android:textStyle="normal"
+          android:gravity="center_horizontal"
+          android:layout_marginBottom="10dp"
+          android:textScaleX="1.3"
+        />
+        <View
+          android:layout_width="fill_parent"
+          android:layout_height="3dip"
+          android:background="#FFFFFFFF"
+        />
+      </LinearLayout>
+      <View
+        android:layout_width="3dip"
+        android:layout_height="fill_parent"
+        android:background="#FFFFFFFF"
+      />
+    </LinearLayout>
+  </LinearLayout>
+</RelativeLayout>
+

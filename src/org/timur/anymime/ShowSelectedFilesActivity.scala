@@ -45,10 +45,12 @@ import android.widget.EditText
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemClickListener
 import android.webkit.MimeTypeMap
-	
+
+import org.timur.rfcomm.AndrTools
+
 class ShowSelectedFilesActivity extends Activity {
   private val TAG = "ShowSelectedFilesActivity"
-  private val D = true
+  private val D = Static.DBGLOG
 
   private val REQUEST_SELECT_FILE = 1
   private val REQUEST_SELECTED_SLOT = 2

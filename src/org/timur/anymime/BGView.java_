@@ -1,0 +1,88 @@
+/*
+ * This file is part of AnyMime, a program to help you swap files
+ * wirelessly between mobile devices.
+ *
+ * Copyright (C) 2011 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.timur.anymime;
+
+import java.util.Random;
+
+import android.content.Context;
+import android.renderscript.RSSurfaceView;
+import android.renderscript.RenderScriptGL;
+import android.renderscript.Float4;
+import android.view.MotionEvent;
+import android.util.Log;
+import android.widget.Toast;
+import android.graphics.BitmapFactory;
+
+public class BGView extends RSSurfaceView {
+  private String TAG = "BGView";
+  private boolean D = true;
+
+	private Context mContext;
+	private BGRS mRenderScript;
+	private RenderScriptGL mRS;
+
+	public BGView(Context context) {
+	    super(context);
+	    mContext = context;
+	    ensureRenderScript();
+    }
+
+	private void ensureRenderScript() {
+	  try {
+		  if(mRS == null) {
+			  final RenderScriptGL.SurfaceConfig sc = new RenderScriptGL.SurfaceConfig();
+        if(D) Log.i(TAG, "ensureRenderScript sc="+sc);
+			  mRS = createRenderScriptGL(sc);
+        if(D) Log.i(TAG, "ensureRenderScript mRS="+mRS);
+		  }
+		  if (mRenderScript == null) {
+			  mRenderScript = new BGRS(mRS, mContext.getResources(), R.raw.bg);
+        if(D) Log.i(TAG, "ensureRenderScript mRenderScript="+mRenderScript);
+		  }
+    } catch(java.lang.NoClassDefFoundError ncldefex) {
+      Log.e(TAG, "ensureRenderScript "+ncldefex);
+      Toast.makeText(mContext, "RenderScript classes not available", Toast.LENGTH_LONG).show();
+    }
+	}
+
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
+    super.onTouchEvent(event);
+
+    if (mRenderScript == null) {
+    	return true;
+    }
+
+    if (event.getAction() == MotionEvent.ACTION_DOWN) {
+/*
+    	final Random random = new Random();
+    	final Float4 newColor = new Float4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f);
+      if(D) Log.i(TAG, "onTouchEvent newColor="+newColor);
+    	mRenderScript.setBackgroundColor(newColor);
+*/
+     	mRenderScript.setBackgroundBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.icon));
+    }
+
+    return true;
+  }
+
+}
+

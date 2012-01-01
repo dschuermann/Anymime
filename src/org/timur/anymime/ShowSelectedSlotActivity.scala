@@ -49,7 +49,7 @@ object ShowSelectedSlotActivity {
 
 class ShowSelectedSlotActivity extends Activity {
   private val TAG = "ShowSelectedSlotActivity"
-  private val D = true
+  private val D = Static.DBGLOG
 
   private val PREFS_SETTINGS = "org.timur.anymime.settings"
   private var prefSettings:SharedPreferences = null

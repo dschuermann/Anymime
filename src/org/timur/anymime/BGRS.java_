@@ -1,0 +1,170 @@
+/*
+ * This file is part of AnyMime, a program to help you swap files
+ * wirelessly between mobile devices.
+ *
+ * Copyright (C) 2011 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.timur.anymime;
+
+import android.util.Log;
+
+/*
+import android.content.res.Resources;
+import android.renderscript.RenderScriptGL;
+import android.renderscript.Float4;
+
+public class BGRS {
+  private String TAG = "BGRS";
+  private boolean D = true;
+  private RenderScriptGL mRS;
+  private ScriptC_BG mScript;
+
+  public BGRS(RenderScriptGL rs, Resources res, int resId) {
+    if(D) Log.i(TAG, "rs="+rs+" res="+res+" resId="+resId);
+  	mRS = rs;
+  	mScript = new ScriptC_BG(rs, res, resId);
+  	mRS.bindRootScript(mScript);
+  }
+
+	public void setBackgroundColor(Float4 color) {
+		//mScript.set_bgColor(color);
+	}
+}
+*/
+
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.renderscript.Allocation;
+import android.renderscript.Float4;
+import android.renderscript.Matrix4f;
+import android.renderscript.ProgramFragment;
+import android.renderscript.ProgramFragmentFixedFunction;
+import android.renderscript.ProgramStore;
+import android.renderscript.ProgramVertex;
+import android.renderscript.ProgramVertexFixedFunction;
+import android.renderscript.RenderScriptGL;
+import android.renderscript.Sampler;
+
+public class BGRS {
+
+	private Sampler mLinearClamp;
+  private ProgramStore mProgramStoreBlendNone;
+  private ProgramVertex mProgramVertex;
+	private RenderScriptGL mRS;
+	private ScriptC_BG mScript;
+  private ProgramFragment mSingleTextureFragmentProgram;
+  private ProgramFragment mProgramFragment;
+
+	public BGRS(RenderScriptGL rs, Resources res, int resId) {
+		mRS = rs;
+		mScript = new ScriptC_BG(rs, res, resId);
+
+		initProgramStore();
+		initSampler();
+		initProgramFragment();
+		initProgramVertex();
+		mRS.bindRootScript(mScript);
+
+	}
+
+	public void setBackgroundBitmap(Bitmap bitmap) {
+		if (bitmap == null) {
+			return;
+		}
+		final Allocation bitmapAllocation = Allocation.createFromBitmap(mRS, bitmap, Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE);
+		mScript.set_gBgImage(bitmapAllocation);
+	}
+
+	public void setBackgroundColor(Float4 color) {
+		mScript.set_gBgColor(color);
+	}
+
+	private void initProgramFragment() {
+/*
+        final ProgramFragmentFixedFunction.Builder pfBuilder = new ProgramFragmentFixedFunction.Builder(mRS);
+        pfBuilder.setTexture(ProgramFragmentFixedFunction.Builder.EnvMode.REPLACE, ProgramFragmentFixedFunction.Builder.Format.RGBA, 0);
+        mSingleTextureFragmentProgram = pfBuilder.create();
+        mScript.set_gSingleTextureFragmentProgram(mSingleTextureFragmentProgram);
+        //mRS.bindProgramFragment(mSingleTextureFragmentProgram);
+*/
+
+/*
+*/
+     ProgramFragment.Builder sb = new ProgramFragment.Builder(mRS);
+        String t =  
+          "uniform float time;\n" +
+          "uniform vec2 resolution;\n" +
+	        "void main(void) {\n" +
+		      "  vec2 position = -1.0 + 2.0 * gl_FragCoord.xy / resolution.xy;\n" +
+		      "  float red   = abs(sin(position.x*position.y + time*1.5));\n" +
+		      "  float green = abs(sin(position.x*position.y + time/2.0));\n" +
+		      "  float blue  = abs(sin(position.x*position.y + time*1.2));\n" +
+		      "  gl_FragColor = vec4( red*0.7, 0.9+0.1*green, blue*0.9, 1.0 );\n" +
+	        "}\n";
+
+
+        sb.setShader(t);
+//        sb.addConstant(mVpConsts.getType());
+//        sb.addInput(mPoints.getElement());
+        mSingleTextureFragmentProgram = sb.create();
+//        mProgramVertex.bindConstants(mVpConsts.getAllocation(), 0);
+        //mRS.bindProgramVertex(mProgramVertex);
+        //mScript.set_gProgramFragment(mSingleTextureFragmentProgram);
+        mScript.set_gSingleTextureFragmentProgram(mSingleTextureFragmentProgram);
+	}
+
+    private void initProgramStore() {
+        mProgramStoreBlendNone = ProgramStore.BLEND_NONE_DEPTH_NONE(mRS);
+        mScript.set_gProgramStoreBlendNone(mProgramStoreBlendNone);
+    }
+
+	private void initProgramVertex() {
+/*
+*/
+        ProgramVertexFixedFunction.Builder pvb = new ProgramVertexFixedFunction.Builder(mRS);
+        mProgramVertex = pvb.create();
+        ProgramVertexFixedFunction.Constants pva = new ProgramVertexFixedFunction.Constants(mRS);
+        ((ProgramVertexFixedFunction)mProgramVertex).bindConstants(pva);
+        Matrix4f proj = new Matrix4f();
+        proj.loadProjectionNormalized(1, 1);
+        pva.setProjection(proj);
+
+/*
+     ProgramVertex.Builder sb = new ProgramVertex.Builder(mRS);
+        String t =  
+	        "attribute vec3 position;\n" +
+	        "void main() {\n" +
+	        "	 gl_Position = vec4( position, 1.0 );\n" +
+	        "}\n";
+
+        sb.setShader(t);
+//        sb.addConstant(mVpConsts.getType());
+//        sb.addInput(mPoints.getElement());
+        mProgramVertex = sb.create();
+//        mProgramVertex.bindConstants(mVpConsts.getAllocation(), 0);
+        //mRS.bindProgramVertex(mProgramVertex);
+*/
+
+        mScript.set_gProgramVertex(mProgramVertex);
+	}
+
+	private void initSampler() {
+		mLinearClamp = Sampler.CLAMP_LINEAR(mRS);
+		mScript.set_gLinearClamp(mLinearClamp);
+	}
+}
+

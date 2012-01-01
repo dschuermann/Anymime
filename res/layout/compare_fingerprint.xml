@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This file is part of AnymimeKSP, a program to help you swap key files
+  wirelessly between mobile devices.
+  Copyright (C) 2011 timur.mehrvarz@gmail.com
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<!-- todo use dp instead of px for ALL layout_width/layout_height -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+>
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+  >
+    <!-- this is the view shown after the image capturing and during the detection process -->
+    <LinearLayout
+      android:id="@+id/page1"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:gravity="center"
+    >
+      <RelativeLayout
+        android:id="@+id/screenshotFrame"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_width="260dp"
+        android:layout_height="390dp"
+        android:gravity="center_horizontal"
+      >
+        <!-- this is where the captured image appears -->
+        <View
+          android:id="@+id/screenshot"
+          android:layout_alignParentLeft="true"
+          android:layout_alignParentTop="true"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+        />
+
+        <!-- these two lines will be animated to indicate the scanning process -->
+        <View
+          android:id="@+id/scanLine"
+          android:layout_alignParentLeft="true"
+          android:layout_alignParentTop="true"
+          android:layout_width="match_parent"
+          android:layout_height="7px"
+          android:visibility="invisible"
+          android:background="#8000c000"
+        />
+        <View
+          android:id="@+id/scanLineVerti"
+          android:layout_alignParentLeft="true"
+          android:layout_alignParentTop="true"
+          android:layout_width="7px"
+          android:layout_height="match_parent"
+          android:visibility="invisible"
+          android:background="#8000c000"
+        />
+      </RelativeLayout>
+
+      <TextView
+        android:id="@+id/scanMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="#fff"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="20dip"
+        android:layout_marginLeft="6dip"
+        android:layout_marginRight="6dip"
+      />
+
+      <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="16px"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:max="100"
+        android:progress="0"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dip"
+        android:progressDrawable = "@xml/progressbar"
+      />
+    </LinearLayout>
+
+    <!-- this is the view shown after the detection process, showing the resulting overlay -->
+    <RelativeLayout
+      android:id="@+id/page2"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:visibility="gone"
+    >
+      <TextView
+        android:id="@+id/resultTitle"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textColor="#fff"
+        android:textStyle="bold"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="8dip"
+        android:layout_marginBottom="0dip"
+        android:layout_alignParentTop="true"
+      />
+
+      <LinearLayout
+        android:id="@+id/scanResultsMain"
+        android:layout_below="@id/resultTitle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+      >
+        <TextView
+          android:id="@+id/scanTitle1"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Sent key fingerprint"
+          android:textSize="18sp"
+          android:textStyle="bold"
+          android:textColor="#bbf"
+          android:gravity="center"
+          android:layout_marginTop="4dip"
+          android:layout_marginBottom="6dip"
+        />
+
+        <RelativeLayout
+          android:layout_width="match_parent"
+          android:layout_height="160dp"
+        >
+          <ListView
+            android:id="@+id/scanResult1View"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:cacheColorHint="#00000000"
+            android:drawSelectorOnTop="false"
+            android:divider="#000"
+            android:dividerHeight="0px"
+
+            android:listSelector="#00000000"
+            android:fadingEdgeLength="0px"
+            android:scrollbarDefaultDelayBeforeFade="0"
+            android:scrollbarFadeDuration="0"
+            android:scrollbars="none"
+            android:gravity="center"
+            android:visibility="invisible"
+          />
+
+          <RelativeLayout
+            android:id="@+id/result1Popup" 
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="#e0202020"
+            android:padding="6dip"
+            android:gravity="center"
+            android:visibility="gone"
+          >
+            <TextView
+              android:id="@+id/result1Text"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:textSize="21sp"
+              android:textColor="#fff"
+              android:padding="8dp"
+              android:gravity="center"
+              android:layout_marginLeft="20dip"
+              android:layout_marginRight="20dip"
+            />
+          </RelativeLayout>
+        </RelativeLayout>
+
+
+        <!-- vertical center divider -->
+        <View
+          android:layout_width="wrap_content"
+          android:layout_height="0dip"
+          android:gravity="center"
+          android:layout_marginBottom="20dip"
+        />
+
+
+        <TextView
+          android:id="@+id/scanTitle2"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Received key fingerprint"
+          android:textSize="18sp"
+          android:textStyle="bold"
+          android:textColor="#bbf"
+          android:gravity="center"
+          android:layout_marginTop="4dip"
+          android:layout_marginBottom="6dip"
+        />
+
+        <RelativeLayout
+          android:layout_width="match_parent"
+          android:layout_height="160dp"
+        >
+          <ListView
+            android:id="@+id/scanResult2View"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:cacheColorHint="#00000000"
+            android:drawSelectorOnTop="false"
+            android:divider="#000"
+            android:dividerHeight="0px"
+
+            android:listSelector="#00000000"
+            android:fadingEdgeLength="0px"
+            android:scrollbarDefaultDelayBeforeFade="0"
+            android:scrollbarFadeDuration="0"
+            android:scrollbars="none"
+            android:gravity="center"
+            android:visibility="invisible"
+          />
+
+          <RelativeLayout
+            android:id="@+id/result2Popup" 
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="#e0202020"
+            android:padding="6dip"
+            android:gravity="center"
+            android:visibility="gone"
+          >
+            <TextView
+              android:id="@+id/result2Text"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:textSize="21sp"
+              android:textColor="#fff"
+              android:padding="8dp"
+              android:gravity="center"
+              android:layout_marginLeft="20dip"
+              android:layout_marginRight="20dip"
+            />
+          </RelativeLayout>
+        </RelativeLayout>
+
+
+        <!-- vertical bootom spacer -->
+        <View
+          android:layout_width="wrap_content"
+          android:layout_height="0dip"
+          android:gravity="center"
+          android:layout_marginBottom="25dip"
+        />
+      </LinearLayout>
+    </RelativeLayout>
+
+  </LinearLayout>
+</ScrollView>
+

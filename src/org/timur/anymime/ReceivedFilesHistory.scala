@@ -41,7 +41,7 @@ class HistoryEntry(var date:Long, var btName:String, var kbs:Long, var arrayOfFi
 
 class ReceiveFilesHistory() {
   private val TAG = "ReceiveFilesHistory"
-  private val D = true
+  private val D = Static.DBGLOG
 
   val history_length = 20
   val historyQueue = new scala.collection.mutable.Queue[HistoryEntry]

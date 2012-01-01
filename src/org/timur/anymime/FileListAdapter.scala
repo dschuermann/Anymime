@@ -42,7 +42,7 @@ class FileListAdapter(context:Context, messageResourceId:Int)
   extends ArrayAdapter[String](context, messageResourceId) {
 
   private val TAG = "FileListAdapter"
-  private val D = true
+  private val D = Static.DBGLOG
 
   private var msgList = new ArrayList[String]()
 

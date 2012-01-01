@@ -43,7 +43,8 @@ import android.webkit.MimeTypeMap
 
 class ShowReceivedFilesPopupActivity extends ListActivity {
   private val TAG = "ShowReceivedFilesPopupActivity"
-  private val D = true
+  private val D = Static.DBGLOG
+
   @volatile private var userInteractionCount:Int = 0
   private var otherName:String = null
   private var sendKeyFilePath:String = null

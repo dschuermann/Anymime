@@ -31,7 +31,7 @@ import android.graphics.drawable.Drawable
 
 object FileTypeMapper {
   private val TAG = "FileTypeMapper"
-  private val D = true
+  private val D = Static.DBGLOG
 
   def map(ext:String) :Int = {
     ext match {

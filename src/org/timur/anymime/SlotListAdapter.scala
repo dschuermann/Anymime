@@ -39,7 +39,7 @@ class SlotListAdapter(context:Context, messageResourceId:Int, count:Int)
   extends ArrayAdapter[String](context, messageResourceId) {
 
   private val TAG = "SlotListAdapter"
-  private val D = true
+  private val D = Static.DBGLOG
 
   var selected = -1
 

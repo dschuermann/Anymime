@@ -43,7 +43,7 @@ class FileHistoryAdapter(context:Context, messageResourceId:Int)
   extends ArrayAdapter[String](context, messageResourceId) {
 
   private val TAG = "FileHistoryAdapter"
-  private val D = true
+  private val D = Static.DBGLOG
 
   private var msgList = new ArrayList[String]()
   private val calendar = Calendar.getInstance

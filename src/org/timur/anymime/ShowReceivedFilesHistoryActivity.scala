@@ -38,7 +38,7 @@ import android.widget.ListView
 
 class ShowReceivedFilesHistoryActivity extends ListActivity {
   private val TAG = "ShowReceivedFilesHistoryActivity"
-  private val D = true
+  private val D = Static.DBGLOG
 
   private val receiveFilesHistory = new ReceiveFilesHistory()
   private var receiveFilesHistoryLength=0
