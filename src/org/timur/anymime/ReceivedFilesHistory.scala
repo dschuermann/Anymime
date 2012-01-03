@@ -20,9 +20,6 @@
 
 package org.timur.anymime
 
-import java.util.ArrayList
-import scala.collection.mutable.HashMap
-
 import android.content.Context
 import android.util.Log
 import android.view.View
@@ -67,7 +64,7 @@ class ReceiveFilesHistory() {
           val kbs = java.lang.Long.parseLong(resultArray(2), 10)
           val arrayOfFiles = resultArray.drop(3)
           val historyEntry = new HistoryEntry(date, btName, kbs, arrayOfFiles)
-          if(D) Log.i(TAG,"load "+i+" historyEntry="+historyEntry)
+          //if(D) Log.i(TAG,"load "+i+" historyEntry="+historyEntry)
           historyQueue += historyEntry
           if(historyQueue.size>history_length)
             historyQueue.dequeue

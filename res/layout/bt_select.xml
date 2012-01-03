@@ -46,7 +46,7 @@
         android:layout_height="fill_parent"
         android:layout_above="@+id/progressBar"
         android:orientation="horizontal"
-        android:paddingBottom="4dp"
+        android:paddingBottom="2dp"
       >
         <Button
           android:id="@+id/buttonCancel"
@@ -59,7 +59,7 @@
           android:drawablePadding="0dp"
           android:layout_marginLeft="2dip"
           android:layout_marginRight="2dip"
-          android:paddingBottom="6dp"
+          android:paddingBottom="2dp"
         />
         <Button
           android:id="@+id/buttonBt"
@@ -72,7 +72,7 @@
           android:drawablePadding="0dp"
           android:layout_marginLeft="2dip"
           android:layout_marginRight="2dip"
-          android:paddingBottom="6dp"
+          android:paddingBottom="4dp"
         />
       </LinearLayout>
     </HorizontalScrollView>
@@ -83,7 +83,6 @@
     android:layout_above="@+id/footer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:textSize="16sp"
     android:transcriptMode="alwaysScroll"
     android:cacheColorHint="#00000000"
   />

@@ -25,8 +25,6 @@ import java.util.Calendar
 import java.util.Locale
 import java.text.DateFormat
 
-import scala.collection.mutable.HashMap
-
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log

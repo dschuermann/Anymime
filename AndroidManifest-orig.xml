@@ -57,8 +57,9 @@
       </intent-filter>
     </activity>
 
+    <!-- todo: SelectPairedDevicePopupActivity -> SelectTargetDevicePopupActivity -->
     <activity android:name=".SelectPairedDevicePopupActivity"
-              android:label="Connect to a paired device"
+              android:label="Selected device to connect"
               android:theme="@android:style/Theme.Dialog"
               android:configChanges="orientation|keyboardHidden" />
 

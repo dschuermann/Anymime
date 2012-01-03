@@ -20,9 +20,6 @@
 
 package org.timur.anymime
 
-import java.util.ArrayList
-import scala.collection.mutable.HashMap
-
 import android.content.Context
 import android.util.Log
 import android.view.View

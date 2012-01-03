@@ -95,7 +95,7 @@ class AnyMimeActivity extends Activity {
 
   private val DIALOG_ABOUT = 1
 
-  private val REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO = 1
+  private val REQUEST_SELECT_DEVICE_AND_CONNECT = 1
   private val REQUEST_READ_CURRENT_SLOT = 3
   private val REQUEST_READ_SELECTED_SLOT_ADD_FILE = 4
 
@@ -255,7 +255,7 @@ class AnyMimeActivity extends Activity {
       //intent.putExtra("rfCommHelper", rfCommHelper)
       //val bundle = new Bundle()
       //bundle.putString("sendKeyFile", fileString)
-      startActivityForResult(intent, REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO) // -> SelectPairedDevicePopupActivity -> onActivityResult()
+      startActivityForResult(intent, REQUEST_SELECT_DEVICE_AND_CONNECT) // -> SelectPairedDevicePopupActivity -> onActivityResult()
 
       if(D) Log.i(TAG, "onClick buttonManualConnect startActivityForResult done")
     }
@@ -478,48 +478,52 @@ class AnyMimeActivity extends Activity {
     // didn't return any result, or crashed during its operation. 
     if(D) Log.i(TAG, "onActivityResult resultCode="+resultCode+" requestCode="+requestCode)
 
-    if(rfCommHelper!=null) 
-      if(rfCommHelper.onActivityResult(requestCode, resultCode, intent))
-        return
+//    if(rfCommHelper!=null) 
+//     if(rfCommHelper.onActivityResult(requestCode, resultCode, intent))
+//        return
 
     requestCode match {
-      case REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO =>
-        if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO")
+      case REQUEST_SELECT_DEVICE_AND_CONNECT =>
+        if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT")
         if(resultCode!=Activity.RESULT_OK) {
-          Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO resultCode!=Activity.RESULT_OK ="+resultCode)
+          Log.e(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT resultCode!=Activity.RESULT_OK ="+resultCode)
         } else
         if(intent==null) {
-          Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO intent==null")
+          Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT intent==null")
         } else {
           val bundle = intent.getExtras()
           if(bundle==null) {
-            Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO intent.getExtras==null")
+            Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT intent.getExtras==null")
           } else {
-            val btDevice = bundle.getString("btdevice")
-            if(D) Log.i(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO btDevice="+btDevice)
-            if(btDevice==null) {
-              Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO btDevice==null")
+            val device = bundle.getString("device")
+            //if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT device="+device)
+            if(device==null) {
+              Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT device==null")
             } else {
               // user has selected one paired device to manually connect to
-              val idxCR = btDevice.indexOf("\n")
+              val idxCR = device.indexOf("\n")
               if(idxCR<1) {
-                Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO idxCR<1")
+                Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT idxCR<1")
               } else {
-                val btAddr = btDevice.substring(idxCR+1)
-                val btName = btDevice.substring(0,idxCR)
-                if(D) Log.i(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO btName="+btDevice+" btAddr="+btAddr)
-            		Toast.makeText(activity, "Bt connecting to "+btName, Toast.LENGTH_SHORT).show
+                val deviceName = device.substring(0,idxCR)
+                var deviceAddr = device.substring(idxCR+1)
+                val deviceAddrComment = deviceAddr.indexOf(" ")
+                if(deviceAddrComment>=0)
+                  deviceAddr = deviceAddr.substring(0,deviceAddrComment)
+
+                if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT deviceName="+deviceName+" deviceAddr="+deviceAddr+" ####################")
+            		//Toast.makeText(activity, "connecting to "+deviceName, Toast.LENGTH_SHORT).show
+               
+                // todo: distinguish device-type from deviceAddr format ??
                
                 // connect to btAddr
-                val remoteBluetoothDevice = BluetoothAdapter.getDefaultAdapter.getRemoteDevice(btAddr)
+                val remoteBluetoothDevice = BluetoothAdapter.getDefaultAdapter.getRemoteDevice(deviceAddr)
                 if(remoteBluetoothDevice==null) {
-                  Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO remoteBluetoothDevice==null")
+                  Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT remoteBluetoothDevice==null")
                 } else {
-                  //val sendFilesCount = if(selectedFileStringsArrayList!=null) selectedFileStringsArrayList.size else 0
-                  //if(D) Log.i(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO rfCommService.connectBt() sendFilesCount="+sendFilesCount+" ...")
-                  if(D) Log.i(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO rfCommService.connectBt() ...")
+                  if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectBt() ...")
                   initiatedConnectionByThisDevice = true
-                  rfCommHelper.connectAttemptFromNfc=false
+                  rfCommHelper.connectAttemptFromNfc = false
                   rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
                 }
               }
@@ -827,13 +831,14 @@ class AnyMimeActivity extends Activity {
           if(radioLogoView!=null)
           	radioLogoView.setAnimation(null)
           if(D) Log.i(TAG, "CONNECTION_FAILED -> mainViewUpdate")
+          if(audioConfirmSound!=null)
+            audioConfirmSound.start
+          Toast.makeText(getApplicationContext, "Failed to connect to "+mDisconnectedDeviceName+" "+mDisconnectedDeviceAddr, Toast.LENGTH_LONG).show
           mainViewUpdate
-          Toast.makeText(getApplicationContext, "CONNECTION_FAILED ["+mDisconnectedDeviceName+"] addr="+mDisconnectedDeviceAddr, Toast.LENGTH_LONG).show
 
           if(!rfCommHelper.connectAttemptFromNfc) {
-            // coming from REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO (and not via NFC connect)
-
-            // ask: "fall back to OPP?" alertDialog
+            // coming from REQUEST_SELECT_DEVICE_AND_CONNECT (and not NFC-initiated connect)
+            // therefor we ask: "fall back to OPP?"
             val dialogClickListener = new DialogInterface.OnClickListener() {
               override def onClick(dialog:DialogInterface, whichButton:Int) {
                 whichButton match {
