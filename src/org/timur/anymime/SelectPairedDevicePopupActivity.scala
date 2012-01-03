@@ -38,7 +38,7 @@ import android.widget.ListView
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 
-import org.timur.rfcomm.AndrTools
+import org.timur.rfcomm._
 
 class SelectPairedDevicePopupActivity extends ListActivity {
 
@@ -46,13 +46,35 @@ class SelectPairedDevicePopupActivity extends ListActivity {
   private val D = Static.DBGLOG
 
   private val REQUEST_BT_SETTINGS = 1
-  private val pairedDevicesArrayListOfStrings = new java.util.ArrayList[String]()
   private val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter
+
+  private var rfCommHelper:RFCommHelper = null
+  private var pairedDevicesArrayListOfStrings:java.util.ArrayList[String] = null
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
     if(D) Log.i(TAG, "onCreate()")
 
+    val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
+    if(anyMimeApp==null) {
+      val errMsg = "getApplication returns null"
+      Log.e(TAG, "onCreate "+errMsg)
+      Toast.makeText(this, errMsg, Toast.LENGTH_LONG).show
+      return
+    }
+
+    rfCommHelper = anyMimeApp.rfCommHelper
+    if(rfCommHelper==null) {
+      val errMsg = "anyMimeApp.rfCommHelper == null"
+      Log.e(TAG, "onCreate "+errMsg)
+      Toast.makeText(this, errMsg, Toast.LENGTH_LONG).show
+      return
+    }
+
+    // good, we got access to rfCommHelper...
+    if(D) Log.i(TAG, "onCreate desiredBluetooth="+rfCommHelper.desiredBluetooth+" desiredWifiDirect="+rfCommHelper.desiredWifiDirect+" desiredNfc="+rfCommHelper.desiredNfc+" ##############")
+
+    // todo: this is not an error anymore
     if(mBluetoothAdapter == null) {
       Log.e(TAG, "onCreate mBluetoothAdapter not available")
       Toast.makeText(this, "Bluetooth not available", Toast.LENGTH_LONG).show
@@ -61,12 +83,15 @@ class SelectPairedDevicePopupActivity extends ListActivity {
 
     setContentView(R.layout.bt_select)
 
-    getPairedDevices
-    val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, pairedDevicesArrayListOfStrings)
-		setListAdapter(arrayAdapter)
+    pairedDevicesArrayListOfStrings = rfCommHelper.getPairedDevices
+    if(pairedDevicesArrayListOfStrings!=null) {
+      val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, pairedDevicesArrayListOfStrings)
+  		setListAdapter(arrayAdapter)
+    }
 
     AndrTools.buttonCallback(this, R.id.buttonCancel) { () =>
       if(D) Log.i(TAG, "onClick buttonCancel")
+  		setResult(-1)
       finish
     }
 
@@ -78,40 +103,17 @@ class SelectPairedDevicePopupActivity extends ListActivity {
     }
   }
 
-  def getPairedDevices() {
-    pairedDevicesArrayListOfStrings.clear
-    val pairedDevicesSet = mBluetoothAdapter.getBondedDevices
-    if(pairedDevicesSet.size<1) {
-      Log.e(TAG, "onCreate pairedDevicesSet.size<1")
-      Toast.makeText(this, "No paired Bluetooth devices available", Toast.LENGTH_LONG).show
-    } else {
-		  // Create an ArrayAdapter that will make the Strings above appear in the ListView
-      val pairedDevicesArrayListOfBluetoothDevices = new ArrayList[BluetoothDevice](pairedDevicesSet)
-      if(pairedDevicesArrayListOfBluetoothDevices==null) {
-        Log.e(TAG, "onCreate pairedDevicesArrayListOfBluetoothDevices==null")
-        Toast.makeText(this, "Could not create pairedDevicesArrayListOfBluetoothDevices", Toast.LENGTH_LONG).show
-        return
-      }
-
-      val iterator = pairedDevicesArrayListOfBluetoothDevices.iterator 
-      while(iterator.hasNext) {
-        val device = iterator.next
-        if(device!=null) {
-          //if(D) Log.i(TAG, "updateDevicesView ADD paired="+device.getName)
-          if(device.getName!=null && device.getName.size>0) {
-            pairedDevicesArrayListOfStrings.add(device.getName+"\n"+device.getAddress)
-          }
-        }
-      }
-    }
-  }
-
   override def onActivityResult(requestCode:Int, resultCode:Int, intent:Intent) {
     if(D) Log.i(TAG, "onActivityResult resultCode="+resultCode+" requestCode="+requestCode)
     requestCode match {
       case REQUEST_BT_SETTINGS =>
         if(D) Log.i(TAG, "onActivityResult - REQUEST_BT_SETTINGS")
-        getPairedDevices
+        pairedDevicesArrayListOfStrings = rfCommHelper.getPairedDevices
+        if(pairedDevicesArrayListOfStrings!=null) {
+          val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, pairedDevicesArrayListOfStrings)
+      		setListAdapter(arrayAdapter)
+        }
+
         val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, pairedDevicesArrayListOfStrings)
 		    setListAdapter(arrayAdapter)
     }

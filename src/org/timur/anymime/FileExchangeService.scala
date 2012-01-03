@@ -56,6 +56,13 @@ class FileExchangeService extends RFServiceTrait {
 
   override def onBind(intent:Intent) :IBinder = localBinder 
 
+  override def onCreate() {
+    //if(D) Log.i(TAG, "onCreate ####################")
+    // note: our service was started via bindService() from activity onCreate()
+    //       but ConnectedThread will only be instantiated when needed, from RFCommHelperService connectedBt() or connectedWifi()
+    //       and will run while codedInputStream!=null (set null by ConnectedThread.cancel())
+  }
+
   def createConnectedThread() {
     connectedThread = new ConnectedThread()
   }

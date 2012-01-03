@@ -74,6 +74,10 @@ import android.media.MediaPlayer
 
 import org.timur.rfcomm._
 
+class AnyMimeApp extends android.app.Application {
+  var rfCommHelper:RFCommHelper = null
+}
+
 object BluetoothShare {
   val URI = "uri"
   val CONTENT_URI = Uri.parse("content://com.android.bluetooth.opp/btopp")
@@ -89,16 +93,19 @@ class AnyMimeActivity extends Activity {
   private val TAG = "AnyMimeActivity"
   private val D = Static.DBGLOG
 
-  private val DIALOG_ABOUT = 2
+  private val DIALOG_ABOUT = 1
+
+  private val REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO = 1
   private val REQUEST_READ_CURRENT_SLOT = 3
   private val REQUEST_READ_SELECTED_SLOT_ADD_FILE = 4
 
-  private var context:Activity = null
-  private var activityResumed = false
-
   private val PREFS_SETTINGS = "org.timur.anymime.settings"
+
   private var prefSettings:SharedPreferences = null
   private var prefSettingsEditor:SharedPreferences.Editor = null
+
+  private var activity:Activity = null
+  private var activityResumed = false
 
   private var appServiceConnection:ServiceConnection = null
   private var mConnectedDeviceAddr:String = null
@@ -124,12 +131,14 @@ class AnyMimeActivity extends Activity {
   private var selectedSlot = 0
   private var selectedSlotName = ""
 
+  private var initiatedConnectionByThisDevice = false
+
   private var addFilePathNameString:String = null
   private var receivedFileUriStringArrayList = new ArrayList[String]()
-  var selectedFileStringsArrayList = new ArrayList[String]()
+  private var selectedFileStringsArrayList = new ArrayList[String]()
 
-  var appService:FileExchangeService = null
-  var rfCommHelper:RFCommHelper = null
+  private var appService:FileExchangeService = null
+  private var rfCommHelper:RFCommHelper = null
   
 
   def initUIFkt() { 
@@ -143,6 +152,7 @@ class AnyMimeActivity extends Activity {
       }.start                        
     }
 
+    if(D) Log.i(TAG, "initUIFkt -> mainViewUpdate")
     checkLayout
     mainViewUpdate
 
@@ -157,8 +167,8 @@ class AnyMimeActivity extends Activity {
 
   def serviceFailedFkt() {
     if(D) Log.i(TAG, "serviceFailedFkt ... ###########")
-    AndrTools.runOnUiThread(context) { () =>
-      Toast.makeText(context, "service initialization failed", Toast.LENGTH_LONG).show
+    AndrTools.runOnUiThread(activity) { () =>
+      Toast.makeText(activity, "service initialization failed", Toast.LENGTH_LONG).show
     }
   }
 
@@ -166,7 +176,7 @@ class AnyMimeActivity extends Activity {
     super.onCreate(savedInstanceState)
     val packageInfo = getPackageManager.getPackageInfo(getPackageName, 0)
     if(D) Log.i(TAG, "onCreate versionName="+packageInfo.versionName+" android.os.Build.VERSION.SDK_INT="+android.os.Build.VERSION.SDK_INT)
-    context = this
+    activity = this
     requestWindowFeature(Window.FEATURE_NO_TITLE)
 
 /*
@@ -183,7 +193,7 @@ class AnyMimeActivity extends Activity {
         prefSettingsEditor = prefSettings.edit
     }
 
-    audioConfirmSound = MediaPlayer.create(context, R.raw.textboxbloop8bit)
+    audioConfirmSound = MediaPlayer.create(activity, R.raw.textboxbloop8bit)
 
     mainView = findViewById(R.id.main)
     radioLogoView = findViewById(R.id.radioLogo).asInstanceOf[ImageView]
@@ -198,17 +208,17 @@ class AnyMimeActivity extends Activity {
 	  slowAnimation = AnimationUtils.loadAnimation(this, R.anim.slow_anim)
 
     getArrayListSelectedFileStrings
-    receiveFilesHistoryLength = receiveFilesHistory.load(context)
+    receiveFilesHistoryLength = receiveFilesHistory.load(activity)
 
-    AndrTools.buttonCallback(context, R.id.buttonSendFiles) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick buttonSendFiles")
+    AndrTools.buttonCallback(activity, R.id.buttonSendFiles) { () =>
+      if(D) Log.i(TAG, "onClick buttonSendFiles")
       showSelectedFiles
     }
 
     // received files history
-    AndrTools.buttonCallback(context, R.id.buttonReceivedFiles) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick buttonReceivedFiles")
-      val intent = new Intent(context, classOf[ShowReceivedFilesHistoryActivity])
+    AndrTools.buttonCallback(activity, R.id.buttonReceivedFiles) { () =>
+      if(D) Log.i(TAG, "onClick buttonReceivedFiles")
+      val intent = new Intent(activity, classOf[ShowReceivedFilesHistoryActivity])
       // hand over .asc file from most recent delivery
       val bundle = new Bundle()
       if(selectedFileStringsArrayList!=null)
@@ -227,66 +237,67 @@ class AnyMimeActivity extends Activity {
       startActivity(intent) // -> ShowReceivedFilesHistoryActivity
     }
 
-    AndrTools.buttonCallback(context, R.id.buttonManualConnect) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick buttonManualConnect mConnectedDeviceAddr="+mConnectedDeviceAddr)
+    AndrTools.buttonCallback(activity, R.id.buttonManualConnect) { () =>
+      if(D) Log.i(TAG, "onClick buttonManualConnect mConnectedDeviceAddr="+mConnectedDeviceAddr)
       // select one device from list of paired/bonded devices and connect to it
-      // but only if there is no active bt-connection yet
+      // but only if there is no active connection yet
       if(mConnectedDeviceAddr!=null) {
-        if(D) Log.i(TAG, "initUIFkt onClick buttonManualConnect toast 'You are Bluetooth connected already'")
-        AndrTools.runOnUiThread(context) { () =>
-          Toast.makeText(context, "You are Bluetooth connected already", Toast.LENGTH_LONG).show
+        if(D) Log.i(TAG, "onClick buttonManualConnect toast 'You are Bluetooth connected already'")
+        AndrTools.runOnUiThread(activity) { () =>
+          Toast.makeText(activity, "You are connected already", Toast.LENGTH_LONG).show
+          // todo: offer disconnect?
         }
         return
       }
-      //if(D) Log.i(TAG, "initUIFkt onClick buttonManualConnect new Intent(context, classOf[SelectPairedDevicePopupActivity])")
-      //val intent = new Intent(context, classOf[SelectPairedDevicePopupActivity])
-      //if(D) Log.i(TAG, "initUIFkt onClick buttonManualConnect startActivityForResult")
-      //startActivityForResult(intent, REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO) // -> SelectPairedDevicePopupActivity -> onActivityResult()
+
+      if(D) Log.i(TAG, "onClick buttonManualConnect new Intent(activity, classOf[SelectPairedDevicePopupActivity])")
+      val intent = new Intent(activity, classOf[SelectPairedDevicePopupActivity])
+      //intent.putExtra("rfCommHelper", rfCommHelper)
+      //val bundle = new Bundle()
+      //bundle.putString("sendKeyFile", fileString)
+      startActivityForResult(intent, REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO) // -> SelectPairedDevicePopupActivity -> onActivityResult()
+
+      if(D) Log.i(TAG, "onClick buttonManualConnect startActivityForResult done")
+    }
+
+    AndrTools.buttonCallback(activity, R.id.buttonRadioSelect) { () =>
+      if(D) Log.i(TAG, "onClick buttonRadioSelect")
+      //radioTypeSelected=false
       if(rfCommHelper!=null)
-        rfCommHelper.offerBtConnect   // todo: if p2pWifi is enabled, we want to support p2pWifi-devices here as well
-
-      if(D) Log.i(TAG, "initUIFkt onClick buttonManualConnect startActivityForResult done")
+        rfCommHelper.radioDialog(false)
     }
 
-/*
-    AndrTools.buttonCallback(context, R.id.buttonRadioSelect) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick buttonRadioSelect")
-      radioTypeSelected=false
-      radioDialog(false)
-    }
-*/
-
-    AndrTools.buttonCallback(context, R.id.buttonBluetoothSettings) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick buttonBluetoothSettings")
+    AndrTools.buttonCallback(activity, R.id.buttonBluetoothSettings) { () =>
+      if(D) Log.i(TAG, "onClick buttonBluetoothSettings")
       val bluetoothSettingsIntent = new Intent
       bluetoothSettingsIntent.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
       startActivity(bluetoothSettingsIntent) // -> BLUETOOTH_SETTINGS
     }
 
-    AndrTools.buttonCallback(context, R.id.buttonAbout) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick buttonAbout")
+    AndrTools.buttonCallback(activity, R.id.buttonAbout) { () =>
+      if(D) Log.i(TAG, "onClick buttonAbout")
       showDialog(DIALOG_ABOUT)
     }
 
-    AndrTools.buttonCallback(context, R.id.applogo) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick applogoView")
+    AndrTools.buttonCallback(activity, R.id.applogo) { () =>
+      if(D) Log.i(TAG, "onClick applogoView")
       showDialog(DIALOG_ABOUT)
     }
 
-    AndrTools.buttonCallback(context, R.id.main) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick mainView")
-      val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
+    AndrTools.buttonCallback(activity, R.id.main) { () =>
+      if(D) Log.i(TAG, "onClick mainView")
+      val intent = new Intent(activity, classOf[ShowSelectedSlotActivity])
       startActivityForResult(intent, REQUEST_READ_CURRENT_SLOT) // -> ShowSelectedSlotActivity -> onActivityResult()
     }
 
     AndrTools.buttonCallback(progressBarView) { () =>
-      if(D) Log.i(TAG, "initUIFkt onClick progressBarView")
+      if(D) Log.i(TAG, "onClick progressBarView")
       offerUserToDisconnect
     }
 
-    // initialize our service (but don't start bt-receive-thread yet)
+    // instantiate FileExchangeService
     if(D) Log.i(TAG, "onCreate startService('FileExchangeService') ...")
-    val serviceIntent = new Intent(context.asInstanceOf[AnyMimeActivity], classOf[FileExchangeService])
+    val serviceIntent = new Intent(activity, classOf[FileExchangeService])
     // see LocalBinder below
 
     //startService(serviceIntent)   // call this only, to keep service active after onDestroy()/unbindService()
@@ -303,23 +314,33 @@ class AnyMimeActivity extends Activity {
         appService = rawBinder.asInstanceOf[FileExchangeService#LocalBinder].getService
         if(appService==null) {
           Log.e(TAG, "onCreate onServiceConnected no interface to service, appService==null")
-          AndrTools.runOnUiThread(context) { () =>
-            Toast.makeText(context, "failed to get service interface from binder", Toast.LENGTH_LONG).show    // todo: create more 'human' text
+          AndrTools.runOnUiThread(activity) { () =>
+            Toast.makeText(activity, "failed to get service interface from binder", Toast.LENGTH_LONG).show    // todo: create more 'human' text
           }
           return
         }
-        if(D) Log.i(TAG, "onCreate onServiceConnected got appService object")
-        appService.context = context
+        if(D) Log.i(TAG, "onCreate onServiceConnected got appService object !!!!!!!!!!!!!!!!")
+        appService.context = activity
         appService.activityMsgHandler = msgFromServiceHandler
         appService.setSendFiles(selectedFileStringsArrayList)
 
-        // both services will use msgFromServiceHandler to communicate back to the activity
-        rfCommHelper = new RFCommHelper(context, msgFromServiceHandler, 
+        // instantiate RFCommService
+        // both services will use msgFromServiceHandler to communicate back to the activity (todo: maybe better use separate handlers?)
+        rfCommHelper = new RFCommHelper(activity, msgFromServiceHandler, 
                                         prefSettings, prefSettingsEditor, 
                                         initUIFkt, serviceFailedFkt, 
                                         appService,
                                         intentReceiverActivityClass,
-                                        audioConfirmSound)
+                                        audioConfirmSound,
+                                        RFCommHelper.RADIO_BT| RFCommHelper.RADIO_P2PWIFI| RFCommHelper.RADIO_NFC)
+
+        val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
+        if(D) Log.i(TAG, "onCreate anyMimeApp="+anyMimeApp+" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        if(anyMimeApp!=null) {
+          anyMimeApp.rfCommHelper = rfCommHelper
+          if(D) Log.i(TAG, "anyMimeApp="+anyMimeApp+" anyMimeApp.rfCommHelper="+anyMimeApp.rfCommHelper+" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        }
+
         appService.rfCommHelper = rfCommHelper
       }
     } 
@@ -341,9 +362,8 @@ class AnyMimeActivity extends Activity {
 
     if(rfCommHelper!=null) 
       rfCommHelper.onResume
-    else {
-      if(D) Log.i(TAG, "onResume rfCommHelper==null #####")
-    }
+    else
+      Log.e(TAG, "onResume rfCommHelper==null #####")
 
     activityResumed = true
   }
@@ -426,7 +446,7 @@ class AnyMimeActivity extends Activity {
             if(D) Log.i(TAG, "processExternalIntent adding file from intent.getExtras.getPath="+addFilePathNameString)
             if(addFilePathNameString!=null && addFilePathNameString.length>0) {
               // user must select the slot where this new file should be added
-              val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
+              val intent = new Intent(activity, classOf[ShowSelectedSlotActivity])
               startActivityForResult(intent, REQUEST_READ_SELECTED_SLOT_ADD_FILE) // -> ShowSelectedSlotActivity -> onActivityResult()
               Toast.makeText(this, "Select where to add "+fileUri.getLastPathSegment, Toast.LENGTH_LONG).show
             }
@@ -442,7 +462,7 @@ class AnyMimeActivity extends Activity {
             if(D) Log.i(TAG, "processExternalIntent adding file from intent.getData.getPath="+addFilePathNameString)
 
             // user must select the slot where this new file should be added
-            val intent = new Intent(context, classOf[ShowSelectedSlotActivity])
+            val intent = new Intent(activity, classOf[ShowSelectedSlotActivity])
             startActivityForResult(intent, REQUEST_READ_SELECTED_SLOT_ADD_FILE) // -> ShowSelectedSlotActivity -> onActivityResult()
             Toast.makeText(this, "Select where to add "+fileUri.getLastPathSegment, Toast.LENGTH_LONG).show
           }
@@ -463,14 +483,61 @@ class AnyMimeActivity extends Activity {
         return
 
     requestCode match {
+      case REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO =>
+        if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO")
+        if(resultCode!=Activity.RESULT_OK) {
+          Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO resultCode!=Activity.RESULT_OK ="+resultCode)
+        } else
+        if(intent==null) {
+          Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO intent==null")
+        } else {
+          val bundle = intent.getExtras()
+          if(bundle==null) {
+            Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO intent.getExtras==null")
+          } else {
+            val btDevice = bundle.getString("btdevice")
+            if(D) Log.i(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO btDevice="+btDevice)
+            if(btDevice==null) {
+              Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO btDevice==null")
+            } else {
+              // user has selected one paired device to manually connect to
+              val idxCR = btDevice.indexOf("\n")
+              if(idxCR<1) {
+                Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO idxCR<1")
+              } else {
+                val btAddr = btDevice.substring(idxCR+1)
+                val btName = btDevice.substring(0,idxCR)
+                if(D) Log.i(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO btName="+btDevice+" btAddr="+btAddr)
+            		Toast.makeText(activity, "Bt connecting to "+btName, Toast.LENGTH_SHORT).show
+               
+                // connect to btAddr
+                val remoteBluetoothDevice = BluetoothAdapter.getDefaultAdapter.getRemoteDevice(btAddr)
+                if(remoteBluetoothDevice==null) {
+                  Log.e(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO remoteBluetoothDevice==null")
+                } else {
+                  //val sendFilesCount = if(selectedFileStringsArrayList!=null) selectedFileStringsArrayList.size else 0
+                  //if(D) Log.i(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO rfCommService.connectBt() sendFilesCount="+sendFilesCount+" ...")
+                  if(D) Log.i(TAG, "REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO rfCommService.connectBt() ...")
+                  initiatedConnectionByThisDevice = true
+                  rfCommHelper.connectAttemptFromNfc=false
+                  rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
+                }
+              }
+            }
+          }
+        }
+        return true   // todo ???
+
       case REQUEST_READ_CURRENT_SLOT =>
         getArrayListSelectedFileStrings
+        if(D) Log.i(TAG, "REQUEST_READ_CURRENT_SLOT -> mainViewUpdate")
         mainViewUpdate
         if(appService!=null)
           appService.setSendFiles(selectedFileStringsArrayList)
 
       case REQUEST_READ_SELECTED_SLOT_ADD_FILE =>
         getArrayListSelectedFileStrings
+        if(D) Log.i(TAG, "REQUEST_READ_SELECTED_SLOT_ADD_FILE -> mainViewUpdate")
         mainViewUpdate
 
         if(D) Log.i(TAG, "REQUEST_READ_SELECTED_SLOT_ADD_FILE add addFilePathNameString="+addFilePathNameString)
@@ -500,7 +567,7 @@ class AnyMimeActivity extends Activity {
         case nnfex:android.content.pm.PackageManager.NameNotFoundException =>
           Log.e(TAG, "onClick btnAbout FAILED on getPackageManager.getPackageInfo(getPackageName, 0) "+nnfex)
           val errMsg = nnfex.getMessage
-          Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
+          Toast.makeText(activity, errMsg, Toast.LENGTH_LONG).show
       }
 
 /*
@@ -520,7 +587,7 @@ class AnyMimeActivity extends Activity {
             } catch {
               case ex:Exception =>
                 val errMsg = ex.getMessage
-                Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
+                Toast.makeText(activity, errMsg, Toast.LENGTH_LONG).show
             }
 
             dismissDialog(id)
@@ -556,25 +623,26 @@ class AnyMimeActivity extends Activity {
       override def onClick(dialog:DialogInterface, whichButton:Int) {
         whichButton match {
           case DialogInterface.BUTTON_POSITIVE =>
-/*
-            // disconnect the active transmission
+            // only disconnect the active transmission...
             if(rfCommHelper!=null && rfCommHelper.rfCommService!=null) {
               rfCommHelper.rfCommService.stopActiveConnection
               // todo: should exit app
             }
-*/
+/*
+            // ... or also exit app ?
             finish
+*/
           case DialogInterface.BUTTON_NEGATIVE =>
             // do nothing, just continue
         }
       }
     }
 
-    new AlertDialog.Builder(context).setTitle("Disconnect and exit?")
-                                    .setMessage("Are you sure you want to disconnect the onging transmission?")
-                                    .setPositiveButton("Yes",dialogClickListener)
-                                    .setNegativeButton("No", dialogClickListener)
-                                    .show     
+    new AlertDialog.Builder(activity).setTitle("Disconnect and exit?")
+                                     .setMessage("Are you sure you want to disconnect the onging transmission?")
+                                     .setPositiveButton("Yes",dialogClickListener)
+                                     .setNegativeButton("No", dialogClickListener)
+                                     .show     
 	}
 
 	override def onBackPressed() {
@@ -607,7 +675,7 @@ class AnyMimeActivity extends Activity {
 
   private def showSelectedFiles() {
     if(D) Log.i(TAG, "showSelectedFiles selectedFileStringsArrayList="+selectedFileStringsArrayList)
-    val intent = new Intent(context, classOf[ShowSelectedFilesActivity])
+    val intent = new Intent(activity, classOf[ShowSelectedFilesActivity])
       val bundle = new Bundle()
       bundle.putStringArrayList("selectedFilesStringArrayList", selectedFileStringsArrayList)
       intent.putExtras(bundle)
@@ -680,6 +748,7 @@ class AnyMimeActivity extends Activity {
                 audioConfirmSound.start
                 
               receivedFileUriStringArrayList.clear
+              if(D) Log.i(TAG, "STATE_CONNECTED -> mainViewUpdate")
               mainViewUpdate
 
               // switch off button bar, switch on progressBar
@@ -704,26 +773,26 @@ class AnyMimeActivity extends Activity {
           if(D) Log.i(TAG, "handleMessage MESSAGE_DEVICE_NAME="+mConnectedDeviceName+" addr="+mConnectedDeviceAddr)
 
           // show toast only, if we did not initiate the connection
-          if(!rfCommHelper.initiatedConnectionByThisDevice) {
+          if(!initiatedConnectionByThisDevice) {
             Toast.makeText(getApplicationContext, ""+mConnectedDeviceName+" has connected", Toast.LENGTH_LONG).show
           }
 
         case RFCommHelperService.MESSAGE_YOURTURN =>
-          //if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN reset startTime ---------------------------------------------")
+          if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN reset startTime")
           //startTime = SystemClock.uptimeMillis
           if(progressBarView!=null)
             progressBarView.setProgress(0)
           mainViewUpdate          
 
         case RFCommHelperService.MESSAGE_USERHINT1 =>
-          def writeMessage = msg.obj.asInstanceOf[String]
+          val writeMessage = msg.obj.asInstanceOf[String]
           if(userHint1View!=null && writeMessage!=null) {
             //if(D) Log.i(TAG, "MESSAGE_USERHINT1 userHint1View.setText writeMessage="+writeMessage)
             userHint1View.setText(writeMessage)
           }
 
         case RFCommHelperService.MESSAGE_USERHINT2 =>
-          def readMessage = msg.obj.asInstanceOf[String]
+          val readMessage = msg.obj.asInstanceOf[String]
           if(userHint2View!=null && readMessage!=null) {
             userHint2View.setText(readMessage)
           }
@@ -739,7 +808,7 @@ class AnyMimeActivity extends Activity {
             if(D) Log.i(TAG, "CONNECTION_START userHint1View.setText")
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
           }
-          // show a little round progress bar
+          // show a little round progress bar animation
           if(userHint2View!=null)
             userHint2View.setVisibility(View.GONE)
           if(userHint3View!=null)
@@ -754,10 +823,12 @@ class AnyMimeActivity extends Activity {
           if(D) Log.i(TAG, "handleMessage CONNECTION_FAILED: ["+mDisconnectedDeviceName+"] addr="+mDisconnectedDeviceAddr)
           mConnectedDeviceAddr = null
           mConnectedDeviceName = null
-          rfCommHelper.initiatedConnectionByThisDevice = false
+          initiatedConnectionByThisDevice = false
           if(radioLogoView!=null)
           	radioLogoView.setAnimation(null)
+          if(D) Log.i(TAG, "CONNECTION_FAILED -> mainViewUpdate")
           mainViewUpdate
+          Toast.makeText(getApplicationContext, "CONNECTION_FAILED ["+mDisconnectedDeviceName+"] addr="+mDisconnectedDeviceAddr, Toast.LENGTH_LONG).show
 
           if(!rfCommHelper.connectAttemptFromNfc) {
             // coming from REQUEST_SELECT_PAIRED_DEVICE_AND_CONNECT_TO (and not via NFC connect)
@@ -808,11 +879,11 @@ class AnyMimeActivity extends Activity {
               }
             }
 
-            new AlertDialog.Builder(context).setTitle("No Anymime device found")
-                                            .setMessage("Send files using OBEX/OPP?")
-                                            .setPositiveButton("Yes",dialogClickListener)
-                                            .setNegativeButton("No", dialogClickListener)
-                                            .show     
+            new AlertDialog.Builder(activity).setTitle("No Anymime device found")
+                                             .setMessage("Send files using OBEX/OPP?")
+                                             .setPositiveButton("Yes",dialogClickListener)
+                                             .setNegativeButton("No", dialogClickListener)
+                                             .show     
           }
 
 
@@ -862,7 +933,8 @@ class AnyMimeActivity extends Activity {
           if(audioConfirmSound!=null)
             audioConfirmSound.start
 
-          rfCommHelper.initiatedConnectionByThisDevice = false
+          initiatedConnectionByThisDevice = false
+          if(D) Log.i(TAG, "DEVICE_DISCONNECT -> mainViewUpdate")
           mainViewUpdate          
 
           if(receivedFileUriStringArrayList.size<1) {
@@ -886,7 +958,7 @@ class AnyMimeActivity extends Activity {
           // run ShowReceivedFilesPopupActivity hand over receivedFileUriStringArrayList
           // this will show the list of receive files and allow the user to start intents on the individual files
           try { Thread.sleep(100) } catch { case ex:Exception => }
-          val intent = new Intent(context, classOf[ShowReceivedFilesPopupActivity])
+          val intent = new Intent(activity, classOf[ShowReceivedFilesPopupActivity])
           val bundle = new Bundle()
           bundle.putStringArrayList("listOfUriStrings", receivedFileUriStringArrayList)
           bundle.putString("opentype", "auto") // activity will auto-close after about 15s if not used
@@ -899,6 +971,8 @@ class AnyMimeActivity extends Activity {
               if(fileString.endsWith(".asc")) {
                 bundle.putString("sendKeyFile", fileString)
                 // break
+                
+                // todo: we might want to auto-open optical key-verification
               }
             }
           }
@@ -906,7 +980,34 @@ class AnyMimeActivity extends Activity {
           startActivity(intent)
 
         case RFCommHelperService.UI_UPDATE =>
+          if(D) Log.i(TAG, "UI_UPDATE -> mainViewUpdate")
           mainViewUpdate
+
+        case RFCommHelperService.ALERT_MESSAGE =>
+          val alertMessage = msg.obj.asInstanceOf[String]
+          if(D) Log.i(TAG, "handleMessage ALERT_MESSAGE ["+alertMessage+"] audioConfirmSound="+audioConfirmSound)
+          if(alertMessage!=null) {
+            if(audioConfirmSound!=null)
+              audioConfirmSound.start
+            Toast.makeText(getApplicationContext, "ALERT "+alertMessage, Toast.LENGTH_LONG).show
+          }
+        
+        case RFCommHelperService.CONNECTING =>
+          val otherDeviceInfo = msg.obj.asInstanceOf[String]
+          if(D) Log.i(TAG, "handleMessage CONNECTING otherDeviceInfo="+otherDeviceInfo+" ################################")
+          if(radioLogoView!=null)
+            radioLogoView.setImageResource(R.drawable.bluetooth)
+          if(userHint1View!=null)
+            userHint1View.setText("waiting for "+otherDeviceInfo)
+          // show a little round progress bar
+          if(userHint2View!=null)
+            userHint2View.setVisibility(View.GONE)
+          if(userHint3View!=null)
+            userHint3View.setVisibility(View.GONE)
+          if(simpleProgressBarView!=null) {
+            simpleProgressBarView.setVisibility(View.VISIBLE)
+            if(D) Log.i(TAG, "handleMessage CONNECTING simpleProgressBarView now visible ################################")
+          }
       }
     }
   }
@@ -928,9 +1029,9 @@ class AnyMimeActivity extends Activity {
 
   private def mainViewUpdate() {
     if(rfCommHelper==null || rfCommHelper.rfCommService==null) {
-      if(D) Log.i(TAG, "mainViewUpdate rfCommService==null")
+      if(D) Log.i(TAG, "mainViewUpdate rfCommService==null || rfCommHelper.rfCommService==null")
     } else {
-      //if(D) Log.i(TAG, "mainViewUpdate rfCommService.acceptAndConnect="+rfCommService.acceptAndConnect)
+      if(D) Log.i(TAG, "mainViewUpdate rfCommHelper.rfCommService.acceptAndConnect="+rfCommHelper.rfCommService.acceptAndConnect)
     }
       
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED) {
@@ -941,6 +1042,7 @@ class AnyMimeActivity extends Activity {
   }
 
   private def mainViewDefaults() {
+    if(D) Log.i(TAG, "mainViewDefaults")
     if(radioLogoView!=null) {
       if(rfCommHelper!=null && rfCommHelper.isNfcEnabled) {
         radioLogoView.setImageResource(R.drawable.nfc)
@@ -1001,7 +1103,7 @@ class AnyMimeActivity extends Activity {
   }
 
   private def mainViewBluetooth() {
-    //if(D) Log.i(TAG, "mainViewBluetooth")
+    if(D) Log.i(TAG, "mainViewBluetooth")
     if(radioLogoView!=null) {
       radioLogoView.setImageResource(R.drawable.bluetooth)
     	radioLogoView.setAnimation(null)
