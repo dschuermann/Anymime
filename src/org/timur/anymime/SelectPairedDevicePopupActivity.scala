@@ -129,19 +129,21 @@ class SelectPairedDevicePopupActivity extends ListActivity {
     bundle.putString("device", keyword)
     returnIntent.putExtras(bundle)
 		setResult(Activity.RESULT_OK,returnIntent)
+    rfCommHelper.addAllDevicesUnregister
 		finish
 	}
 
   override def onDestroy() {
     if(D) Log.i(TAG, "onDestroy")
-    rfCommHelper.addAllDevicesUnregister    
+    rfCommHelper.addAllDevicesUnregister
     super.onDestroy
   }
   
 	override def onBackPressed() {
     if(D) Log.i(TAG, "onBackPressed()")
-		setResult(-1)
+		setResult(Activity.RESULT_CANCELED)
     super.onBackPressed 
+		finish
 	}
 }
 

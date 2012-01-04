@@ -484,8 +484,7 @@ class AnyMimeActivity extends Activity {
         if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT")
         if(resultCode!=Activity.RESULT_OK) {
           Log.e(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT resultCode!=Activity.RESULT_OK ="+resultCode)
-        } else
-        if(intent==null) {
+        } else if(intent==null) {
           Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT intent==null")
         } else {
           val bundle = intent.getExtras()
@@ -515,7 +514,7 @@ class AnyMimeActivity extends Activity {
 
                 if(deviceAddrComment!=null && deviceAddrComment.startsWith("wifi")) {
                   // connect to wifi device
-                  if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectWifi() ...")
+                  if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT connectWifi() rfCommHelper.wifiP2pManager="+rfCommHelper.wifiP2pManager)
                   if(rfCommHelper.wifiP2pManager!=null)
                     rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr, deviceName)
 
@@ -531,6 +530,8 @@ class AnyMimeActivity extends Activity {
                     rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
                   }
                 }
+                
+                mainViewUpdate
               }
             }
           }
@@ -632,22 +633,17 @@ class AnyMimeActivity extends Activity {
       override def onClick(dialog:DialogInterface, whichButton:Int) {
         whichButton match {
           case DialogInterface.BUTTON_POSITIVE =>
-            // only disconnect the active transmission...
+            // disconnect active connection/transmission
             if(rfCommHelper!=null && rfCommHelper.rfCommService!=null) {
               rfCommHelper.rfCommService.stopActiveConnection
-              // todo: should exit app
             }
-/*
-            // ... or also exit app ?
-            finish
-*/
           case DialogInterface.BUTTON_NEGATIVE =>
             // do nothing, just continue
         }
       }
     }
 
-    new AlertDialog.Builder(activity).setTitle("Disconnect and exit?")
+    new AlertDialog.Builder(activity).setTitle("Disconnect?")
                                      .setMessage("Are you sure you want to disconnect the onging transmission?")
                                      .setPositiveButton("Yes",dialogClickListener)
                                      .setNegativeButton("No", dialogClickListener)
@@ -812,12 +808,13 @@ class AnyMimeActivity extends Activity {
           val mConnectingDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mConnectingDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage CONNECTION_START: "+mConnectingDeviceName+" addr="+mConnectingDeviceAddr)
-          if(radioLogoView!=null)
-            radioLogoView.setImageResource(R.drawable.bluetooth)
-          if(userHint1View!=null) {
+
+          //if(radioLogoView!=null)
+          //  radioLogoView.setImageResource(R.drawable.bluetooth)
+          mainViewUpdate
+
+          if(userHint1View!=null)
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
-                                          // todo: mConnectingDeviceName seems to be null in case of wifi
-          }
           // show a little round progress bar animation
           if(userHint2View!=null)
             userHint2View.setVisibility(View.GONE)
@@ -1042,11 +1039,15 @@ class AnyMimeActivity extends Activity {
     if(rfCommHelper==null || rfCommHelper.rfCommService==null) {
       if(D) Log.i(TAG, "mainViewUpdate rfCommService==null || rfCommHelper.rfCommService==null")
     } else {
-      if(D) Log.i(TAG, "mainViewUpdate rfCommHelper.rfCommService.acceptAndConnect="+rfCommHelper.rfCommService.acceptAndConnect)
+      if(D) Log.i(TAG, "mainViewUpdate rfCommService.acceptAndConnect="+rfCommHelper.rfCommService.acceptAndConnect+" rfCommService.state="+rfCommHelper.rfCommService.state)
     }
       
-    if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED) {
-      mainViewBluetooth
+    if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && 
+        (rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED || rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)) {
+      if(rfCommHelper.rfCommService.connectedRadio==2)
+        mainViewWifiDirect
+      else
+        mainViewBluetooth
     } else {
       mainViewDefaults
     }
@@ -1125,6 +1126,41 @@ class AnyMimeActivity extends Activity {
 
     if(userHint1View!=null) {
       //if(D) Log.i(TAG, "mainViewBluetooth userHint1View.setText clr")
+      userHint1View.setText("")
+    }
+
+    if(userHint2View!=null) {
+      userHint2View.setText("")
+      userHint2View.setVisibility(View.VISIBLE)
+    }
+
+    if(userHint3View!=null) {
+      userHint3View.setTypeface(null, 0)  // not bold
+      userHint3View.setTextSize(15)  // normal size
+      userHint3View.setText("")
+      userHint3View.setVisibility(View.VISIBLE)
+    }
+
+    if(simpleProgressBarView!=null)
+      simpleProgressBarView.setVisibility(View.GONE)
+
+    if(progressBarView!=null) {
+      progressBarView.setMax(100)
+      progressBarView.setProgress(0)
+    }
+  }
+  
+  private def mainViewWifiDirect() {
+    if(D) Log.i(TAG, "mainViewWifiDirect")
+    if(radioLogoView!=null) {
+      radioLogoView.setImageResource(R.drawable.wifi_direct_logo)
+    	radioLogoView.setAnimation(null)
+    }
+    
+    if(mainView!=null)
+      mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
+
+    if(userHint1View!=null) {
       userHint1View.setText("")
     }
 
