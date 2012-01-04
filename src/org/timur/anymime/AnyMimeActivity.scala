@@ -252,9 +252,6 @@ class AnyMimeActivity extends Activity {
 
       if(D) Log.i(TAG, "onClick buttonManualConnect new Intent(activity, classOf[SelectPairedDevicePopupActivity])")
       val intent = new Intent(activity, classOf[SelectPairedDevicePopupActivity])
-      //intent.putExtra("rfCommHelper", rfCommHelper)
-      //val bundle = new Bundle()
-      //bundle.putString("sendKeyFile", fileString)
       startActivityForResult(intent, REQUEST_SELECT_DEVICE_AND_CONNECT) // -> SelectPairedDevicePopupActivity -> onActivityResult()
 
       if(D) Log.i(TAG, "onClick buttonManualConnect startActivityForResult done")
@@ -478,9 +475,9 @@ class AnyMimeActivity extends Activity {
     // didn't return any result, or crashed during its operation. 
     if(D) Log.i(TAG, "onActivityResult resultCode="+resultCode+" requestCode="+requestCode)
 
-//    if(rfCommHelper!=null) 
-//     if(rfCommHelper.onActivityResult(requestCode, resultCode, intent))
-//        return
+    if(rfCommHelper!=null) 
+      if(rfCommHelper.onActivityResult(requestCode, resultCode, intent))
+        return
 
     requestCode match {
       case REQUEST_SELECT_DEVICE_AND_CONNECT =>
@@ -507,24 +504,32 @@ class AnyMimeActivity extends Activity {
               } else {
                 val deviceName = device.substring(0,idxCR)
                 var deviceAddr = device.substring(idxCR+1)
-                val deviceAddrComment = deviceAddr.indexOf(" ")
-                if(deviceAddrComment>=0)
-                  deviceAddr = deviceAddr.substring(0,deviceAddrComment)
+                val idxComment = deviceAddr.indexOf(" ")
+                if(idxComment>=0)
+                  deviceAddr = deviceAddr.substring(0,idxComment)
+                val deviceAddrComment = if(idxComment>=0) device.substring(idxCR+1+idxComment+1) else null
 
-                if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT deviceName="+deviceName+" deviceAddr="+deviceAddr+" ####################")
-            		//Toast.makeText(activity, "connecting to "+deviceName, Toast.LENGTH_SHORT).show
+                if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT deviceName="+deviceName+" deviceAddr="+deviceAddr+" deviceAddrComment="+deviceAddrComment+" ####################")
                
-                // todo: distinguish device-type from deviceAddr format ??
-               
-                // connect to btAddr
-                val remoteBluetoothDevice = BluetoothAdapter.getDefaultAdapter.getRemoteDevice(deviceAddr)
-                if(remoteBluetoothDevice==null) {
-                  Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT remoteBluetoothDevice==null")
+                initiatedConnectionByThisDevice = true
+
+                if(deviceAddrComment!=null && deviceAddrComment.startsWith("wifi")) {
+                  // connect to wifi device
+                  if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectWifi() ...")
+                  if(rfCommHelper.wifiP2pManager!=null)
+                    rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr)
+
                 } else {
-                  if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectBt() ...")
-                  initiatedConnectionByThisDevice = true
-                  rfCommHelper.connectAttemptFromNfc = false
-                  rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
+                  // connect to bt device
+                  val remoteBluetoothDevice = BluetoothAdapter.getDefaultAdapter.getRemoteDevice(deviceAddr)
+                  if(remoteBluetoothDevice==null) {
+                    Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT remoteBluetoothDevice==null")
+                  } else {
+                    if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectBt() ...")
+                    initiatedConnectionByThisDevice = true
+                    rfCommHelper.connectAttemptFromNfc = false
+                    rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
+                  }
                 }
               }
             }
@@ -779,6 +784,7 @@ class AnyMimeActivity extends Activity {
           // show toast only, if we did not initiate the connection
           if(!initiatedConnectionByThisDevice) {
             Toast.makeText(getApplicationContext, ""+mConnectedDeviceName+" has connected", Toast.LENGTH_LONG).show
+                                                  // todo: why do I see a ip4 address here?
           }
 
         case RFCommHelperService.MESSAGE_YOURTURN =>

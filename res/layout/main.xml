@@ -102,7 +102,7 @@
         >
           <Button
             android:id="@+id/buttonManualConnect"
-            android:text="Transfer"
+            android:text="Connect"
             android:textSize="12sp"
             android:layout_width="100dip"
             android:layout_height="fill_parent"

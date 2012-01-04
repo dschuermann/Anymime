@@ -224,7 +224,7 @@ class FileExchangeService extends RFServiceTrait {
 
       // plug-in app-specific behaviour
       if(!processBtMessage(cmd, arg1, fromAddr, fromName, btMessage) { () =>
-        // tmtmtm: this closure is used as readCodedInputStream() from within subclassed clients
+        // this closure is used as readCodedInputStream() from within subclassed clients
         //if(D) Log.i(TAG, "ConnectedThread processReceivedRawData closure from processBtMessage ...")
         var magic=0
         var magicRecount=0

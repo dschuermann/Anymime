@@ -23,7 +23,7 @@ package org.timur.anymime
 import java.util.ArrayList
 import java.util.Collections
 
-import scala.collection.mutable //.HashMap
+import scala.collection.mutable // for instance: mutable.HashMap
 
 import android.app.Activity
 import android.app.ListActivity
@@ -59,7 +59,6 @@ class SelectPairedDevicePopupActivity extends ListActivity {
 
   private var rfCommHelper:RFCommHelper = null
   private var arrayAdapter:ArrayAdapter[String] = null
-  
   private var btBroadcastReceiver:BroadcastReceiver = null
 
   override def onCreate(savedInstanceState:Bundle) {
@@ -107,7 +106,7 @@ class SelectPairedDevicePopupActivity extends ListActivity {
     // we use pairedDevicesShadowHashMap[addr,name] as a shadow-HashMap containing all listed devices, so we can prevent double-entries in the visible arrayAdapter
     val pairedDevicesShadowHashMap = new mutable.HashMap[String,String]()
 
-    if(rfCommHelper.desiredBluetooth) {
+    if(rfCommHelper.rfCommService.desiredBluetooth) {
       // 1. get list of paired bt devices from rfCommHelper
       val pairedDevicesArrayListOfStrings = rfCommHelper.getBtPairedDevices  // java.util.ArrayList[String], "name/naddr"
       if(pairedDevicesArrayListOfStrings!=null) {
@@ -132,7 +131,7 @@ class SelectPairedDevicePopupActivity extends ListActivity {
       // todo: 2. get list of stored (previously connected) bt devices
 
       // 3. start handler for all newly discovered bt devices
-      if(rfCommHelper.rfCommService.btAdapter!=null) {
+      if(rfCommHelper.mBluetoothAdapter!=null) {
         btBroadcastReceiver = new BroadcastReceiver() {
           override def onReceive(context:Context, intent:Intent) {
             val actionString = intent.getAction
@@ -149,8 +148,8 @@ class SelectPairedDevicePopupActivity extends ListActivity {
               }
             }
             else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED==actionString) {
-              if(D) Log.i(TAG,"Entered the Finished ")
-              rfCommHelper.rfCommService.btAdapter.startDiscovery
+              //if(D) Log.i(TAG,"btBroadcastReceiver ACTION_DISCOVERY_FINISHED")
+              rfCommHelper.mBluetoothAdapter.startDiscovery
             }
           }
         }
@@ -159,26 +158,27 @@ class SelectPairedDevicePopupActivity extends ListActivity {
         registerReceiver(btBroadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND))
         registerReceiver(btBroadcastReceiver, new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED))
 
-        rfCommHelper.rfCommService.btAdapter.startDiscovery
+        rfCommHelper.mBluetoothAdapter.startDiscovery
       }
     }
 
-    if(rfCommHelper.desiredWifiDirect) {
+    if(rfCommHelper.rfCommService.desiredWifiDirect) {
       // todo: 4. get list of previously connected p2pWifi devices
 
       // 5. start handler for freshly discovered p2pWifi devices
       if(rfCommHelper.wifiP2pManager!=null) {
         rfCommHelper.rfCommService.p2pWifiDiscoveredCallbackFkt = { wifiP2pDevice =>
           if(wifiP2pDevice != null) {
-            if(D) Log.i(TAG, "add wifiP2p device deviceName="+wifiP2pDevice.deviceName+" deviceAddress="+wifiP2pDevice.deviceAddress+" status="+wifiP2pDevice.status+" "+(wifiP2pDevice.deviceAddress==rfCommHelper.p2pRemoteAddressToConnect)+" ####")
             if(pairedDevicesShadowHashMap.getOrElse(wifiP2pDevice.deviceAddress,null)==null) {
+              if(D) Log.i(TAG, "add wifiP2p device deviceName="+wifiP2pDevice.deviceName+" deviceAddress="+wifiP2pDevice.deviceAddress+
+                              " status="+wifiP2pDevice.status+" "+(wifiP2pDevice.deviceAddress==rfCommHelper.rfCommService.p2pRemoteAddressToConnect))
               pairedDevicesShadowHashMap += wifiP2pDevice.deviceAddress -> wifiP2pDevice.deviceName
               arrayAdapter.add(wifiP2pDevice.deviceName+"\n"+wifiP2pDevice.deviceAddress+" wifi")
             }
           }
         }
 
-        rfCommHelper.wifiP2pManager.discoverPeers(rfCommHelper.p2pChannel, new WifiP2pManager.ActionListener() {
+        rfCommHelper.wifiP2pManager.discoverPeers(rfCommHelper.rfCommService.p2pChannel, new WifiP2pManager.ActionListener() {
           override def onFailure(reasonCode:Int) {
             if(D) Log.i(TAG, "wifiP2pManager.discoverPeers failed reasonCode="+reasonCode)
             // reason ERROR=0, P2P_UNSUPPORTED=1, BUSY=2
@@ -230,8 +230,8 @@ class SelectPairedDevicePopupActivity extends ListActivity {
       rfCommHelper.rfCommService.p2pWifiDiscoveredCallbackFkt = null
     
       if(btBroadcastReceiver!=null) {
-        if(rfCommHelper.rfCommService.btAdapter!=null)
-          rfCommHelper.rfCommService.btAdapter.cancelDiscovery
+        if(rfCommHelper.mBluetoothAdapter!=null)
+          rfCommHelper.mBluetoothAdapter.cancelDiscovery
         unregisterReceiver(btBroadcastReceiver)
       }
     }
@@ -239,7 +239,8 @@ class SelectPairedDevicePopupActivity extends ListActivity {
     super.onDestroy
   }
   
-  // todo: rather use onKeyBack ...
+/*
+  // todo: rather use onBackPressed
   override def dispatchKeyEvent(keyEvent:KeyEvent) :Boolean = {
     //if(D) Log.i(TAG, "dispatchKeyEvent")
     val keyCode = keyEvent.getKeyCode()
@@ -250,5 +251,11 @@ class SelectPairedDevicePopupActivity extends ListActivity {
 
     return super.dispatchKeyEvent(keyEvent)
   }
+*/
+	override def onBackPressed() {
+    if(D) Log.i(TAG, "onBackPressed()")
+		setResult(-1)
+    super.onBackPressed 
+	}
 }
 
