@@ -517,7 +517,7 @@ class AnyMimeActivity extends Activity {
                   // connect to wifi device
                   if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectWifi() ...")
                   if(rfCommHelper.wifiP2pManager!=null)
-                    rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr)
+                    rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr, deviceName)
 
                 } else {
                   // connect to bt device
@@ -815,8 +815,8 @@ class AnyMimeActivity extends Activity {
           if(radioLogoView!=null)
             radioLogoView.setImageResource(R.drawable.bluetooth)
           if(userHint1View!=null) {
-            if(D) Log.i(TAG, "CONNECTION_START userHint1View.setText")
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
+                                          // todo: mConnectingDeviceName seems to be null in case of wifi
           }
           // show a little round progress bar animation
           if(userHint2View!=null)
