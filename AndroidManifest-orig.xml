@@ -57,7 +57,7 @@
     </activity>
 
     <activity android:name=".SelectDeviceActivity"
-              android:label="Selected device to connect"
+              android:label="Select target device"
               android:theme="@android:style/Theme.Dialog"
               android:configChanges="orientation|keyboardHidden" />
 

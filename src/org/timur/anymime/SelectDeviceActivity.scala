@@ -29,6 +29,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.widget.ListView
+import android.media.MediaPlayer
 
 import org.timur.rfcomm._
 
@@ -40,6 +41,7 @@ class SelectDeviceActivity extends ListActivity {
   private val REQUEST_BT_SETTINGS = 1
 
   private var rfCommHelper:RFCommHelper = null
+  private var audioMiniAlert:MediaPlayer = null
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
@@ -77,9 +79,11 @@ class SelectDeviceActivity extends ListActivity {
       startActivityForResult(bluetoothSettingsIntent, REQUEST_BT_SETTINGS) // -> onActivityResult()
     }
 
+    audioMiniAlert = MediaPlayer.create(this, R.raw.confirm8bit) //kirbystylelaser)
+
     val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, new java.util.ArrayList[String]())
     setListAdapter(arrayAdapter)
-    rfCommHelper.addAllDevices(arrayAdapter)
+    rfCommHelper.addAllDevices(arrayAdapter,audioMiniAlert)
   }
   
   // todo: somehere else store every connected bt-address in preferences (in a hash map, ideally on sdcard so multiple apps can share); then make these devices available here
