@@ -74,7 +74,7 @@
         android:layout_marginBottom="8dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="(c) 2011 Timur Mehrvarz"
+        android:text="(c) 2012 Timur Mehrvarz"
       />
 
       <TextView

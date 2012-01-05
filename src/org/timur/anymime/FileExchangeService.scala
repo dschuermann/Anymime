@@ -70,7 +70,7 @@ class FileExchangeService extends RFServiceTrait {
   class ConnectedThread() extends ConnectedThreadTrait {
     private var mmInStream:InputStream = null
     private var mmOutStream:OutputStream = null
-    private var socketType:String = null
+    private var pairedBtOnly:Boolean = false
     private var deviceAddr:String = null
     private var deviceName:String = null
     private var localDeviceAddr:String = null
@@ -83,15 +83,15 @@ class FileExchangeService extends RFServiceTrait {
 
     bytesWritten=0
 
-    def init(setMmInStream:InputStream, setMmOutStream:OutputStream, setSocketType:String, 
+    def init(setMmInStream:InputStream, setMmOutStream:OutputStream, setPairedBtOnly:Boolean, 
              setLocalDeviceAddr:String, setLocalDeviceName:String, 
              setDeviceAddr:String, setDeviceName:String, 
              setSocketCloseFkt:() => Unit) {
-      //if(D) Log.i(TAG, "ConnectedThread start " + socketType)
+      //if(D) Log.i(TAG, "ConnectedThread start pairedBtOnly="+pairedBtOnly)
 
       mmInStream = setMmInStream
       mmOutStream = setMmOutStream
-      socketType = setSocketType
+      pairedBtOnly = setPairedBtOnly
       localDeviceAddr = setLocalDeviceAddr
       localDeviceName = setLocalDeviceName
       deviceAddr = setDeviceAddr
@@ -281,12 +281,12 @@ class FileExchangeService extends RFServiceTrait {
     }
 
     override def run() {
-      if(D) Log.i(TAG, "ConnectedThread run " + socketType)
+      if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly)
       try {
         // while connected, keep listening to the InputStream
         threadRunning = true
         while(threadRunning) {
-          //if(D) Log.i(TAG, "ConnectedThread run " + socketType+" read size...")
+          //if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" read size...")
           var magic=0
           var magicRecount=0
           do {
@@ -300,7 +300,7 @@ class FileExchangeService extends RFServiceTrait {
 
           if(threadRunning && codedInputStream!=null) {
             val size = codedInputStream.readRawVarint32 // may block
-            //if(D) Log.i(TAG, "ConnectedThread run " + socketType+" read size="+size+" magic="+magic+" magicRecount="+magicRecount+" socket="+socket+" threadRunning="+threadRunning)
+            //if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" read size="+size+" magic="+magic+" magicRecount="+magicRecount+" socket="+socket+" threadRunning="+threadRunning)
             if(threadRunning && size>0) {
               val rawdata = codedInputStream.readRawBytes(size) // bc we know the size of data to expect, this will not block
               if(threadRunning)
@@ -338,7 +338,7 @@ class FileExchangeService extends RFServiceTrait {
           }
       }
 
-      if(D) Log.i(TAG, "ConnectedThread run "+socketType+" DONE threadRunning="+threadRunning+" ##############################")
+      if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" DONE threadRunning="+threadRunning+" ##############################")
     }
 
     def writeBtShareMessage(btMessage:BtShare.Message) :Unit = {
@@ -588,10 +588,6 @@ class FileExchangeService extends RFServiceTrait {
       }
     }
   }
-
-
-
-
 
 
 

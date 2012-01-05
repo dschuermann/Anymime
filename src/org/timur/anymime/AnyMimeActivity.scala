@@ -508,30 +508,36 @@ class AnyMimeActivity extends Activity {
                   deviceAddr = deviceAddr.substring(0,idxComment)
                 val deviceAddrComment = if(idxComment>=0) device.substring(idxCR+1+idxComment+1) else null
 
-                if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT deviceName="+deviceName+" deviceAddr="+deviceAddr+" deviceAddrComment="+deviceAddrComment+" ####################")
-               
-                initiatedConnectionByThisDevice = true
+                // todo: if activity is currently in sleep mode, wait for it to be resumed
+                new Thread() {
+                  override def run() {
+                    try { Thread.sleep(300) } catch { case ex:Exception => }
 
-                if(deviceAddrComment!=null && deviceAddrComment.startsWith("wifi")) {
-                  // connect to wifi device
-                  if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT connectWifi() rfCommHelper.wifiP2pManager="+rfCommHelper.wifiP2pManager)
-                  if(rfCommHelper.wifiP2pManager!=null)
-                    rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr, deviceName)
-
-                } else {
-                  // connect to bt device
-                  val remoteBluetoothDevice = BluetoothAdapter.getDefaultAdapter.getRemoteDevice(deviceAddr)
-                  if(remoteBluetoothDevice==null) {
-                    Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT remoteBluetoothDevice==null")
-                  } else {
-                    if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectBt() ...")
+                    if(D) Log.i(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT deviceName="+deviceName+" deviceAddr="+deviceAddr+" deviceAddrComment="+deviceAddrComment+" ####################")              
                     initiatedConnectionByThisDevice = true
-                    rfCommHelper.connectAttemptFromNfc = false
-                    rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
+                    if(deviceAddrComment!=null && deviceAddrComment.startsWith("wifi")) {
+                      // connect to wifi device
+                      if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT connectWifi() rfCommHelper.wifiP2pManager="+rfCommHelper.wifiP2pManager)
+                      if(rfCommHelper.wifiP2pManager!=null)
+                        rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr, deviceName)
+
+                    } else {
+                      // connect to bt device
+                      val remoteBluetoothDevice = BluetoothAdapter.getDefaultAdapter.getRemoteDevice(deviceAddr)
+                      if(remoteBluetoothDevice==null) {
+                        Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT remoteBluetoothDevice==null")
+                      } else {
+                        if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectBt() ...")
+                        rfCommHelper.connectAttemptFromNfc = false
+                        rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
+                      }
+                    }
+                    
+                    AndrTools.runOnUiThread(activity) { () =>
+                      mainViewUpdate
+                    }
                   }
-                }
-                
-                mainViewUpdate
+                }.start                        
               }
             }
           }
@@ -636,6 +642,8 @@ class AnyMimeActivity extends Activity {
             // disconnect active connection/transmission
             if(rfCommHelper!=null && rfCommHelper.rfCommService!=null) {
               rfCommHelper.rfCommService.stopActiveConnection
+              // todo: must update view - but after rfCommService.state=3 has changed to 1
+              mainViewUpdate
             }
           case DialogInterface.BUTTON_NEGATIVE =>
             // do nothing, just continue
@@ -656,7 +664,6 @@ class AnyMimeActivity extends Activity {
        rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED) {
       // ask the user to confirm before disconnecting active transmission
       offerUserToDisconnect
-      // activity will not be closed here
     } else {
       // this activity will be closed here
       super.onBackPressed 
@@ -774,7 +781,7 @@ class AnyMimeActivity extends Activity {
           // note: MESSAGE_DEVICE_NAME is immediately followed by a MESSAGE_STATE_CHANGE/STATE_CONNECTED message
           mConnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           mConnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
-          val mConnectedSocketType = msg.getData.getString(RFCommHelperService.SOCKET_TYPE)
+          //val pairedBtOnly = msg.getData.getBoolean(RFCommHelperService.SOCKET_TYPE)
           if(D) Log.i(TAG, "handleMessage MESSAGE_DEVICE_NAME="+mConnectedDeviceName+" addr="+mConnectedDeviceAddr)
 
           // show toast only, if we did not initiate the connection
@@ -876,7 +883,6 @@ class AnyMimeActivity extends Activity {
                               }
                             }
                           }
-                        
                         }
                       }.start                        
                     }
