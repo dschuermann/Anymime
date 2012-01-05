@@ -38,7 +38,7 @@ import android.os.Message
 
 object Ocr {
   private val TAG = "Ocr"
-  private val D = Static.DBGLOG
+  private val D = false //Static.DBGLOG
 
   var pixelInColumn:Array[Int] = null
   var skipped2ndFingerprint = false

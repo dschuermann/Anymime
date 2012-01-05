@@ -1,3 +1,23 @@
+/* 
+ * This file is part of AnyMime, a program to help you swap files
+ * wirelessly between mobile devices.
+ *
+ * Copyright (C) 2012 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.timur.anymime
 
 import java.io.InputStream
@@ -29,7 +49,6 @@ import com.google.protobuf.CodedInputStream
 import scala.collection.mutable.ListBuffer
 
 import org.timur.rfcomm._
-
 
 // app-specific code that needs to stay in memory when the activity goes into background
 // so that filetransfer can continue while the app is in background (and the activity might have been removed from memory)
@@ -928,6 +947,5 @@ class FileExchangeService extends RFServiceTrait {
       // may result in "ConnectedThread run disconnected (38:16:D1:78:96:D0 Nexus S tm) com.google.protobuf.InvalidProtocolBufferException: Protocol message tag had invalid wire type"
     }
   }
-
 }
 

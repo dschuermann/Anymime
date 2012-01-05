@@ -2,7 +2,7 @@
  * This file is part of AnyMime, a program to help you swap files
  * wirelessly between mobile devices.
  *
- * Copyright (C) 2011 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+ * Copyright (C) 2012 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,37 +20,21 @@
 
 package org.timur.anymime
 
-import java.util.ArrayList
-import java.util.Collections
-
 import android.app.Activity
 import android.app.ListActivity
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.util.Log
-import android.view.KeyEvent
-import android.view.Window
 import android.view.View
-import android.widget.CheckBox
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.widget.ListView
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-
-import android.net.wifi.p2p.WifiP2pManager
-import android.net.wifi.p2p.WifiP2pManager.PeerListListener
-import android.net.wifi.p2p.WifiP2pDeviceList
-
 import org.timur.rfcomm._
 
-class SelectPairedDevicePopupActivity extends ListActivity {
+class SelectDeviceActivity extends ListActivity {
 
-  private val TAG = "SelectPairedDevicePopupActivity"
+  private val TAG = "SelectDeviceActivity"
   private val D = Static.DBGLOG
 
   private val REQUEST_BT_SETTINGS = 1
@@ -98,9 +82,7 @@ class SelectPairedDevicePopupActivity extends ListActivity {
     rfCommHelper.addAllDevices(arrayAdapter)
   }
   
-  // todo's somehere else
-  //   todo: must store every connected bt-address in preferences (in a hash map)
-  //   todo: must store every connected p2pWifi-address in preferences (in a hash map)
+  // todo: somehere else store every connected bt-address in preferences (in a hash map, ideally on sdcard so multiple apps can share); then make these devices available here
 
   override def onActivityResult(requestCode:Int, resultCode:Int, intent:Intent) {
     if(D) Log.i(TAG, "onActivityResult resultCode="+resultCode+" requestCode="+requestCode)

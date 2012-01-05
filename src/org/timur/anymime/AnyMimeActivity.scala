@@ -2,7 +2,7 @@
  * This file is part of AnyMime, a program to help you swap files
  * wirelessly between mobile devices.
  *
- * Copyright (C) 2011 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+ * Copyright (C) 2012 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -250,9 +250,9 @@ class AnyMimeActivity extends Activity {
         return
       }
 
-      if(D) Log.i(TAG, "onClick buttonManualConnect new Intent(activity, classOf[SelectPairedDevicePopupActivity])")
-      val intent = new Intent(activity, classOf[SelectPairedDevicePopupActivity])
-      startActivityForResult(intent, REQUEST_SELECT_DEVICE_AND_CONNECT) // -> SelectPairedDevicePopupActivity -> onActivityResult()
+      if(D) Log.i(TAG, "onClick buttonManualConnect new Intent(activity, classOf[SelectDeviceActivity])")
+      val intent = new Intent(activity, classOf[SelectDeviceActivity])
+      startActivityForResult(intent, REQUEST_SELECT_DEVICE_AND_CONNECT) // -> SelectDeviceActivity -> onActivityResult()
 
       if(D) Log.i(TAG, "onClick buttonManualConnect startActivityForResult done")
     }
@@ -519,7 +519,7 @@ class AnyMimeActivity extends Activity {
                       // connect to wifi device
                       if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT connectWifi() rfCommHelper.wifiP2pManager="+rfCommHelper.wifiP2pManager)
                       if(rfCommHelper.wifiP2pManager!=null)
-                        rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr, deviceName)
+                        rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr, deviceName, false)
 
                     } else {
                       // connect to bt device
@@ -661,7 +661,7 @@ class AnyMimeActivity extends Activity {
 	override def onBackPressed() {
     if(D) Log.i(TAG, "onBackPressed()")
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null &&
-       rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED) {
+       (rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED || rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)) {
       // ask the user to confirm before disconnecting active transmission
       offerUserToDisconnect
     } else {
