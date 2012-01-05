@@ -99,10 +99,14 @@ class AnyMimeActivity extends Activity {
   private val REQUEST_READ_CURRENT_SLOT = 3
   private val REQUEST_READ_SELECTED_SLOT_ADD_FILE = 4
 
-  private val PREFS_SETTINGS = "org.timur.anymime.settings"
+  private val PREFS_PRIVATE = "org.timur.anymime.settings"
+  private var prefsPrivate:SharedPreferences = null
+  private var prefsPrivateEditor:SharedPreferences.Editor = null
 
-  private var prefSettings:SharedPreferences = null
-  private var prefSettingsEditor:SharedPreferences.Editor = null
+  private val PREFS_SHARED_P2P_BT = "org.timur.p2pDevices.bt"
+  private var prefsSharedP2pBt:SharedPreferences = null
+  private val PREFS_SHARED_P2P_WIFI = "org.timur.p2pDevices.wifi"
+  private var prefsSharedP2pWifi:SharedPreferences = null
 
   private var activity:Activity = null
   private var activityResumed = false
@@ -186,12 +190,12 @@ class AnyMimeActivity extends Activity {
 */
       setContentView(R.layout.main)
 
-    // prepare access to prefSettings
-    if(prefSettings==null) {
-      prefSettings = getSharedPreferences(PREFS_SETTINGS, Context.MODE_WORLD_WRITEABLE)
-      if(prefSettings!=null)
-        prefSettingsEditor = prefSettings.edit
-    }
+    // prepare access to preferences
+    prefsPrivate = getSharedPreferences(PREFS_PRIVATE, Context.MODE_PRIVATE)
+    if(prefsPrivate!=null)
+      prefsPrivateEditor = prefsPrivate.edit
+    prefsSharedP2pBt = getSharedPreferences(PREFS_SHARED_P2P_BT, Context.MODE_WORLD_WRITEABLE)
+    prefsSharedP2pWifi = getSharedPreferences(PREFS_SHARED_P2P_WIFI, Context.MODE_WORLD_WRITEABLE)
 
     audioConfirmSound = MediaPlayer.create(activity, R.raw.textboxbloop8bit)
 
@@ -316,7 +320,7 @@ class AnyMimeActivity extends Activity {
           }
           return
         }
-        if(D) Log.i(TAG, "onCreate onServiceConnected got appService object !!!!!!!!!!!!!!!!")
+        if(D) Log.i(TAG, "onCreate onServiceConnected got appService object")
         appService.context = activity
         appService.activityMsgHandler = msgFromServiceHandler
         appService.setSendFiles(selectedFileStringsArrayList)
@@ -324,7 +328,7 @@ class AnyMimeActivity extends Activity {
         // instantiate RFCommService
         // both services will use msgFromServiceHandler to communicate back to the activity (todo: maybe better use separate handlers?)
         rfCommHelper = new RFCommHelper(activity, msgFromServiceHandler, 
-                                        prefSettings, prefSettingsEditor, 
+                                        prefsPrivate, prefsSharedP2pBt, prefsSharedP2pWifi,
                                         initUIFkt, serviceFailedFkt, 
                                         appService,
                                         intentReceiverActivityClass,
@@ -332,10 +336,10 @@ class AnyMimeActivity extends Activity {
                                         RFCommHelper.RADIO_BT| RFCommHelper.RADIO_P2PWIFI| RFCommHelper.RADIO_NFC)
 
         val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
-        if(D) Log.i(TAG, "onCreate anyMimeApp="+anyMimeApp+" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        if(D) Log.i(TAG, "onCreate anyMimeApp="+anyMimeApp)
         if(anyMimeApp!=null) {
           anyMimeApp.rfCommHelper = rfCommHelper
-          if(D) Log.i(TAG, "anyMimeApp="+anyMimeApp+" anyMimeApp.rfCommHelper="+anyMimeApp.rfCommHelper+" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+          if(D) Log.i(TAG, "anyMimeApp="+anyMimeApp+" anyMimeApp.rfCommHelper="+anyMimeApp.rfCommHelper)
         }
 
         appService.rfCommHelper = rfCommHelper
@@ -528,7 +532,7 @@ class AnyMimeActivity extends Activity {
                         Log.e(TAG, "onActivityResult REQUEST_SELECT_DEVICE_AND_CONNECT remoteBluetoothDevice==null")
                       } else {
                         if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectBt() ...")
-                        rfCommHelper.connectAttemptFromNfc = false
+                        rfCommHelper.connectAttemptFromNfc = false  // on connect fail will ask user "fall back to OPP?" only if connect not initiated by nfc
                         rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
                       }
                     }
@@ -651,27 +655,31 @@ class AnyMimeActivity extends Activity {
       }
     }
 
-    new AlertDialog.Builder(activity).setTitle("Disconnect?")
-                                     .setMessage("Are you sure you want to disconnect the onging transmission?")
-                                     .setPositiveButton("Yes",dialogClickListener)
-                                     .setNegativeButton("No", dialogClickListener)
-                                     .show     
+    val alertDialog = new AlertDialog.Builder(activity).setTitle("Disconnect?")
+                           .setPositiveButton("Yes",dialogClickListener)
+                           .setNegativeButton("No", dialogClickListener)
+    if(rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)
+      alertDialog.setMessage("Are you sure you want to abort the onging connect request?")
+    else
+      alertDialog.setMessage("Are you sure you want to abort the onging transmission?")
+    alertDialog.show     
 	}
 
 	override def onBackPressed() {
     if(D) Log.i(TAG, "onBackPressed()")
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null &&
-       (rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED || rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)) {
+       (rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED || 
+        rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)) {
       // ask the user to confirm before disconnecting active transmission
       offerUserToDisconnect
-    } else {
-      // this activity will be closed here
-      super.onBackPressed 
+      return
     }
+    // this activity will be closed here
+    super.onBackPressed 
 	}
 
   private def persistArrayList(arrayList:ArrayList[String], persistName:String) {
-    if(prefSettingsEditor!=null) {
+    if(prefsPrivateEditor!=null) {
       val iterator = arrayList.iterator 
       var stringBuilder = new StringBuilder()
       while(iterator.hasNext) {
@@ -680,8 +688,8 @@ class AnyMimeActivity extends Activity {
         stringBuilder append iterator.next
       }
       if(D) Log.i(TAG, "persistArrayList stringBuilder="+stringBuilder.toString)
-      prefSettingsEditor.putString(persistName,stringBuilder.toString)
-      prefSettingsEditor.commit
+      prefsPrivateEditor.putString(persistName,stringBuilder.toString)
+      prefsPrivateEditor.commit
     }
   }
 
@@ -695,24 +703,24 @@ class AnyMimeActivity extends Activity {
   }
 
   private def getArrayListSelectedFileStrings() {
-    val selectedSlotString = prefSettings.getString("selectedSlot", null)
+    val selectedSlotString = prefsPrivate.getString("selectedSlot", null)
     selectedSlot = if(selectedSlotString!=null) selectedSlotString.toInt else 0
     if(selectedSlot<0 || selectedSlot>ShowSelectedSlotActivity.MAX_SLOTS)
       selectedSlot = 0
     if(D) Log.i(TAG, "getArrayListSelectedFileStrings selectedSlot="+selectedSlot)
     if(selectedFileStringsArrayList!=null)
       selectedFileStringsArrayList.clear
-    selectedSlotName = prefSettings.getString("fileSlotName"+selectedSlot, "")
+    selectedSlotName = prefsPrivate.getString("fileSlotName"+selectedSlot, "")
 
     // read the lists of selected files
-    var commaSeparatedString = prefSettings.getString("fileSlot"+selectedSlot, null)
+    var commaSeparatedString = prefsPrivate.getString("fileSlot"+selectedSlot, null)
     if(D) Log.i(TAG, "getArrayListSelectedFileStrings commaSeparatedString="+commaSeparatedString)
     if(commaSeparatedString!=null) {
       commaSeparatedString = commaSeparatedString.trim
       if(commaSeparatedString.size>0) {
         val resultArray = commaSeparatedString split ","
         if(resultArray!=null) {
-          if(D) Log.i(TAG,"getArrayListSelectedFileStrings prefSettings selectedFilesStringArrayList size="+resultArray.size)
+          if(D) Log.i(TAG,"getArrayListSelectedFileStrings prefsPrivate selectedFilesStringArrayList size="+resultArray.size)
           for(filePathString <- resultArray) {
             if(filePathString!=null)
               selectedFileStringsArrayList add filePathString.trim
@@ -723,8 +731,8 @@ class AnyMimeActivity extends Activity {
   }
 
   private def persistArrayListSelectedFileStrings() {
-    if(prefSettings!=null && prefSettingsEditor!=null) {
-      val selectedSlotString = prefSettings.getString("selectedSlot", null)
+    if(prefsPrivate!=null && prefsPrivateEditor!=null) {
+      val selectedSlotString = prefsPrivate.getString("selectedSlot", null)
       selectedSlot = if(selectedSlotString!=null) selectedSlotString.toInt else 0
       if(selectedSlot<0 || selectedSlot>ShowSelectedSlotActivity.MAX_SLOTS)
         selectedSlot = 0
@@ -737,8 +745,8 @@ class AnyMimeActivity extends Activity {
         stringBuilder append iterator.next
       }
       if(D) Log.i(TAG, "persistArrayListSelectedFileStrings stringBuilder="+stringBuilder.toString)
-      prefSettingsEditor.putString("fileSlot"+selectedSlot,stringBuilder.toString)
-      prefSettingsEditor.commit
+      prefsPrivateEditor.putString("fileSlot"+selectedSlot,stringBuilder.toString)
+      prefsPrivateEditor.commit
     }
   }
 

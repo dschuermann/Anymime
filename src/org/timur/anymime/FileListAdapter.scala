@@ -33,6 +33,7 @@ import android.widget.ArrayAdapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import android.os.Environment
 
 // FileListAdapter is being used by ShowReceivedFilesPopupActivity and ShowSelectedFilesActivity 
 
@@ -109,6 +110,7 @@ class FileListAdapter(context:Context, messageResourceId:Int)
     if(visibleText2View != null) {
       val idxLastSlash = pathFileString.lastIndexOf("/")
       var visibleMsg = if(idxLastSlash>=0) pathFileString.substring(0,idxLastSlash+1) else pathFileString
+      //if(visibleMsg.startsWith(Environment.getExternalStorageDirectory.getAbsolutePath))
       if(visibleMsg.startsWith("/mnt/sdcard/"))
         visibleMsg = visibleMsg.substring(4)
       visibleText2View.setText(visibleMsg)

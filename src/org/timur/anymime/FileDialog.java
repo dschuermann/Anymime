@@ -31,6 +31,7 @@ import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -53,7 +54,8 @@ public class FileDialog extends ListActivity {
 
 	private List<String> item = null;
 	private List<String> path = null;
-	private String root = "/sdcard";
+//private String root = "/sdcard";
+	private String root = Environment.getExternalStorageDirectory().getAbsolutePath();
 	private TextView myPath;
 	private EditText mFileName;
 	private ArrayList<HashMap<String, Object>> mList;

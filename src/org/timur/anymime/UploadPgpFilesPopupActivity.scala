@@ -31,6 +31,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import android.widget.TextView
@@ -244,7 +245,9 @@ class UploadPgpFilesPopupActivity extends Activity {
 
       sshLocalKeyPath = prefSettings.getString("sshLocalKeyPath", null) // "/sdcard/id_rsa_openssh"
       if(sshLocalKeyPath==null || sshLocalKeyPath.length<=0)
-        sshLocalKeyPath = "/sdcard/id_rsa_openssh"
+        //sshLocalKeyPath = "/sdcard/id_rsa_openssh"
+        sshLocalKeyPath = Environment.getExternalStorageDirectory.getAbsolutePath+"/id_rsa_openssh"
+        
       if(sshLocalKeyPathEditView!=null)
         sshLocalKeyPathEditView.setText(sshLocalKeyPath)
     }

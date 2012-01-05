@@ -64,7 +64,7 @@ class SelectDeviceActivity extends ListActivity {
     }
     // good, we got access to rfCommHelper
 
-    setContentView(R.layout.bt_select)
+    setContentView(R.layout.select_device)
 
     AndrTools.buttonCallback(this, R.id.buttonCancel) { () =>
       if(D) Log.i(TAG, "onClick buttonCancel")
@@ -77,6 +77,11 @@ class SelectDeviceActivity extends ListActivity {
       val bluetoothSettingsIntent = new Intent
       bluetoothSettingsIntent.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
       startActivityForResult(bluetoothSettingsIntent, REQUEST_BT_SETTINGS) // -> onActivityResult()
+    }
+
+    AndrTools.buttonCallback(this, R.id.buttonHistory) { () =>
+      if(D) Log.i(TAG, "onClick buttonHistory")
+      // todo
     }
 
     audioMiniAlert = MediaPlayer.create(this, R.raw.confirm8bit) //kirbystylelaser)
