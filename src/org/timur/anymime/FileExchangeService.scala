@@ -180,11 +180,12 @@ class FileExchangeService extends RFServiceTrait {
           disconnecting = true
           if(D) Log.i(TAG, "processBtMessage 'disconnect' ################################")
           if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
-            rfCommHelper.rfCommService.stopActiveConnection
+            rfCommHelper.rfCommService.stopActiveConnection // will call our cancel method and set connectedThread=null
           else {
             Log.e(TAG, "processBtMessage 'disconnect' unable to rfCommHelper.rfCommService.stopActiveConnection")
           }
-          connectedThread.cancel
+          //if(connectedThread!=null)
+          //  connectedThread.cancel
         } else {
           Log.e(TAG, "processBtMessage 'disconnect' connectedThread==null, unable to connectedThread.cancel")
         }
@@ -201,14 +202,15 @@ class FileExchangeService extends RFServiceTrait {
           // remind disconnect-status - so we wont try to switch to backup-connection in case the other side will disconnect now
           disconnecting=true
           if(connectedThread!=null) {
-            // sleep to allow the disconnect command to transmit
+            // sleep a little to allow the disconnect command to transmit
             try { Thread.sleep(200); } catch { case ex:Exception => }
             if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
-              rfCommHelper.rfCommService.stopActiveConnection
+              rfCommHelper.rfCommService.stopActiveConnection // will call our cancel method and set connectedThread=null
             else {
               Log.e(TAG, "processBtMessage 'yourturn' firstActor unable to rfCommHelper.rfCommService.stopActiveConnection")
             }
-            connectedThread.cancel
+            //if(connectedThread!=null)
+            //  connectedThread.cancel
           } else {
             Log.e(TAG, "processBtMessage 'yourturn' firstActor connectedThread==null, unable to connectedThread.cancel")
           }

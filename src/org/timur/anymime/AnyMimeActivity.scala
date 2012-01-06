@@ -795,7 +795,7 @@ class AnyMimeActivity extends Activity {
           //val pairedBtOnly = msg.getData.getBoolean(RFCommHelperService.SOCKET_TYPE)
           if(D) Log.i(TAG, "handleMessage MESSAGE_DEVICE_NAME="+mConnectedDeviceName+" addr="+mConnectedDeviceAddr)
 
-          // show toast only, if we did not initiate the connection
+          // show "... has connected" toast only, if we did NOT initiate the connection
           if(!initiatedConnectionByThisDevice) {
             Toast.makeText(getApplicationContext, ""+mConnectedDeviceName+" has connected", Toast.LENGTH_LONG).show
                                                   // todo: why do I see a ip4 address here?
