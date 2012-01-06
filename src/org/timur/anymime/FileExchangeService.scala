@@ -313,6 +313,7 @@ class FileExchangeService extends RFServiceTrait {
           do {
             if(codedInputStream==null) {
               threadRunning=false
+              if(D) Log.i(TAG, "ConnectedThread run codedInputStream==null -> threadRunning=false")
             } else {
               magic = codedInputStream.readRawVarint32 // may block
               magicRecount+=1
@@ -329,6 +330,7 @@ class FileExchangeService extends RFServiceTrait {
             }
           }
         }
+        if(D) Log.i(TAG, "ConnectedThread run exit loop threadRunning="+threadRunning)
 
       } catch {
         case ioex:IOException =>
@@ -336,30 +338,19 @@ class FileExchangeService extends RFServiceTrait {
           // "Software caused connection abort" 
           // todo: catch unexpected disconnect while sending, then switch to backupConnection!
           if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
-            rfCommHelper.rfCommService.stopActiveConnection
-          else {
+            rfCommHelper.rfCommService.stopActiveConnection  // will connectedThread.cancel
+          else
             Log.e(TAG, "ConnectedThread run IOException unable to rfCommHelper.rfCommService.stopActiveConnection")
-          }
-          if(connectedThread!=null)
-            connectedThread.cancel
-          else {
-            Log.e(TAG, "ConnectedThread run IOException unable to connectedThread.cancel")
-          }
+
         case istex:java.lang.IllegalStateException =>
           Log.e(TAG, "ConnectedThread run IllegalStateException disconnected "+istex)
           if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
-            rfCommHelper.rfCommService.stopActiveConnection
-          else {
+            rfCommHelper.rfCommService.stopActiveConnection  // will connectedThread.cancel
+          else
             Log.e(TAG, "ConnectedThread run IllegalStateException unable to rfCommHelper.rfCommService.stopActiveConnection")
-          }
-          if(connectedThread!=null)
-            connectedThread.cancel
-          else {
-            Log.e(TAG, "ConnectedThread run IllegalStateException unable to connectedThread.cancel")
-          }
       }
 
-      if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" DONE threadRunning="+threadRunning+" ##############################")
+      if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" DONE threadRunning="+threadRunning)
     }
 
     def writeBtShareMessage(btMessage:BtShare.Message) :Unit = {
@@ -401,10 +392,10 @@ class FileExchangeService extends RFServiceTrait {
         while(sendQueue.size>500) {
           if(!threadRunning || disconnecting)
             return
-          if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" >500 sleep ===================")
+          //if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" >500 sleep ===================")
           try { Thread.sleep(1000); } catch { case ex:Exception => }
         }
-        if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" after sleep")
+        //if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" after sleep")
       }
 
       if(!threadRunning || disconnecting)
@@ -701,6 +692,7 @@ class FileExchangeService extends RFServiceTrait {
   // called by connectedBt(), connectedWifi(), processBtMessage()
   def deliverFileArray(remoteDeviceName:String, remoteDeviceAddr:String) {
     numberOfSentFiles = 0
+
     if(selectedFileStringsArrayList==null || selectedFileStringsArrayList.size<1) {
       Log.e(TAG, "deliverFileArray no files to send selectedFileStringsArrayList="+selectedFileStringsArrayList)
 
@@ -712,51 +704,62 @@ class FileExchangeService extends RFServiceTrait {
       //       new ReceiverIdleCheckThread().start
 
     } else {
-      new Thread() {
-        override def run() {
-          AndrTools.runOnUiThread(context) { () =>
-            if(activityMsgHandler!=null)
-              activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Upload to "+remoteDeviceName).sendToTarget
-          }
-          try { Thread.sleep(100) } catch { case ex:Exception => }
+      if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state != RFCommHelperService.STATE_CONNECTED) {
+        Log.e(TAG, "deliverFileArray not connected anymore ########")
+      } else {
+        new Thread() {
+          override def run() {
+            AndrTools.runOnUiThread(context) { () =>
+              if(activityMsgHandler!=null)
+                activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Upload to "+remoteDeviceName).sendToTarget
+            }
 
-          try {
-            val iterator = selectedFileStringsArrayList.iterator 
-            while(iterator.hasNext) {
-              val fileString = iterator.next
-              if(fileString!=null) {
-                if(D) Log.i(TAG, "deliverFileArray fileString=["+fileString+"] numberOfSentFiles="+numberOfSentFiles)
+            // todo why?
+            try { Thread.sleep(100) } catch { case ex:Exception => }
 
-                val idxLastDot = fileString.lastIndexOf(".")
-                if(idxLastDot<0) {
-                  Log.e(TAG, "deliverFileArray idxLastDot<0 (no file extension)")
+            try {
+              val iterator = selectedFileStringsArrayList.iterator 
+              while(iterator.hasNext) {
+                // check: are we still connected?
+                if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state != RFCommHelperService.STATE_CONNECTED) {
+                  Log.e(TAG, "deliverFileArray not connected anymore ########")
                 } else {
-                  val ext = fileString.substring(idxLastDot+1)
-                  //val dstFileName = mBluetoothAdapter.getName+"."+ext
-                  //if(D) Log.i(TAG, "deliverFileArray dstFileName=["+dstFileName+"]")
-                  if(deliverFile(new File(fileString),remoteDeviceName, remoteDeviceAddr)==0)
-                    numberOfSentFiles += 1
+                  val fileString = iterator.next
+                  if(fileString!=null) {
+                    if(D) Log.i(TAG, "deliverFileArray fileString=["+fileString+"] numberOfSentFiles="+numberOfSentFiles)
+
+                    val idxLastDot = fileString.lastIndexOf(".")
+                    if(idxLastDot<0) {
+                      Log.e(TAG, "deliverFileArray idxLastDot<0 (no file extension)")
+                    } else {
+                      val ext = fileString.substring(idxLastDot+1)
+                      //val dstFileName = mBluetoothAdapter.getName+"."+ext
+                      //if(D) Log.i(TAG, "deliverFileArray dstFileName=["+dstFileName+"]")
+                      if(deliverFile(new File(fileString),remoteDeviceName, remoteDeviceAddr)==0)
+                        numberOfSentFiles += 1
+                    }
+                  }
                 }
               }
+            } catch {
+              case npex: java.lang.NullPointerException =>
+                Log.e(TAG, "deliverFileArray NullPointerException "+npex)
+                val errMsg = npex.getMessage
+                Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
             }
-          } catch {
-            case npex: java.lang.NullPointerException =>
-              Log.e(TAG, "deliverFileArray NullPointerException "+npex)
-              val errMsg = npex.getMessage
-              Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
-          }
 
-          // send special token to indicate the other side is becoming the actor
-          if(D) Log.i(TAG, "deliverFileArray sending 'yourturn' after sending")
-          send("yourturn",null,remoteDeviceAddr,remoteDeviceName)
-          // note: we expect the other party to start sending files immediately now (and after that to call stopActiveConnection)
-          // TODO: for the case that nothing happens, we need to disconnect the bt-connection ourselfs
-          // TODO: possible solution:
-          // 1. capture the current number of received bytes from the service
-          // 2. start a dedicated thread to come back in 5 to 10 seconds
-          // 3. if no additional new bytes were received ... hang up
-        }
-      }.start                        
+            // send special token to indicate the other side is becoming the actor
+            if(D) Log.i(TAG, "deliverFileArray sending 'yourturn' after sending")
+            send("yourturn",null,remoteDeviceAddr,remoteDeviceName)
+            // note: we expect the other party to start sending files immediately now (and after that to call stopActiveConnection)
+            // TODO: for the case that nothing happens, we need to disconnect the bt-connection ourselfs
+            // TODO: possible solution:
+            // 1. capture the current number of received bytes from the service
+            // 2. start a dedicated thread to come back in 5 to 10 seconds
+            // 3. if no additional new bytes were received ... hang up
+          }
+        }.start                        
+      } 
     } 
   }
 

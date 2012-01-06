@@ -1135,13 +1135,11 @@ class AnyMimeActivity extends Activity {
     	radioLogoView.setAnimation(null)
     }
     
-    if(mainView!=null)
-      mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
+    //if(mainView!=null)
+    //  mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
 
-    if(userHint1View!=null) {
-      //if(D) Log.i(TAG, "mainViewBluetooth userHint1View.setText clr")
+    if(userHint1View!=null)
       userHint1View.setText("")
-    }
 
     if(userHint2View!=null) {
       userHint2View.setText("")
@@ -1171,12 +1169,11 @@ class AnyMimeActivity extends Activity {
     	radioLogoView.setAnimation(null)
     }
     
-    if(mainView!=null)
-      mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
+    //if(mainView!=null)
+    //  mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
 
-    if(userHint1View!=null) {
+    if(userHint1View!=null)
       userHint1View.setText("")
-    }
 
     if(userHint2View!=null) {
       userHint2View.setText("")
