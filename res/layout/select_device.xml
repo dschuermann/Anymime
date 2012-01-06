@@ -74,7 +74,7 @@
           android:layout_marginRight="2dip"
           android:paddingBottom="4dp"
         />
-        <Button
+        <!--Button
           android:id="@+id/buttonHistory"
           android:text="History"
           android:textSize="12sp"
@@ -86,7 +86,7 @@
           android:layout_marginLeft="2dip"
           android:layout_marginRight="2dip"
           android:paddingBottom="4dp"
-        />
+        /-->
       </LinearLayout>
     </HorizontalScrollView>
   </LinearLayout>

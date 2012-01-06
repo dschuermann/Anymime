@@ -79,10 +79,12 @@ class SelectDeviceActivity extends ListActivity {
       startActivityForResult(bluetoothSettingsIntent, REQUEST_BT_SETTINGS) // -> onActivityResult()
     }
 
+/*
     AndrTools.buttonCallback(this, R.id.buttonHistory) { () =>
       if(D) Log.i(TAG, "onClick buttonHistory")
       // todo
     }
+*/
 
     audioMiniAlert = MediaPlayer.create(this, R.raw.confirm8bit) //kirbystylelaser)
 

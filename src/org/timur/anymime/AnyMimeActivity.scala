@@ -537,9 +537,10 @@ class AnyMimeActivity extends Activity {
                       }
                     }
                     
-                    AndrTools.runOnUiThread(activity) { () =>
+                    /*AndrTools.runOnUiThread(activity) { () =>
+                      if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT -> mainViewUpdate")
                       mainViewUpdate
-                    }
+                    }*/
                   }
                 }.start                        
               }
@@ -646,8 +647,10 @@ class AnyMimeActivity extends Activity {
             // disconnect active connection/transmission
             if(rfCommHelper!=null && rfCommHelper.rfCommService!=null) {
               rfCommHelper.rfCommService.stopActiveConnection
-              // todo: must update view - but after rfCommService.state=3 has changed to 1
+              if(D) Log.i(TAG, "offerUserToDisconnect -> mainViewUpdate")
               mainViewUpdate
+            } else {
+              Log.e(TAG, "offerUserToDisconnect BUTTON_POSITIVE failed to stopActiveConnection")
             }
           case DialogInterface.BUTTON_NEGATIVE =>
             // do nothing, just continue
@@ -659,9 +662,9 @@ class AnyMimeActivity extends Activity {
                            .setPositiveButton("Yes",dialogClickListener)
                            .setNegativeButton("No", dialogClickListener)
     if(rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)
-      alertDialog.setMessage("Are you sure you want to abort the onging connect request?")
+      alertDialog.setMessage("Are you sure you want to abort the ongoing connect request?")
     else
-      alertDialog.setMessage("Are you sure you want to abort the onging transmission?")
+      alertDialog.setMessage("Are you sure you want to abort the ongoing transmission?")
     alertDialog.show     
 	}
 
@@ -781,7 +784,7 @@ class AnyMimeActivity extends Activity {
               startTime = SystemClock.uptimeMillis
 
             case RFCommHelperService.STATE_LISTEN | RFCommHelperService.STATE_NONE =>
-              if(D) Log.i(TAG, "handleMessage MESSAGE_STATE_CHANGE: NOT CONNECTED")
+              if(D) Log.i(TAG, "handleMessage MESSAGE_STATE_CHANGE: NOT CONNECTED -> mainViewUpdate")
               mainViewUpdate          
           }
 
@@ -799,8 +802,7 @@ class AnyMimeActivity extends Activity {
           }
 
         case RFCommHelperService.MESSAGE_YOURTURN =>
-          if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN reset startTime")
-          //startTime = SystemClock.uptimeMillis
+          if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN reset startTime -> mainViewUpdate")
           if(progressBarView!=null)
             progressBarView.setProgress(0)
           mainViewUpdate          
@@ -822,10 +824,7 @@ class AnyMimeActivity extends Activity {
           // our outgoing connect attempt is starting now
           val mConnectingDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mConnectingDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
-          if(D) Log.i(TAG, "handleMessage CONNECTION_START: "+mConnectingDeviceName+" addr="+mConnectingDeviceAddr)
-
-          //if(radioLogoView!=null)
-          //  radioLogoView.setImageResource(R.drawable.bluetooth)
+          if(D) Log.i(TAG, "handleMessage CONNECTION_START: "+mConnectingDeviceName+" addr="+mConnectingDeviceAddr+" -> mainViewUpdate")
           mainViewUpdate
 
           if(userHint1View!=null)
@@ -837,6 +836,7 @@ class AnyMimeActivity extends Activity {
             userHint3View.setVisibility(View.GONE)
           if(simpleProgressBarView!=null)
             simpleProgressBarView.setVisibility(View.VISIBLE)
+          if(D) Log.i(TAG, "handleMessage CONNECTION_START done")
 
         case RFCommHelperService.CONNECTION_FAILED =>
           // Anymime connect attempt has failed
@@ -1053,7 +1053,7 @@ class AnyMimeActivity extends Activity {
     if(rfCommHelper==null || rfCommHelper.rfCommService==null) {
       if(D) Log.i(TAG, "mainViewUpdate rfCommService==null || rfCommHelper.rfCommService==null")
     } else {
-      if(D) Log.i(TAG, "mainViewUpdate rfCommService.acceptAndConnect="+rfCommHelper.rfCommService.acceptAndConnect+" rfCommService.state="+rfCommHelper.rfCommService.state)
+      if(D) Log.i(TAG, "mainViewUpdate rfCommService.activityResumed="+rfCommHelper.rfCommService.activityResumed+" rfCommService.state="+rfCommHelper.rfCommService.state)
     }
       
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && 
