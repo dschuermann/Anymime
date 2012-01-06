@@ -41,7 +41,7 @@
         <data android:mimeType="text/plain" />
       </intent-filter>
 
-      <intent-filter android:label="Anymime add">
+      <intent-filter android:label="Anymime send">
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
@@ -49,7 +49,7 @@
         <data android:mimeType="*/*"/>
       </intent-filter>
 
-      <intent-filter android:label="Anymime add">
+      <intent-filter android:label="Anymime send">
         <action android:name="android.intent.action.SEND" />
         <category android:name="android.intent.category.DEFAULT" />
         <data android:mimeType="image/*"/>
@@ -58,17 +58,14 @@
 
     <activity android:name=".SelectDeviceActivity"
               android:label="Select target device"
-              android:theme="@android:style/Theme.Dialog"
               android:configChanges="orientation|keyboardHidden" />
 
     <activity android:name=".ShowReceivedFilesHistoryActivity"
               android:label="Received files history"
-              android:theme="@android:style/Theme.Dialog"
               android:configChanges="orientation|keyboardHidden" />
 
     <activity android:name=".ShowReceivedFilesPopupActivity"
               android:label="Received files"
-              android:theme="@android:style/Theme.Dialog"
               android:configChanges="orientation|keyboardHidden" />
 
     <activity android:name=".ShowSelectedSlotActivity"
@@ -81,7 +78,6 @@
 
     <activity android:name=".DisplayTextFileActivity"
               android:label="Display text file"
-              android:theme="@android:style/Theme.Dialog"
               android:configChanges="orientation|keyboardHidden">
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
@@ -95,7 +91,6 @@
 
     <activity android:name=".FileDialog"
               android:label="File select"
-              android:theme="@android:style/Theme.Dialog"
               android:configChanges="orientation|keyboardHidden" >
       <intent-filter>
         <action android:name="android.intent.action.GET_CONTENT" />
@@ -132,7 +127,6 @@
 
     <activity android:name="UploadPgpFilesPopupActivity"
               android:label="SCP key upload"
-              android:theme="@android:style/Theme.Dialog"
               android:configChanges="orientation|keyboardHidden">
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />

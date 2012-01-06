@@ -43,6 +43,7 @@
       android:gravity="fill"
       android:layout_centerHorizontal="true"
     >
+<!--
       <TextView
         android:id="@+id/aboutText"
         android:layout_height="wrap_content"
@@ -54,7 +55,7 @@
         android:textSize="21sp"
         android:text="About: Anymime"
       />
-
+-->
       <!-- at runtime this will be filled with android:versionName from the manifest and build date+time -->
       <TextView
         android:id="@+id/aboutVersion"

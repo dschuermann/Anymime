@@ -572,10 +572,11 @@ class AnyMimeActivity extends Activity {
   }
 
   override def onCreateDialog(id:Int) :Dialog = {
-    val menuDialog = new Dialog(this,R.style.NoTitleDialog)
+    val menuDialog = new Dialog(this)
 
     if(id==DIALOG_ABOUT) {
       if(D) Log.i(TAG, "onCreateDialog id==DIALOG_ABOUT")
+      menuDialog.setTitle("About: Anymime")
       menuDialog.setContentView(R.layout.about_dialog)
 
       try {
@@ -1110,7 +1111,7 @@ class AnyMimeActivity extends Activity {
       else {
         userHint3View.setTypeface(null, 0)  // not bold
         userHint3View.setTextSize(15)  // normal size
-        userHint3View.setText("NFC disabled - manual connect required")
+        userHint3View.setText("NFC disabled - please connect manually")
       }
       userHint3View.setVisibility(View.VISIBLE)
     }

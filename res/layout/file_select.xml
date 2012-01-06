@@ -51,7 +51,7 @@
       >
         <Button
           android:id="@+id/buttonDone"
-          android:text="Main"
+          android:text="Back"
           android:textSize="12sp"
           android:layout_width="100dip"
           android:layout_height="fill_parent"
