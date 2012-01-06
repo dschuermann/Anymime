@@ -302,7 +302,7 @@ class FileExchangeService extends RFServiceTrait {
     }
 
     override def run() {
-      if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly)
+      if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" firstActor="+firstActor)
       try {
         // while connected, keep listening to the InputStream
         threadRunning = true
@@ -749,7 +749,7 @@ class FileExchangeService extends RFServiceTrait {
             }
 
             // send special token to indicate the other side is becoming the actor
-            if(D) Log.i(TAG, "deliverFileArray sending 'yourturn' after sending")
+            if(D) Log.i(TAG, "deliverFileArray sending 'yourturn' after delivery")
             send("yourturn",null,remoteDeviceAddr,remoteDeviceName)
             // note: we expect the other party to start sending files immediately now (and after that to call stopActiveConnection)
             // TODO: for the case that nothing happens, we need to disconnect the bt-connection ourselfs
