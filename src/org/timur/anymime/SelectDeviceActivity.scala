@@ -26,14 +26,17 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.widget.ListView
 import android.media.MediaPlayer
 
+import android.widget.TextView
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemClickListener
+
 import org.timur.rfcomm._
 
-class SelectDeviceActivity extends ListActivity {
+class SelectDeviceActivity extends Activity {
 
   private val TAG = "SelectDeviceActivity"
   private val D = Static.DBGLOG
@@ -66,6 +69,34 @@ class SelectDeviceActivity extends ListActivity {
 
     setContentView(R.layout.select_device)
 
+    val listView = findViewById(R.id.listView).asInstanceOf[ListView]
+    if(listView==null) {
+      val errMsg = "no access to listView"
+      Log.e(TAG, "onCreate "+errMsg)
+      Toast.makeText(this, errMsg, Toast.LENGTH_LONG).show
+      return
+    }
+
+    val deviceListAdapter = new DeviceListAdapter(this, R.layout.device_list_entry)
+		listView.setAdapter(deviceListAdapter)
+    audioMiniAlert = MediaPlayer.create(this, R.raw.confirm8bit)
+    rfCommHelper.addAllDevices(deviceListAdapter,audioMiniAlert)
+
+    listView.setOnItemClickListener(new OnItemClickListener() {
+      override def onItemClick(adapterView:AdapterView[_], view:View, position:Int, id:Long) {
+        // user has clicked into the listview
+        var deviceAddrString = view.findViewById(R.id.invisibleText).asInstanceOf[TextView].getText.toString
+        if(D) Log.i(TAG, "onItemClick deviceAddrString="+deviceAddrString)
+		    val returnIntent = new Intent()
+        val bundle = new Bundle()
+        bundle.putString("device", deviceAddrString)
+        returnIntent.putExtras(bundle)
+		    setResult(Activity.RESULT_OK,returnIntent)
+        rfCommHelper.addAllDevicesUnregister
+		    finish
+      }
+    })
+
     AndrTools.buttonCallback(this, R.id.buttonCancel) { () =>
       if(D) Log.i(TAG, "onClick buttonCancel")
   		setResult(-1)
@@ -78,23 +109,8 @@ class SelectDeviceActivity extends ListActivity {
       bluetoothSettingsIntent.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
       startActivityForResult(bluetoothSettingsIntent, REQUEST_BT_SETTINGS) // -> onActivityResult()
     }
-
-/*
-    AndrTools.buttonCallback(this, R.id.buttonHistory) { () =>
-      if(D) Log.i(TAG, "onClick buttonHistory")
-      // todo
-    }
-*/
-
-    audioMiniAlert = MediaPlayer.create(this, R.raw.confirm8bit) //kirbystylelaser)
-
-    val arrayAdapter = new ArrayAdapter[String](this, android.R.layout.simple_list_item_1, new java.util.ArrayList[String]())
-    setListAdapter(arrayAdapter)
-    rfCommHelper.addAllDevices(arrayAdapter,audioMiniAlert)
   }
   
-  // todo: somehere else store every connected bt-address in preferences (in a hash map, ideally on sdcard so multiple apps can share); then make these devices available here
-
   override def onActivityResult(requestCode:Int, resultCode:Int, intent:Intent) {
     if(D) Log.i(TAG, "onActivityResult resultCode="+resultCode+" requestCode="+requestCode)
     requestCode match {
@@ -110,21 +126,6 @@ class SelectDeviceActivity extends ListActivity {
         }
     }
   }
-
-	override def onListItemClick(listView:ListView, view:View, position:Int, id:Long) {
-		super.onListItemClick(listView, view, position, id);
-		// Get the item that was clicked
-		val obj = this.getListAdapter().getItem(position)
-		val keyword = obj.toString()
-    if(D) Log.i(TAG, "onListItemClick keyword="+keyword)
-		val returnIntent = new Intent()
-    val bundle = new Bundle()
-    bundle.putString("device", keyword)
-    returnIntent.putExtras(bundle)
-		setResult(Activity.RESULT_OK,returnIntent)
-    rfCommHelper.addAllDevicesUnregister
-		finish
-	}
 
   override def onDestroy() {
     if(D) Log.i(TAG, "onDestroy")
