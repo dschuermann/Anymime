@@ -145,6 +145,7 @@ class AnyMimeActivity extends Activity {
   private var rfCommHelper:RFCommHelper = null
   
   def serviceInitializedFkt() { 
+    // todo: move this (calling rfCommHelper.onResume) into RFCommHelper
     if(activityResumed) {
       new Thread() {
         override def run() {
@@ -336,8 +337,8 @@ class AnyMimeActivity extends Activity {
                                         intentReceiverActivityClass,
                                         audioConfirmSound,
                                         RFCommHelper.RADIO_BT| RFCommHelper.RADIO_P2PWIFI| RFCommHelper.RADIO_NFC,
-                                        "AnyMimeSecure",   "fa87c0d0-afac-11de-9991-0800200c9a66",
-                                        "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B34FB")
+                                        "AnyMimeSecure",   "00001101-afac-11de-9991-0800200c9a66",
+                                        "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B3466")
 
         val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
         if(D) Log.i(TAG, "onCreate anyMimeApp="+anyMimeApp)

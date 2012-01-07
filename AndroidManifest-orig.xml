@@ -19,8 +19,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.timur.anymime"
-    android:versionCode="16"
-    android:versionName="2.0.5 - $buildtime">
+    android:versionCode="17"
+    android:versionName="2.0.6 - $buildtime">
 
   <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11" />
 
@@ -119,8 +119,6 @@
       </intent-filter>
     </activity>
 
-
-
     <activity android:name="ShowPgpFingerprintActivity"
               android:label="Fingerprint verification"
               android:configChanges="orientation|keyboardHidden">
@@ -143,7 +141,6 @@
               android:configChanges="orientation|keyboardHidden">
     </activity>
 
-
     <activity android:name="UploadPgpFilesPopupActivity"
               android:label="SCP key upload"
               android:configChanges="orientation|keyboardHidden">
@@ -156,7 +153,6 @@
     </activity>
 
     <service android:name="org.timur.rfcomm.RFCommHelperService" />
-    <!--service android:name=".TestP2pService" /-->
     <service android:name=".FileExchangeService" />
   </application>
 
