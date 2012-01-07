@@ -176,7 +176,7 @@ class FileExchangeService extends RFServiceTrait {
       if(cmd.equals("disconnect")) {
         if(connectedThread!=null) {
           disconnecting = true
-          if(D) Log.i(TAG, "processBtMessage 'disconnect' ################################")
+          if(D) Log.i(TAG, "processBtMessage disconnect")
           if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
             rfCommHelper.rfCommService.stopActiveConnection // will call our cancel method and set connectedThread=null
           else {
@@ -849,7 +849,7 @@ class FileExchangeService extends RFServiceTrait {
     var originalFilename = btMessage.getArg2
     originalFilename = originalFilename.replaceAll(" ","_")
     val contentLength = btMessage.getDataLength
-    if(D) Log.i(TAG, "processIncomingBlob originalFilename=["+originalFilename+"] mime="+mime+" contentLength="+contentLength+" downloadPath="+downloadPath)
+    if(D) Log.i(TAG, "processIncomingBlob orig=["+originalFilename+"] mime="+mime+" len="+contentLength+" "+downloadPath)
     new File(downloadPath).mkdirs    // for instance "/mnt/sdcard/Download/" via Environment.DIRECTORY_DOWNLOADS
 
     val noMediaFile = new File(downloadPath+"/.nomedia")
@@ -939,7 +939,7 @@ class FileExchangeService extends RFServiceTrait {
         var durationSecs = durationMS/1000
         if(durationSecs<1) durationSecs=1
         val bytesPerSeconds = bytesWritten / durationSecs
-        if(D) Log.i(TAG, "processIncomingBlob written file ["+file+"] received="+bytesWritten+" secs="+((durationMS+500)/1000)+" B/s="+bytesPerSeconds+" -------------------")
+        if(D) Log.i(TAG, "processIncomingBlob ["+file+"] len="+bytesWritten+" secs="+((durationMS+500)/1000)+" B/s="+bytesPerSeconds)
 
         // send MESSAGE_RECEIVED_FILE/DELIVER_FILENAME with 'fileName' to activity
         if(activityMsgHandler!=null) {
