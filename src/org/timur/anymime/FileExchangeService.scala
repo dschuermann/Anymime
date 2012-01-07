@@ -89,7 +89,6 @@ class FileExchangeService extends RFServiceTrait {
   class ConnectedThread() extends ConnectedThreadTrait {
     private var mmInStream:InputStream = null
     private var mmOutStream:OutputStream = null
-    private var pairedBtOnly:Boolean = false
     private var deviceAddr:String = null
     private var deviceName:String = null
     private var localDeviceAddr:String = null
@@ -102,15 +101,14 @@ class FileExchangeService extends RFServiceTrait {
 
     bytesWritten=0
 
-    def init(setMmInStream:InputStream, setMmOutStream:OutputStream, setPairedBtOnly:Boolean, 
+    def init(setMmInStream:InputStream, setMmOutStream:OutputStream, 
              setLocalDeviceAddr:String, setLocalDeviceName:String, 
              setDeviceAddr:String, setDeviceName:String, 
              setSocketCloseFkt:() => Unit) {
-      //if(D) Log.i(TAG, "ConnectedThread start pairedBtOnly="+pairedBtOnly)
+      //if(D) Log.i(TAG, "ConnectedThread start")
 
       mmInStream = setMmInStream
       mmOutStream = setMmOutStream
-      pairedBtOnly = setPairedBtOnly
       localDeviceAddr = setLocalDeviceAddr
       localDeviceName = setLocalDeviceName
       deviceAddr = setDeviceAddr
@@ -302,12 +300,12 @@ class FileExchangeService extends RFServiceTrait {
     }
 
     override def run() {
-      if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" firstActor="+firstActor)
+      if(D) Log.i(TAG, "ConnectedThread run firstActor="+firstActor)
       try {
         // while connected, keep listening to the InputStream
         threadRunning = true
         while(threadRunning) {
-          //if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" read size...")
+          //if(D) Log.i(TAG, "ConnectedThread run read size...")
           var magic=0
           var magicRecount=0
           do {
@@ -322,7 +320,7 @@ class FileExchangeService extends RFServiceTrait {
 
           if(threadRunning && codedInputStream!=null) {
             val size = codedInputStream.readRawVarint32 // may block
-            //if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" read size="+size+" magic="+magic+" magicRecount="+magicRecount+" socket="+socket+" threadRunning="+threadRunning)
+            //if(D) Log.i(TAG, "ConnectedThread run read size="+size+" magic="+magic+" magicRecount="+magicRecount+" socket="+socket+" threadRunning="+threadRunning)
             if(threadRunning && size>0) {
               val rawdata = codedInputStream.readRawBytes(size) // bc we know the size of data to expect, this will not block
               if(threadRunning)
@@ -350,7 +348,7 @@ class FileExchangeService extends RFServiceTrait {
             Log.e(TAG, "ConnectedThread run IllegalStateException unable to rfCommHelper.rfCommService.stopActiveConnection")
       }
 
-      if(D) Log.i(TAG, "ConnectedThread run pairedBtOnly="+pairedBtOnly+" DONE threadRunning="+threadRunning)
+      if(D) Log.i(TAG, "ConnectedThread run DONE threadRunning="+threadRunning)
     }
 
     def writeBtShareMessage(btMessage:BtShare.Message) :Unit = {
@@ -643,6 +641,11 @@ class FileExchangeService extends RFServiceTrait {
         totalSentBytes += readBytes
         readBytes = inputStream.read(byteChunkData,0,blobDeliverChunkSize)
       }
+
+      // still connected?
+      if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state!=RFCommHelperService.STATE_CONNECTED)
+        return -3
+
       if(D) Log.i(TAG, "deliver send fileUriString=["+fileUriString+"] done totalSentBytes="+totalSentBytes+" send EOM")
       sendData(0, byteChunkData) // eom - may block
       inputStream.close
@@ -721,13 +724,14 @@ class FileExchangeService extends RFServiceTrait {
               val iterator = selectedFileStringsArrayList.iterator 
               while(iterator.hasNext) {
                 // check: are we still connected?
-                if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state != RFCommHelperService.STATE_CONNECTED) {
-                  Log.e(TAG, "deliverFileArray not connected anymore ########")
-                } else {
-                  val fileString = iterator.next
-                  if(fileString!=null) {
-                    if(D) Log.i(TAG, "deliverFileArray fileString=["+fileString+"] numberOfSentFiles="+numberOfSentFiles)
+                val fileString = iterator.next
+                if(fileString!=null) {
+                  if(D) Log.i(TAG, "deliverFileArray fileString=["+fileString+"] numberOfSentFiles="+numberOfSentFiles)
 
+                  if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state != RFCommHelperService.STATE_CONNECTED) {
+                    Log.e(TAG, "deliverFileArray not connected anymore ########")
+
+                  } else {
                     val idxLastDot = fileString.lastIndexOf(".")
                     if(idxLastDot<0) {
                       Log.e(TAG, "deliverFileArray idxLastDot<0 (no file extension)")
@@ -748,9 +752,14 @@ class FileExchangeService extends RFServiceTrait {
                 Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show
             }
 
+            // still connected?
+            if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state!=RFCommHelperService.STATE_CONNECTED)
+              return -3
+
             // send special token to indicate the other side is becoming the actor
             if(D) Log.i(TAG, "deliverFileArray sending 'yourturn' after delivery")
             send("yourturn",null,remoteDeviceAddr,remoteDeviceName)
+
             // note: we expect the other party to start sending files immediately now (and after that to call stopActiveConnection)
             // TODO: for the case that nothing happens, we need to disconnect the bt-connection ourselfs
             // TODO: possible solution:

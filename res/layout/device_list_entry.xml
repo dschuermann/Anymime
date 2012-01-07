@@ -34,6 +34,7 @@
     android:paddingLeft="4dp"
     android:paddingRight="10dp"
     android:layout_centerVertical="true"
+    android:contentDescription="Radio"
   />
 
   <!-- devicename only -->

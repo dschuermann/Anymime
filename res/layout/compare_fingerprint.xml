@@ -42,8 +42,6 @@
     >
       <RelativeLayout
         android:id="@+id/screenshotFrame"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
         android:layout_width="260dp"
         android:layout_height="390dp"
         android:gravity="center_horizontal"
@@ -100,7 +98,6 @@
         android:progress="0"
         android:paddingLeft="40dp"
         android:paddingRight="40dp"
-        android:layout_centerHorizontal="true"
         android:layout_marginTop="12dip"
         android:progressDrawable = "@xml/progressbar"
       />

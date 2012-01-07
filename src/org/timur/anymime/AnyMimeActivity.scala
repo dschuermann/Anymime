@@ -144,19 +144,20 @@ class AnyMimeActivity extends Activity {
   private var appService:FileExchangeService = null
   private var rfCommHelper:RFCommHelper = null
   
-
-  def initUIFkt() { 
+  def serviceInitializedFkt() { 
     if(activityResumed) {
       new Thread() {
         override def run() {
-          if(D) Log.i(TAG, "initUIFkt -> rfCommHelper.onResume ####")
-          if(rfCommHelper!=null)
-            rfCommHelper.onResume
+          if(D) Log.i(TAG, "serviceInitializedFkt -> rfCommHelper.onResume ####")
+          if(rfCommHelper!=null) {
+            // make sure the UUID's for the mBluetoothAdapter.listenUsingxxxxx must have been set
+            rfCommHelper.onResume  // this will run radioSelect and start the AcceptThread(s)
+          }
         }
       }.start                        
     }
 
-    if(D) Log.i(TAG, "initUIFkt -> mainViewUpdate")
+    if(D) Log.i(TAG, "serviceInitializedFkt -> mainViewUpdate")
     checkLayout
     mainViewUpdate
 
@@ -166,7 +167,7 @@ class AnyMimeActivity extends Activity {
         if(intent!=null)
           processExternalIntent(intent)
     */
-    if(D) Log.i(TAG, "initUIFkt DONE")
+    if(D) Log.i(TAG, "serviceInitializedFkt DONE")
   }
 
   def serviceFailedFkt() {
@@ -327,13 +328,16 @@ class AnyMimeActivity extends Activity {
 
         // instantiate RFCommService
         // both services will use msgFromServiceHandler to communicate back to the activity (todo: maybe better use separate handlers?)
+        // make sure the UUID's for the mBluetoothAdapter.listenUsingxxxxx have been set
         rfCommHelper = new RFCommHelper(activity, msgFromServiceHandler, 
                                         prefsPrivate, prefsSharedP2pBt, prefsSharedP2pWifi,
-                                        initUIFkt, serviceFailedFkt, 
+                                        serviceInitializedFkt, serviceFailedFkt, 
                                         appService,
                                         intentReceiverActivityClass,
                                         audioConfirmSound,
-                                        RFCommHelper.RADIO_BT| RFCommHelper.RADIO_P2PWIFI| RFCommHelper.RADIO_NFC)
+                                        RFCommHelper.RADIO_BT| RFCommHelper.RADIO_P2PWIFI| RFCommHelper.RADIO_NFC,
+                                        "AnyMimeSecure",   "fa87c0d0-afac-11de-9991-0800200c9a66",
+                                        "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B34FB")
 
         val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
         if(D) Log.i(TAG, "onCreate anyMimeApp="+anyMimeApp)
@@ -361,8 +365,10 @@ class AnyMimeActivity extends Activity {
     if(D) Log.i(TAG, "onResume")
     super.onResume
 
-    if(rfCommHelper!=null) 
+    if(rfCommHelper!=null) {
+      // make sure the UUID's for the mBluetoothAdapter.listenUsingxxxxx must have been set
       rfCommHelper.onResume
+    }
     else
       Log.e(TAG, "onResume rfCommHelper==null #####")
 
@@ -376,9 +382,8 @@ class AnyMimeActivity extends Activity {
 
     if(rfCommHelper!=null) 
       rfCommHelper.onPause
-    else {
-      if(D) Log.i(TAG, "onPause rfCommHelper==null #####")
-    }
+    else
+      Log.e(TAG, "onPause rfCommHelper==null #####")
   }
 
   override def onDestroy() {
@@ -386,6 +391,8 @@ class AnyMimeActivity extends Activity {
 
     if(rfCommHelper!=null) 
       rfCommHelper.onDestroy
+    else
+      Log.e(TAG, "onDestroy rfCommHelper==null #####")
 
     if(appServiceConnection!=null) {
       unbindService(appServiceConnection)

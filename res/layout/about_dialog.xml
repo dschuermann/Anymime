@@ -19,7 +19,7 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:id="@+id/buttonLayout"
-  android:layout_width="480px"
+  android:layout_width="320dp"
   android:layout_height="wrap_content"
   android:orientation="vertical"
   android:padding="12dip"
@@ -27,21 +27,19 @@
 
   <ScrollView
     android:layout_height="fill_parent"
-    android:layout_width="fill_parent"
-    android:layout_alignParentTop="true"
-    android:layout_marginTop="12px"
-    android:layout_marginBottom="12px"
-    android:layout_marginLeft="8px"
-    android:layout_marginRight="7px"
+    android:layout_width="wrap_content"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    android:layout_marginLeft="6dp"
+    android:layout_marginRight="6dp"
     android:scrollbarSize="0px"
     android:scrollbars="none">
 
     <LinearLayout 
       android:layout_width="wrap_content"
-      android:layout_height="fill_parent"
+      android:layout_height="wrap_content"
       android:orientation="vertical"
       android:gravity="fill"
-      android:layout_centerHorizontal="true"
     >
 <!--
       <TextView
@@ -61,7 +59,7 @@
         android:id="@+id/aboutVersion"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:layout_marginTop="8px"
+        android:layout_marginTop="5dp"
         android:layout_marginBottom="0px"
         android:textColor="#eef"
         android:textSize="16sp"
@@ -90,7 +88,7 @@
       />
 
       <TextView
-        android:id="@+id/aboutText4"
+        android:id="@+id/aboutText5"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:layout_marginTop="2dp"
@@ -101,7 +99,7 @@
       />
 
       <TextView
-        android:id="@+id/aboutText4"
+        android:id="@+id/aboutText6"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:layout_marginTop="2dp"

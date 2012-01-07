@@ -10,9 +10,9 @@
 
 		<LinearLayout 
 		  android:id="@+id/fdLinearLayoutSelect"
-			android:orientation="vertical" android:layout_width="fill_parent"
+			android:orientation="vertical" 
+			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true" 
 			android:paddingLeft="10dp"
 			android:paddingRight="10dp" 
 			android:paddingBottom="5dp">
@@ -40,7 +40,6 @@
 		  android:id="@+id/fdLinearLayoutCreate"
 			android:orientation="vertical" android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true" 
 			android:paddingLeft="10dp"
 			android:paddingRight="10dp" 
 			android:paddingBottom="5dp">

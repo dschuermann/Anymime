@@ -22,6 +22,25 @@
     android:versionCode="16"
     android:versionName="2.0.5 - $buildtime">
 
+  <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11" />
+
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
+
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+  <uses-permission android:name="android.permission.BLUETOOTH" />
+  <uses-permission android:name="android.permission.NFC" />
+
+  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+  <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+  <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <uses-feature android:name="android.hardware.wifi.direct" android:required="true"/>
+  <uses-permission android:name="android.permission.INTERNET" />
+
+  <uses-permission android:name="android.permission.CAMERA"/> 
+  <uses-feature android:name="android.hardware.camera" />
+  <uses-feature android:name="android.hardware.camera.autofocus" />
+
   <application android:icon="@drawable/app_icon"
                android:label="@string/app_name"
                android:name=".AnyMimeApp"
@@ -140,30 +159,6 @@
     <!--service android:name=".TestP2pService" /-->
     <service android:name=".FileExchangeService" />
   </application>
-
-
-
-  <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11" />
-
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
-
-  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-  <uses-permission android:name="android.permission.BLUETOOTH" />
-  <uses-permission android:name="android.permission.NFC" />
-
-    <!-- wifi direct -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-feature android:name="android.hardware.wifi.direct" android:required="true"/>
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <!--uses-permission android:name="android.permission.READ_PHONE_STATE" /-->
-
-  <uses-permission android:name="android.permission.CAMERA"/> 
-  <uses-feature android:name="android.hardware.camera" />
-  <uses-feature android:name="android.hardware.camera.autofocus" />
 
 </manifest>
 
