@@ -20,11 +20,12 @@
 
 <!-- This is being used to style adapters for mConversationView  -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="horizontal"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
   android:padding="4dp"
-  android:background="#60000000"
+  android:background="#60000000" 
 >
   <ImageView
     android:id="@+id/icon"
@@ -37,39 +38,41 @@
     android:contentDescription="Radio"
   />
 
-  <!-- devicename only -->
-  <TextView
-    android:id="@+id/visibleText"
-    android:layout_width="wrap_content"
+  <LinearLayout
+    android:orientation="vertical"
+    android:layout_width="0dp" 
+    android:layout_weight="1"
     android:layout_height="wrap_content"
-    android:textSize="20sp"
-    android:textColor="#eee"
-    android:paddingTop="3dp"
-    android:paddingBottom="3dp"
-    android:layout_toRightOf="@id/icon"
-  />
+  >
+    <!-- devicename -->
+    <TextView
+      android:id="@+id/visibleText"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:textSize="20sp"
+      android:textColor="#eee"
+      android:paddingBottom="3dp"
+    />
 
-  <!-- addr radio source only -->
-  <TextView
-    android:id="@+id/visibleText2"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textSize="13sp"
-    android:textColor="#eee"
-    android:paddingTop="-10dp"
-    android:paddingBottom="3dp"
-    android:layout_below="@id/visibleText"
-    android:layout_toRightOf="@id/icon"
-  />
+    <!-- addr -->
+    <TextView
+      android:id="@+id/visibleText2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:textSize="13sp"
+      android:textColor="#eee"
+      android:paddingTop="-10dp"
+      android:paddingBottom="3dp"
+    />
+  </LinearLayout>
 
-  <!-- devicename + addr radio source -->
-  <TextView
-    android:id="@+id/invisibleText"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_below="@id/visibleText2"
-    android:layout_toRightOf="@id/icon"
-    android:visibility="gone"
+  <ImageView
+    android:id="@+id/iconDiscovered"
+    android:layout_width="24dp"
+    android:layout_height="24dp"
+    android:paddingTop="8dp"
+    android:paddingRight="8dp"
+    android:contentDescription="Discovered"
   />
-</RelativeLayout>
+</LinearLayout>
 

@@ -23,6 +23,7 @@ package org.timur.anymime
 import android.app.Activity
 import android.app.ListActivity
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -44,7 +45,7 @@ class SelectDeviceActivity extends Activity {
   private val REQUEST_BT_SETTINGS = 1
 
   private var rfCommHelper:RFCommHelper = null
-  private var audioMiniAlert:MediaPlayer = null
+  private var mediaMiniAlert:MediaPlayer = null
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
@@ -79,17 +80,18 @@ class SelectDeviceActivity extends Activity {
 
     val deviceListAdapter = new DeviceListAdapter(this, R.layout.device_list_entry)
 		listView.setAdapter(deviceListAdapter)
-    audioMiniAlert = MediaPlayer.create(this, R.raw.confirm8bit)
-    rfCommHelper.addAllDevices(deviceListAdapter,audioMiniAlert)
+    mediaMiniAlert = MediaPlayer.create(this, R.raw.confirm8bit)
+    rfCommHelper.addAllDevices(deviceListAdapter,mediaMiniAlert)
 
     listView.setOnItemClickListener(new OnItemClickListener() {
       override def onItemClick(adapterView:AdapterView[_], view:View, position:Int, id:Long) {
         // user has clicked into the listview
-        var deviceAddrString = view.findViewById(R.id.invisibleText).asInstanceOf[TextView].getText.toString
-        if(D) Log.i(TAG, "onItemClick deviceAddrString="+deviceAddrString)
+        var deviceAddrString = view.findViewById(R.id.visibleText2).asInstanceOf[TextView].getText.toString
+        var deviceNameString = view.findViewById(R.id.visibleText).asInstanceOf[TextView].getText.toString
+        if(D) Log.i(TAG, "onItemClick deviceAddrString="+deviceAddrString+" deviceNameString="+deviceNameString)
 		    val returnIntent = new Intent()
         val bundle = new Bundle()
-        bundle.putString("device", deviceAddrString)
+        bundle.putString("device", deviceNameString+"\n"+deviceAddrString)
         returnIntent.putExtras(bundle)
 		    setResult(Activity.RESULT_OK,returnIntent)
         rfCommHelper.addAllDevicesUnregister
@@ -109,6 +111,10 @@ class SelectDeviceActivity extends Activity {
       bluetoothSettingsIntent.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
       startActivityForResult(bluetoothSettingsIntent, REQUEST_BT_SETTINGS) // -> onActivityResult()
     }
+  }
+
+  override def onConfigurationChanged(newConfig:Configuration) {
+    super.onConfigurationChanged(newConfig)
   }
   
   override def onActivityResult(requestCode:Int, resultCode:Int, intent:Intent) {

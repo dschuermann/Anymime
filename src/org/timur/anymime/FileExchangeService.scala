@@ -137,7 +137,7 @@ class FileExchangeService extends RFServiceTrait {
 
       try {
         codedInputStream = CodedInputStream.newInstance(mmInStream)
-        if(D) Log.i(TAG, "ConnectedThread start mmInStream="+mmInStream+" codedInputStream="+codedInputStream+" mmOutStream="+mmOutStream)
+        //if(D) Log.i(TAG, "ConnectedThread start mmInStream="+mmInStream+" codedInputStream="+codedInputStream+" mmOutStream="+mmOutStream)
 
         // start fifo queue delivery via codedOutputStream
         mConnectedSendThread = new ConnectedSendThread(sendQueue,CodedOutputStream.newInstance(mmOutStream))

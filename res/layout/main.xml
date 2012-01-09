@@ -66,7 +66,7 @@
       <ProgressBar 
         android:id="@+id/progressBar"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="match_parent"
         style="?android:attr/progressBarStyleHorizontal"
         android:max="100"
         android:progress="0"
@@ -86,7 +86,7 @@
       <HorizontalScrollView
         android:id="@+id/quickBar"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
+        android:layout_height="match_parent"
         android:fillViewport="true"
         android:layout_alignParentBottom="true"
         android:layout_centerInParent="true"
@@ -96,18 +96,18 @@
         <LinearLayout
           android:id="@+id/linearLayout1"
           android:layout_width="wrap_content"
-          android:layout_height="fill_parent"
+          android:layout_height="match_parent"
           android:layout_above="@+id/progressBar"
           android:orientation="horizontal"
         >
           <Button
-            android:id="@+id/buttonManualConnect"
-            android:text="Connect"
+            android:id="@+id/buttonRadioSelect"
+            android:text="Radio"
             android:textSize="12sp"
-            android:layout_width="100dip"
-            android:layout_height="fill_parent"
+            android:layout_width="85dip"
+            android:layout_height="match_parent"
             style="@style/dialogTextAppearence.HighlightButton"
-            android:drawableTop="@android:drawable/ic_menu_upload"
+            android:drawableTop="@android:drawable/ic_menu_preferences"
             android:drawablePadding="0dp"
             android:layout_marginLeft="2dip"
             android:layout_marginRight="2dip"
@@ -116,8 +116,8 @@
             android:id="@+id/buttonManualConnectOpp"
             android:text="Transfer OPP"
             android:textSize="12sp"
-            android:layout_width="100dip"
-            android:layout_height="fill_parent"
+            android:layout_width="84dip"
+            android:layout_height="match_parent"
             style="@style/dialogTextAppearence.HighlightButton"
             android:drawableTop="@android:drawable/ic_menu_upload"
             android:drawablePadding="0dp"
@@ -126,10 +126,10 @@
           /-->
           <Button
             android:id="@+id/buttonSendFiles"
-            android:text="Send files"
+            android:text="To send"
             android:textSize="12sp"
-            android:layout_width="100dip"
-            android:layout_height="fill_parent"
+            android:layout_width="84dip"
+            android:layout_height="match_parent"
             style="@style/dialogTextAppearence.HighlightButton"
             android:drawableTop="@android:drawable/ic_menu_agenda"
             android:drawablePadding="0dp"
@@ -137,53 +137,53 @@
             android:layout_marginRight="2dip"
           />
           <Button
-            android:id="@+id/buttonReceivedFiles"
-            android:text="Received files"
+            android:id="@+id/buttonManualConnect"
+            android:text="Connect"
             android:textSize="12sp"
-            android:layout_width="100dip"
-            android:layout_height="fill_parent"
+            android:layout_width="84dip"
+            android:layout_height="match_parent"
+            style="@style/dialogTextAppearence.HighlightButton"
+            android:drawableTop="@android:drawable/ic_menu_upload"
+            android:drawablePadding="0dp"
+            android:layout_marginLeft="2dip"
+            android:layout_marginRight="2dip"
+          />
+          <Button
+            android:id="@+id/buttonReceivedFiles"
+            android:text="Received"
+            android:textSize="12sp"
+            android:layout_width="84dip"
+            android:layout_height="match_parent"
             style="@style/dialogTextAppearence.HighlightButton"
             android:drawableTop="@android:drawable/ic_menu_save"
             android:drawablePadding="0dp"
             android:layout_marginLeft="2dip"
             android:layout_marginRight="2dip"
           />
-          <Button
-            android:id="@+id/buttonRadioSelect"
-            android:text="Radio select"
-            android:textSize="12sp"
-            android:layout_width="100dip"
-            android:layout_height="fill_parent"
-            style="@style/dialogTextAppearence.HighlightButton"
-            android:drawableTop="@android:drawable/ic_menu_preferences"
-            android:drawablePadding="0dp"
-            android:layout_marginLeft="2dip"
-            android:layout_marginRight="2dip"
-          />
-          <Button
+          <!--Button
             android:id="@+id/buttonBluetoothSettings"
             android:text="Bluetooth"
             android:textSize="12sp"
-            android:layout_width="100dip"
-            android:layout_height="fill_parent"
+            android:layout_width="84dip"
+            android:layout_height="match_parent"
             style="@style/dialogTextAppearence.HighlightButton"
             android:drawableTop="@android:drawable/ic_menu_preferences"
             android:drawablePadding="0dp"
             android:layout_marginLeft="2dip"
             android:layout_marginRight="2dip"
-          />
-          <Button
+          /-->
+          <!--Button
             android:id="@+id/buttonAbout"
             android:text="About"
             android:textSize="12sp"
-            android:layout_width="100dip"
-            android:layout_height="fill_parent"
+            android:layout_width="84dip"
+            android:layout_height="match_parent"
             style="@style/dialogTextAppearence.HighlightButton"
             android:drawableTop="@android:drawable/ic_menu_info_details"
             android:drawablePadding="0dp"
             android:layout_marginLeft="2dip"
             android:layout_marginRight="2dip"
-          />
+          /-->
         </LinearLayout>
       </HorizontalScrollView>
     </RelativeLayout>
