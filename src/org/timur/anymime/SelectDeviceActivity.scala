@@ -44,12 +44,14 @@ class SelectDeviceActivity extends Activity {
 
   private val REQUEST_BT_SETTINGS = 1
 
+  private var activity:Activity = null
   private var rfCommHelper:RFCommHelper = null
   private var mediaMiniAlert:MediaPlayer = null
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
-    if(D) Log.i(TAG, "onCreate()")
+    if(D) Log.i(TAG, "onCreate")
+    activity = this
 
     val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
     if(anyMimeApp==null) {
@@ -67,6 +69,7 @@ class SelectDeviceActivity extends Activity {
       return
     }
     // good, we got access to rfCommHelper
+    // todo tmtmtm: yeah but rfCommHelper now got state=onPause from parent activity
 
     setContentView(R.layout.select_device)
 
@@ -88,13 +91,15 @@ class SelectDeviceActivity extends Activity {
         // user has clicked into the listview
         var deviceAddrString = view.findViewById(R.id.visibleText2).asInstanceOf[TextView].getText.toString
         var deviceNameString = view.findViewById(R.id.visibleText).asInstanceOf[TextView].getText.toString
-        if(D) Log.i(TAG, "onItemClick deviceAddrString="+deviceAddrString+" deviceNameString="+deviceNameString)
+        var deviceCommentString = view.findViewById(R.id.invisibleText).asInstanceOf[TextView].getText.toString        
+        if(D) Log.i(TAG, "onItemClick deviceAddrString="+deviceAddrString+" deviceNameString="+deviceNameString+" deviceCommentString="+deviceCommentString)
 		    val returnIntent = new Intent()
         val bundle = new Bundle()
-        bundle.putString("device", deviceNameString+"\n"+deviceAddrString)
+        bundle.putString("device", deviceNameString+"\n"+deviceAddrString+" "+deviceCommentString)
         returnIntent.putExtras(bundle)
 		    setResult(Activity.RESULT_OK,returnIntent)
         rfCommHelper.addAllDevicesUnregister
+        if(D) Log.i(TAG, "onItemClick finish")
 		    finish
       }
     })
@@ -111,6 +116,8 @@ class SelectDeviceActivity extends Activity {
       bluetoothSettingsIntent.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
       startActivityForResult(bluetoothSettingsIntent, REQUEST_BT_SETTINGS) // -> onActivityResult()
     }
+
+    if(D) Log.i(TAG, "onCreate done")
   }
 
   override def onConfigurationChanged(newConfig:Configuration) {
@@ -123,7 +130,7 @@ class SelectDeviceActivity extends Activity {
       case REQUEST_BT_SETTINGS =>
         if(D) Log.i(TAG, "onActivityResult - REQUEST_BT_SETTINGS")
         // in case the user has paired new devices
-        val pairedDevicesArrayListOfStrings = rfCommHelper.getBtPairedDevices
+        val pairedDevicesArrayListOfStrings = RFCommHelper.getBtPairedDevices(activity)
         if(pairedDevicesArrayListOfStrings!=null) {
           if(D) Log.i(TAG, "add BtPairedDevices count="+pairedDevicesArrayListOfStrings.size)
           if(pairedDevicesArrayListOfStrings.size>0)

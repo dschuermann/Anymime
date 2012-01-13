@@ -112,8 +112,8 @@ class AnyMimeActivity extends Activity {
   private var activityResumed = false
 
   private var appServiceConnection:ServiceConnection = null
-  private var mConnectedDeviceAddr:String = null
-  private var mConnectedDeviceName:String = null
+  private var mConnectedDeviceAddr:String = null    // if set, we do not allow another SelectDeviceActivity
+//private var mConnectedDeviceName:String = null
 
   private val receiveFilesHistory = new ReceiveFilesHistory()
   private var receiveFilesHistoryLength=0
@@ -245,6 +245,10 @@ class AnyMimeActivity extends Activity {
 
       if(D) Log.i(TAG, "onClick buttonManualConnect new Intent(activity, classOf[SelectDeviceActivity])")
       val intent = new Intent(activity, classOf[SelectDeviceActivity])
+        val bundle = new Bundle()
+        bundle.putBoolean("desiredBluetooth", rfCommHelper.rfCommService.desiredBluetooth)
+        bundle.putBoolean("desiredWifiDirect", rfCommHelper.rfCommService.desiredWifiDirect)
+        intent.putExtras(bundle)
       startActivityForResult(intent, REQUEST_SELECT_DEVICE_AND_CONNECT) // -> SelectDeviceActivity -> onActivityResult()
 
       if(D) Log.i(TAG, "onClick buttonManualConnect startActivityForResult done")
@@ -319,7 +323,7 @@ class AnyMimeActivity extends Activity {
                                         prefsPrivate, prefsSharedP2pBt, prefsSharedP2pWifi,
                                         serviceInitializedFkt, serviceFailedFkt, 
                                         appService,
-                                        getClass.asInstanceOf[java.lang.Class[Activity]],    // -> class of method onNewIntent(), needed to receive nfc-events
+                                        activity.getClass.asInstanceOf[java.lang.Class[Activity]],    // -> class of method onNewIntent(), needed to receive nfc-events
                                         mediaConfirmSound,
                                         RFCommHelper.RADIO_BT| RFCommHelper.RADIO_P2PWIFI| RFCommHelper.RADIO_NFC,
                                         "AnyMimeSecure",   "00001101-afac-11de-9991-0800200c9a66",
@@ -560,6 +564,7 @@ class AnyMimeActivity extends Activity {
     }
   }
 
+/*
   override def onCreateDialog(id:Int) :Dialog = {
     val menuDialog = new Dialog(this)
 
@@ -581,49 +586,11 @@ class AnyMimeActivity extends Activity {
           Toast.makeText(activity, errMsg, Toast.LENGTH_LONG).show
       }
 
-/*
-      // DL-link per SMS
-      val btnPromoteSMS = menuDialog.findViewById(R.id.buttonPromoteSMS)
-      if(btnPromoteSMS!=null) {
-        btnPromoteSMS.setOnClickListener(new View.OnClickListener() {
-          override def onClick(view:View) { 
-            if(D) Log.i(TAG, "onClick btnPromoteSMS")
-
-            val smsUri = Uri.parse("smsto:")
-            val sendSmsIntent = new Intent(Intent.ACTION_SENDTO, smsUri)
-            sendSmsIntent.putExtra("sms_body", 
-              "Download AnyMime from http://timur.mobi/android/AnyMime.apk")
-            try {
-              startActivity(sendSmsIntent)
-            } catch {
-              case ex:Exception =>
-                val errMsg = ex.getMessage
-                Toast.makeText(activity, errMsg, Toast.LENGTH_LONG).show
-            }
-
-            dismissDialog(id)
-          } 
-        })
-      }
-*/
-
-/*
-      // close button
-      val btnClose = menuDialog.findViewById(R.id.buttonClose)
-      if(btnClose!=null) {
-        btnClose.setOnClickListener(new View.OnClickListener() {
-          override def onClick(view:View) {
-            dismissDialog(id)
-          }
-        })
-      }
-*/
     } 
 
     return menuDialog
   }
 
-/*
   override def onCreateOptionsMenu(menu: Menu): Boolean = {
     if(D) Log.i(TAG, "onCreateOptionsMenu android.os.Build.VERSION.SDK_INT="+android.os.Build.VERSION.SDK_INT)
     showDialog(DIALOG_ABOUT)
@@ -745,7 +712,8 @@ class AnyMimeActivity extends Activity {
     }
   }
 
-  // this is one service-to-activity handler for all services
+  // a service-to-activity handler for all (both) our services
+  // nothing happening here that is important to communications, everything here is only to inform the user (per visuals + audio)
   // TODO: we need certain standards for RFCommHelper/service as well as our specific appService to be able to post msgs to the user
   // msgFromServiceHandler initialized during startup by rfCommService.setActivityMsgHandler()
   private final def msgFromServiceHandler = new Handler() {
@@ -783,7 +751,7 @@ class AnyMimeActivity extends Activity {
         case RFCommHelperService.MESSAGE_DEVICE_NAME =>
           // note: MESSAGE_DEVICE_NAME is immediately followed by a MESSAGE_STATE_CHANGE/STATE_CONNECTED message
           mConnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
-          mConnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
+          val mConnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           //val pairedBtOnly = msg.getData.getBoolean(RFCommHelperService.SOCKET_TYPE)
           if(D) Log.i(TAG, "handleMessage MESSAGE_DEVICE_NAME="+mConnectedDeviceName+" addr="+mConnectedDeviceAddr)
 
@@ -836,7 +804,7 @@ class AnyMimeActivity extends Activity {
           val mDisconnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage CONNECTION_FAILED: ["+mDisconnectedDeviceName+"] addr="+mDisconnectedDeviceAddr)
           mConnectedDeviceAddr = null
-          mConnectedDeviceName = null
+          //mConnectedDeviceName = null
           initiatedConnectionByThisDevice = false
           if(radioLogoView!=null)
           	radioLogoView.setAnimation(null)
@@ -941,7 +909,7 @@ class AnyMimeActivity extends Activity {
           if(radioLogoView!=null)
           	radioLogoView.setAnimation(null)
           mConnectedDeviceAddr=null
-          mConnectedDeviceName=null
+          //mConnectedDeviceName=null
 
           // audio notification for disconnect
           if(mediaConfirmSound!=null)

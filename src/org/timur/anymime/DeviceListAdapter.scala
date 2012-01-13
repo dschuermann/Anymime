@@ -42,7 +42,9 @@ class DeviceListAdapter(context:Context, messageResourceId:Int)
   extends ArrayAdapter[String](context, messageResourceId) {
 
   private val TAG = "DeviceListAdapter"
-  private val D = Static.DBGLOG
+  private val D = true //Static.DBGLOG
+  
+  //private val messageResourceId = R.layout.device_list_entry
 
   private val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE).asInstanceOf[LayoutInflater]
   private val drawableWireless96 = context.getResources().getDrawable(R.drawable.wireless96)
@@ -52,14 +54,13 @@ class DeviceListAdapter(context:Context, messageResourceId:Int)
   private var otherList = new ArrayList[String]()
   private var discoveredOnList = new ArrayList[Long]()
 
-
   override def clear() {
     nameList.clear
     addrList.clear
     otherList.clear
     discoveredOnList.clear
 	}
-	
+
   override def getCount() :Int = {
 		return addrList.size
 	}
@@ -153,6 +154,10 @@ class DeviceListAdapter(context:Context, messageResourceId:Int)
       }
     }
 
+    val invisibleTextView = view.findViewById(R.id.invisibleText).asInstanceOf[TextView]
+    if(invisibleTextView != null)
+      invisibleTextView.setText(otherList.get(position))
+
     return view
   }
 
@@ -168,12 +173,12 @@ class DeviceListAdapter(context:Context, messageResourceId:Int)
         val idxInArray = addrList.indexOf(addr)
         if(idxInArray>=0) {
           // replace
-          if(D) Log.i(TAG, "replace idxInArray="+idxInArray+" addr="+addr+" name="+name+" other="+other)
+          //if(D) Log.i(TAG, "replace idxInArray="+idxInArray+" addr="+addr+" name="+name+" other="+other)
           nameList.set(idxInArray,name)
           otherList.set(idxInArray,other)
         } else {
           // add
-          if(D) Log.i(TAG, "add addr="+addr+" name="+name+" other="+other)
+          //if(D) Log.i(TAG, "add addr="+addr+" name="+name+" other="+other)
           nameList.add(name)
           addrList.add(addr)
           otherList.add(other)

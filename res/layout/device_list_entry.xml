@@ -74,5 +74,12 @@
     android:paddingRight="8dp"
     android:contentDescription="Discovered"
   />
+
+  <TextView
+    android:id="@+id/invisibleText"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:visibility="gone"
+  />
 </LinearLayout>
 

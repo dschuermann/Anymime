@@ -38,7 +38,7 @@ import android.os.Handler
 import android.os.SystemClock
 import android.os.Bundle
 import android.app.Activity
-import android.app.ActivityManager
+//import android.app.ActivityManager
 import android.content.Intent
 import android.webkit.MimeTypeMap
 import android.widget.Toast
@@ -67,6 +67,18 @@ class FileExchangeService extends RFServiceTrait {
   private var firstActor = false
   @volatile private var disconnecting = false
 
+  def setContextMsgHandler(setContext:Context,setActivityMsgHandler:Handler) {
+    context = setContext
+    activityMsgHandler = setActivityMsgHandler
+  }
+
+  def setRfCommHelper(setRfCommHelper:RFCommHelper) {
+    rfCommHelper = setRfCommHelper
+  }
+
+  def getRfCommHelper() :RFCommHelper = {
+    return rfCommHelper
+  }
 
   class LocalBinder extends android.os.Binder {
     def getService = FileExchangeService.this
@@ -455,9 +467,10 @@ class FileExchangeService extends RFServiceTrait {
     var blobId:Long = 0
     var contentLength:Long = 0
     var progressLastStep:Long = 0
+/*
     val activityManager = if(context!=null) context.getSystemService(Context.ACTIVITY_SERVICE).asInstanceOf[ActivityManager] else null
     val memoryInfo = new ActivityManager.MemoryInfo
-
+*/
     totalSend = 0
 
     override def run() {
@@ -531,11 +544,12 @@ class FileExchangeService extends RFServiceTrait {
           halt
       }
 
+/*
       if(activityManager!=null) {
         activityManager.getMemoryInfo(memoryInfo)
         if(D) Log.i(TAG, "ConnectedSendThread run pre DONE memoryInfo.availMem="+memoryInfo.availMem+" memoryInfo.lowMemory="+memoryInfo.lowMemory)
       }
-
+*/
       if(D) Log.i(TAG, "ConnectedSendThread run DONE connectedThread="+connectedThread)
     }
 
@@ -861,11 +875,9 @@ class FileExchangeService extends RFServiceTrait {
       case ex:Exception =>
         Log.e(TAG, "Exception during write .nomedia file", ex)
         if(context!=null)
-          context.asInstanceOf[Activity].runOnUiThread(new Runnable() {
-            override def run() { 
-              Toast.makeText(context, "Error writing to "+downloadPath, Toast.LENGTH_LONG).show
-            }
-          })
+          AndrTools.runOnUiThread(context) { () =>
+            Toast.makeText(context, "Error writing to "+downloadPath, Toast.LENGTH_LONG).show
+          }
     }
 
     val startMS = SystemClock.uptimeMillis
