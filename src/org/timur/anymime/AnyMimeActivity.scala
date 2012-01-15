@@ -132,6 +132,7 @@ class AnyMimeActivity extends Activity {
   private var kbytesPerSecond:Long=0
 
   private var mediaConfirmSound:MediaPlayer = null
+  private var mediaNegativeSound:MediaPlayer = null
   private var selectedSlot = 0
   private var selectedSlotName = ""
 
@@ -187,6 +188,7 @@ class AnyMimeActivity extends Activity {
     prefsSharedP2pWifi = getSharedPreferences(PREFS_SHARED_P2P_WIFI, Context.MODE_WORLD_WRITEABLE)
 
     mediaConfirmSound = MediaPlayer.create(activity, R.raw.textboxbloop8bit)
+    mediaNegativeSound = MediaPlayer.create(activity, R.raw.collision8bit)
 
     mainView = findViewById(R.id.main)
     radioLogoView = findViewById(R.id.radioLogo).asInstanceOf[ImageView]
@@ -324,11 +326,11 @@ class AnyMimeActivity extends Activity {
                                         serviceInitializedFkt, serviceFailedFkt, 
                                         appService,
                                         activity.getClass.asInstanceOf[java.lang.Class[Activity]],    // -> class of method onNewIntent(), needed to receive nfc-events
-                                        mediaConfirmSound,
-                                        RFCommHelper.RADIO_BT| RFCommHelper.RADIO_P2PWIFI| RFCommHelper.RADIO_NFC,
+                                        mediaConfirmSound, mediaNegativeSound,
+                                        RFCommHelper.RADIO_BT| /*RFCommHelper.RADIO_P2PWIFI|*/ RFCommHelper.RADIO_NFC,      // disable p2pWifi here
                                         "AnyMimeSecure",   "00001101-afac-11de-9991-0800200c9a66",
                                         "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B3466",
-                                        8954)
+                                        8954, "anymime")
 
         // provide SelectDeviceActivity with access to rfCommHelper
         val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
@@ -375,6 +377,13 @@ class AnyMimeActivity extends Activity {
     else
       Log.e(TAG, "onPause rfCommHelper==null #####")
   }
+
+/*
+  override def onChannelDisconnected() {
+    if(rfCommHelper!=null) 
+      rfCommHelper.onChannelDisconnected
+  }
+*/
 
   override def onDestroy() {
     if(D) Log.i(TAG, "onDestroy")
@@ -514,9 +523,10 @@ class AnyMimeActivity extends Activity {
                     initiatedConnectionByThisDevice = true
                     if(deviceAddrComment!=null && deviceAddrComment.startsWith("wifi")) {
                       // connect to wifi device
-                      if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT connectWifi() rfCommHelper.wifiP2pManager="+rfCommHelper.wifiP2pManager)
-                      if(rfCommHelper.wifiP2pManager!=null)
-                        rfCommHelper.rfCommService.connectWifi(rfCommHelper.wifiP2pManager, deviceAddr, deviceName, false)
+                      if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT connectWifi() rfCommHelper.rfCommService="+rfCommHelper.rfCommService)
+                      if(rfCommHelper.rfCommService!=null)
+                        rfCommHelper.rfCommService.connectWifi(deviceAddr, deviceName, onlyIfLocalAddrBiggerThatRemote=false, 
+                                                               reportConnectState=true, onstartEnableBackupConnection=false)
 
                     } else {
                       // connect to bt device
@@ -526,7 +536,7 @@ class AnyMimeActivity extends Activity {
                       } else {
                         if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT rfCommService.connectBt() ...")
                         rfCommHelper.connectAttemptFromNfc = false  // on connect fail will ask user "fall back to OPP?" only if connect not initiated by nfc
-                        rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice)
+                        rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice, reportConnectState=true, onstartEnableBackupConnection=false)
                       }
                     }
                     
@@ -786,7 +796,6 @@ class AnyMimeActivity extends Activity {
           val mConnectingDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage CONNECTION_START: "+mConnectingDeviceName+" addr="+mConnectingDeviceAddr+" -> mainViewUpdate")
           mainViewUpdate
-
           if(userHint1View!=null)
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
           // show a little round progress bar animation
@@ -1047,7 +1056,7 @@ class AnyMimeActivity extends Activity {
       val statFs = new android.os.StatFs(android.os.Environment.getExternalStorageDirectory().getPath())
       val sdAvailSize = statFs.getAvailableBlocks().asInstanceOf[Long] * statFs.getBlockSize().asInstanceOf[Long]
       val str = Formatter.formatFileSize(this, sdAvailSize)
-      userHint1View.setText(str+" free media to receive files")
+      userHint1View.setText(str+" free to receive files")
     }
 
     if(userHint2View!=null) {
@@ -1062,7 +1071,12 @@ class AnyMimeActivity extends Activity {
     }
 
     if(userHint3View!=null) {
-      if(rfCommHelper!=null && rfCommHelper.isNfcEnabled) {
+      if(rfCommHelper==null) {
+        userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
+        userHint3View.setTextSize(18)  // bigger
+        userHint3View.setText("RFComm subsystem failed - no radio interface")
+      }
+      else if(rfCommHelper.isNfcEnabled) {
         userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
         userHint3View.setTextSize(18)  // bigger
         userHint3View.setText("NFC ready: Tap devices to share")   

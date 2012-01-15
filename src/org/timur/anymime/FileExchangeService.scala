@@ -38,7 +38,6 @@ import android.os.Handler
 import android.os.SystemClock
 import android.os.Bundle
 import android.app.Activity
-//import android.app.ActivityManager
 import android.content.Intent
 import android.webkit.MimeTypeMap
 import android.widget.Toast
@@ -92,6 +91,17 @@ class FileExchangeService extends RFServiceTrait {
     // note: our service was started via bindService() from activity onCreate()
     //       but ConnectedThread will only be instantiated when needed, from RFCommHelperService connectedBt() or connectedWifi()
     //       and will run while codedInputStream!=null (set null by ConnectedThread.cancel())
+  }
+
+  def stopActiveConnection() {
+    // this is called by RFCommHelper.onDestroy
+    if(D) Log.i(TAG, "stopActiveConnection")
+    if(connectedThread!=null)
+      connectedThread.cancel
+  }
+
+  def connectViaBackupHost() {
+    // not implemented for FileExchange
   }
 
   def createConnectedThread() {
@@ -160,11 +170,21 @@ class FileExchangeService extends RFServiceTrait {
       }
     }
 
+    def isConnected() :Boolean = {
+      return rfCommHelper.state==3
+    }
+
+/*
     def updateStreams(setMmInStream:InputStream, setMmOutStream:OutputStream) {
       mmInStream = setMmInStream
       mmOutStream = setMmOutStream
       if(D) Log.i(TAG, "ConnectedThread updateStreams done")
     } 
+
+    def disconnectBackupConnection() {
+      if(D) Log.i(TAG, "ConnectedThread disconnectBackupConnection")
+    }
+*/
 
     private def splitString(line:String, delim:List[String]) :List[String] = delim match {
       case head :: tail => 
@@ -209,18 +229,16 @@ class FileExchangeService extends RFServiceTrait {
           if(D) Log.i(TAG, "processBtMessage 'yourturn' firstActor stopActiveConnection ...")
           send("disconnect",null,fromAddr,fromName)
           threadRunning = false
-          // remind disconnect-status - so we wont try to switch to backup-connection in case the other side will disconnect now
           disconnecting=true
           if(connectedThread!=null) {
-            // sleep a little to allow the disconnect command to transmit
-            try { Thread.sleep(200); } catch { case ex:Exception => }
+            // sleep a little to allow the disconnect command to transmit - it doesn't really matter if this arrives on the other side, we just disconnect
+            try { Thread.sleep(400); } catch { case ex:Exception => }
+            
             if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
               rfCommHelper.rfCommService.stopActiveConnection // will call our cancel method and set connectedThread=null
             else {
-              Log.e(TAG, "processBtMessage 'yourturn' firstActor unable to rfCommHelper.rfCommService.stopActiveConnection")
+              Log.e(TAG, "processBtMessage 'yourturn' firstActor unable to send 'disconnect' due to unavailable rfCommHelper.rfCommService.stopActiveConnection")
             }
-            //if(connectedThread!=null)
-            //  connectedThread.cancel
           } else {
             Log.e(TAG, "processBtMessage 'yourturn' firstActor connectedThread==null, unable to connectedThread.cancel")
           }
@@ -261,7 +279,6 @@ class FileExchangeService extends RFServiceTrait {
         var magicRecount=0
         do {
           magic = codedInputStream.readRawVarint32 // may block
-          // todo: possible java.io.IOException on unexpected disconnect while receiving, switch to backupConnection!
           magicRecount+=1
         } while(magic!=11111)
 
@@ -289,15 +306,6 @@ class FileExchangeService extends RFServiceTrait {
 
     def isRunning() :Boolean = {
       return threadRunning
-    }
-
-    def disconnectBackupConnection() {
-      if(D) Log.i(TAG, "ConnectedThread disconnectBackupConnection")
-/*
-// TODO
-      if(backupConnectionSocket!=null)
-        backupConnectionSocket.close
-*/
     }
 
     def doFirstActor() {
@@ -346,7 +354,6 @@ class FileExchangeService extends RFServiceTrait {
         case ioex:IOException =>
           if(D) Log.i(TAG, "ConnectedThread run IOException disconnected "+ioex+" ##############################")
           // "Software caused connection abort" 
-          // todo: catch unexpected disconnect while sending, then switch to backupConnection!
           if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
             rfCommHelper.rfCommService.stopActiveConnection  // will connectedThread.cancel
           else
@@ -449,7 +456,7 @@ class FileExchangeService extends RFServiceTrait {
 
       codedInputStream = null
       if(mConnectedSendThread!=null)
-        mConnectedSendThread.halt
+      mConnectedSendThread.halt
 
       if(D) Log.i(TAG, "ConnectedThread -> socketCloseFkt")
       socketCloseFkt() // call device-type specific socket.close
@@ -467,10 +474,6 @@ class FileExchangeService extends RFServiceTrait {
     var blobId:Long = 0
     var contentLength:Long = 0
     var progressLastStep:Long = 0
-/*
-    val activityManager = if(context!=null) context.getSystemService(Context.ACTIVITY_SERVICE).asInstanceOf[ActivityManager] else null
-    val memoryInfo = new ActivityManager.MemoryInfo
-*/
     totalSend = 0
 
     override def run() {
@@ -535,25 +538,23 @@ class FileExchangeService extends RFServiceTrait {
               }
             }
           } else {
-            try { Thread.sleep(50); } catch { case ex:Exception => }
+            if(D) Log.i(TAG, "ConnectedSendThread sendQueue.size(="+sendQueue.size+") not >0  sleep ###################")
+            try { Thread.sleep(500); } catch { case ex:Exception => }
           }
         }
+        if(D) Log.i(TAG, "ConnectedSendThread run finished connectedThread="+connectedThread+" codedOutputStream="+codedOutputStream+" sendQueue="+sendQueue+" #######################")
+
       } catch {
         case e: IOException =>
           if(D) Log.i(TAG, "ConnectedSendThread run ex="+e)
           halt
       }
 
-/*
-      if(activityManager!=null) {
-        activityManager.getMemoryInfo(memoryInfo)
-        if(D) Log.i(TAG, "ConnectedSendThread run pre DONE memoryInfo.availMem="+memoryInfo.availMem+" memoryInfo.lowMemory="+memoryInfo.lowMemory)
-      }
-*/
       if(D) Log.i(TAG, "ConnectedSendThread run DONE connectedThread="+connectedThread)
     }
 
     def halt() {
+      if(D) Log.i(TAG, "ConnectedSendThread halt")
       codedOutputStream=null
     }
 
@@ -562,7 +563,7 @@ class FileExchangeService extends RFServiceTrait {
       //if(D) Log.i(TAG, "ConnectedSendThread writeBtShareMessage btMessage.getCommand="+btMessage.getCommand+" btMessage.getArg2="+btMessage.getArg2)
       try {
         val size = btMessage.getSerializedSize
-        if(D) Log.i(TAG, "ConnectedSendThread writeBtShareMessage size="+size+" contentLength="+contentLength+" totalSend="+totalSend+" btMessage.getArg2="+btMessage.getArg2)
+        if(D) Log.i(TAG, "ConnectedSendThread writeBtShareMessage size="+size+" contentLength="+contentLength+" totalSend="+totalSend+" btMessage.getCommand="+btMessage.getCommand+" btMessage.getArg2="+btMessage.getArg2)
         if(size>0) {
           val byteData = new Array[Byte](size)
           com.google.protobuf.ByteString.copyFrom(byteData)
@@ -572,12 +573,13 @@ class FileExchangeService extends RFServiceTrait {
               codedOutputStream.writeRawVarint32(size)
               if(codedOutputStream!=null) {
                 btMessage.writeTo(codedOutputStream)
-                if(codedOutputStream!=null)
+                if(codedOutputStream!=null) {
                   codedOutputStream.flush
+                  if(D) Log.i(TAG, "ConnectedSendThread writeBtShareMSG flushed size="+size+" codedOutputStr="+codedOutputStream)
+                }
               }
             }
           }
-          //if(D) Log.i(TAG, "ConnectedSendThread writeBtShareMSG flushed size="+size+" codedOutputStr="+codedOutputStream)
         }
       } catch {
         case ex: IOException =>
@@ -792,7 +794,7 @@ class FileExchangeService extends RFServiceTrait {
   }
 
   def send(cmd:String, message:String=null, toAddr:String=null, toName:String=null) = synchronized {
-    // the idea with synchronized is that no other send() shall take over (interrupt) an ongoing send()
+    // the idea with synchronized is that no other send() shall interrupt an ongoing send()
     var thisSendMsgCounter:Long = 0
     synchronized { 
       val nowMs = SystemClock.uptimeMillis
@@ -832,8 +834,8 @@ class FileExchangeService extends RFServiceTrait {
                                    .setArgCount(sendMsgCounter)
                                    .setId(id)
                                    .setDataLength(contentLength)
-                                   .setFromName("")    // may not be null // todo: got no fromName here, but it must be set
-                                   .setFromAddr("")    // may not be null // todo: got no fromAddr here, but it must be set
+                                   .setFromName("")    // may not be null // todo: got no fromName here, but it should be set
+                                   .setFromAddr("")    // may not be null // todo: got no fromAddr here, but it should be set
 
     if(mime!=null)
       btBuilder.setArg1(mime)
