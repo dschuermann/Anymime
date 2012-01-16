@@ -109,7 +109,7 @@ class AnyMimeActivity extends Activity {
   private var prefsSharedP2pWifi:SharedPreferences = null
 
   private var activity:Activity = null
-  private var activityResumed = false
+  @volatile private var activityResumed = false
 
   private var appServiceConnection:ServiceConnection = null
   private var mConnectedDeviceAddr:String = null    // if set, we do not allow another SelectDeviceActivity
@@ -151,6 +151,9 @@ class AnyMimeActivity extends Activity {
     if(D) Log.i(TAG, "serviceInitializedFkt -> mainViewUpdate")
     checkLayout
     mainViewUpdate
+
+    if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
+      rfCommHelper.rfCommService.activityResumed = activityResumed // important! see onResume() below
 
     /* TODO: re-include
         // have we been started with a file being handed over (say from OI File Manager)?
@@ -359,14 +362,16 @@ class AnyMimeActivity extends Activity {
     if(D) Log.i(TAG, "onResume")
     super.onResume
 
+    activityResumed = true
+
     if(rfCommHelper!=null) {
       // make sure the UUID's for the mBluetoothAdapter.listenUsingxxxxx hass been set
       rfCommHelper.onResume
     }
-    else
-      Log.e(TAG, "onResume rfCommHelper==null #####")
-
-    activityResumed = true
+    else {
+      if(D) Log.i(TAG, "onResume rfCommHelper==null #####")
+      // rfcommService was not yet loaded. must set activityResumed=true state in rfCommHelper as soon as it becomes available
+    }
   }
 
   override def onPause() = synchronized {
@@ -376,8 +381,10 @@ class AnyMimeActivity extends Activity {
 
     if(rfCommHelper!=null) 
       rfCommHelper.onPause
-    else
+    else {
       Log.e(TAG, "onPause rfCommHelper==null #####")
+      // rfcommService was not yet loaded. must set activityResumed=false state in rfCommHelper as soon as it becomes available
+    }
   }
 
 /*
