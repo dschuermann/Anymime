@@ -359,7 +359,7 @@ class AnyMimeActivity extends Activity {
     super.onResume
 
     if(rfCommHelper!=null) {
-      // make sure the UUID's for the mBluetoothAdapter.listenUsingxxxxx must have been set
+      // make sure the UUID's for the mBluetoothAdapter.listenUsingxxxxx hass been set
       rfCommHelper.onResume
     }
     else
@@ -575,7 +575,7 @@ class AnyMimeActivity extends Activity {
     }
   }
 
-/*
+
   override def onCreateDialog(id:Int) :Dialog = {
     val menuDialog = new Dialog(this)
 
@@ -602,6 +602,7 @@ class AnyMimeActivity extends Activity {
     return menuDialog
   }
 
+/*
   override def onCreateOptionsMenu(menu: Menu): Boolean = {
     if(D) Log.i(TAG, "onCreateOptionsMenu android.os.Build.VERSION.SDK_INT="+android.os.Build.VERSION.SDK_INT)
     showDialog(DIALOG_ABOUT)
@@ -757,6 +758,7 @@ class AnyMimeActivity extends Activity {
 
             case RFCommHelperService.STATE_LISTEN | RFCommHelperService.STATE_NONE =>
               if(D) Log.i(TAG, "handleMessage MESSAGE_STATE_CHANGE: NOT CONNECTED -> mainViewUpdate")
+              mConnectedDeviceAddr=null
               mainViewUpdate
           }
 
@@ -783,11 +785,14 @@ class AnyMimeActivity extends Activity {
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
           // show a little round progress bar animation
           if(userHint2View!=null)
-            userHint2View.setVisibility(View.GONE)
+            //userHint2View.setVisibility(View.GONE)
+            userHint2View.setText("")
+
           if(userHint3View!=null)
             userHint3View.setVisibility(View.GONE)
           if(simpleProgressBarView!=null)
             simpleProgressBarView.setVisibility(View.VISIBLE)
+
           if(D) Log.i(TAG, "handleMessage CONNECTION_START done")
 
         case RFCommHelperService.CONNECTION_FAILED =>
@@ -936,13 +941,13 @@ class AnyMimeActivity extends Activity {
             userHint1View.setText("waiting for "+otherDeviceInfo)
           // show a little round progress bar
           if(userHint2View!=null)
-            userHint2View.setVisibility(View.GONE)
+            //userHint2View.setVisibility(View.GONE)
+            userHint2View.setText("")
+
           if(userHint3View!=null)
             userHint3View.setVisibility(View.GONE)
-          if(simpleProgressBarView!=null) {
+          if(simpleProgressBarView!=null)
             simpleProgressBarView.setVisibility(View.VISIBLE)
-            if(D) Log.i(TAG, "handleMessage CONNECTING simpleProgressBarView now visible ################################")
-          }
 
         ///////////////////////////////////////////////////////////////////////////////////////7
         case FileExchangeService.MESSAGE_YOURTURN =>
@@ -966,23 +971,25 @@ class AnyMimeActivity extends Activity {
           }
 
         case FileExchangeService.MESSAGE_DELIVER_PROGRESS =>
-          val progressType = msg.getData.getString(RFCommHelperService.DELIVER_TYPE) // "receive" or "send"
-          val progressPercent = msg.getData.getInt(RFCommHelperService.DELIVER_PROGRESS)
-          //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS: progressPercent="+progressPercent)
-          if(progressBarView!=null)
-            progressBarView.setProgress(progressPercent)
-          val progressBytes = msg.getData.getLong(RFCommHelperService.DELIVER_BYTES)
-          val durationSeconds = (SystemClock.uptimeMillis - startTimeConnect) / 1000
-          val durationFileSeconds = (SystemClock.uptimeMillis - startTimeFile) / 1000
-          if(durationFileSeconds>0) {
-            val newKbytesPerSecond = (progressBytes/1024)/durationFileSeconds
-            //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
-            if(newKbytesPerSecond>0 || kbytesPerSecond==0) {
-              kbytesPerSecond = newKbytesPerSecond
-              if(userHint3View!=null) {
-                userHint3View.setTypeface(null, 0)  // un-bold
-                userHint3View.setTextSize(15)  // normal size
-                userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
+          if(mConnectedDeviceAddr!=null) {
+            val progressType = msg.getData.getString(RFCommHelperService.DELIVER_TYPE) // "receive" or "send"
+            val progressPercent = msg.getData.getInt(RFCommHelperService.DELIVER_PROGRESS)
+            //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS: progressPercent="+progressPercent)
+            if(progressBarView!=null)
+              progressBarView.setProgress(progressPercent)
+            val progressBytes = msg.getData.getLong(RFCommHelperService.DELIVER_BYTES)
+            val durationSeconds = (SystemClock.uptimeMillis - startTimeConnect) / 1000
+            val durationFileSeconds = (SystemClock.uptimeMillis - startTimeFile) / 1000
+            if(durationFileSeconds>0) {
+              val newKbytesPerSecond = (progressBytes/1024)/durationFileSeconds
+              //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
+              if(newKbytesPerSecond>0 || kbytesPerSecond==0) {
+                kbytesPerSecond = newKbytesPerSecond
+                if(userHint3View!=null) {
+                  userHint3View.setTypeface(null, 0)  // un-bold
+                  userHint3View.setTextSize(15)  // normal size
+                  userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
+                }
               }
             }
           }
@@ -1062,12 +1069,12 @@ class AnyMimeActivity extends Activity {
     if(userHint2View!=null) {
       val numberOfFilesToSend = if(selectedFileStringsArrayList==null) 0 else selectedFileStringsArrayList.size
       if(numberOfFilesToSend<1)
-        userHint2View.setText("No files selected for delivery")
+        userHint2View.setText("No files to send")
       else if(selectedSlotName!=null && selectedSlotName.length>0)
         userHint2View.setText("Ready to send "+numberOfFilesToSend+" files from '"+selectedSlotName+"'")
       else
         userHint2View.setText("Ready to send "+numberOfFilesToSend+" files from slot "+(selectedSlot+1))
-      userHint2View.setVisibility(View.VISIBLE)
+      //userHint2View.setVisibility(View.VISIBLE)
     }
 
     if(userHint3View!=null) {
@@ -1075,32 +1082,32 @@ class AnyMimeActivity extends Activity {
         userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
         userHint3View.setTextSize(18)  // bigger
         userHint3View.setText("RFComm subsystem failed - no radio interface")
-      }
-      else if(rfCommHelper.isNfcEnabled) {
+      } else if(rfCommHelper.isNfcEnabled) {
         userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
         userHint3View.setTextSize(18)  // bigger
         userHint3View.setText("NFC ready: Tap devices to share")   
-      }
-      else {
+      } else {
         userHint3View.setTypeface(null, 0)  // not bold
         userHint3View.setTextSize(15)  // normal size
-        userHint3View.setText("NFC disabled - please connect manually")
+        //userHint3View.setText("NFC disabled - please connect manually")
+        userHint3View.setText("")
       }
       userHint3View.setVisibility(View.VISIBLE)
     }
-    if(simpleProgressBarView!=null)
-      simpleProgressBarView.setVisibility(View.GONE)
+    // switch off progressBar, switch back on button bar
     if(progressBarView!=null) {
+      progressBarView.setVisibility(View.GONE)
       progressBarView.setMax(100)
       progressBarView.setProgress(0)
     }
 
-    // switch off progressBar, switch back on button bar
-    if(progressBarView!=null)
-      progressBarView.setVisibility(View.GONE)
+    if(simpleProgressBarView!=null)
+      simpleProgressBarView.setVisibility(View.GONE)
+
     if(quickBarView!=null)
       quickBarView.setVisibility(View.VISIBLE)
   }
+
 
   private def mainViewBluetooth() {
     if(D) Log.i(TAG, "mainViewBluetooth")
@@ -1109,16 +1116,11 @@ class AnyMimeActivity extends Activity {
     	radioLogoView.setAnimation(null)
     }
     
-    //if(mainView!=null)
-    //  mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
-
     if(userHint1View!=null)
       userHint1View.setText("")
 
-    if(userHint2View!=null) {
+    if(userHint2View!=null)
       userHint2View.setText("")
-      userHint2View.setVisibility(View.VISIBLE)
-    }
 
     if(userHint3View!=null) {
       userHint3View.setTypeface(null, 0)  // not bold
@@ -1126,15 +1128,16 @@ class AnyMimeActivity extends Activity {
       userHint3View.setText("")
       userHint3View.setVisibility(View.VISIBLE)
     }
-
-    if(simpleProgressBarView!=null)
-      simpleProgressBarView.setVisibility(View.GONE)
-
     if(progressBarView!=null) {
+      progressBarView.setVisibility(View.GONE)
       progressBarView.setMax(100)
       progressBarView.setProgress(0)
     }
+
+    if(simpleProgressBarView!=null)
+      simpleProgressBarView.setVisibility(View.GONE)
   }
+
   
   private def mainViewWifiDirect() {
     if(D) Log.i(TAG, "mainViewWifiDirect")
@@ -1143,16 +1146,11 @@ class AnyMimeActivity extends Activity {
     	radioLogoView.setAnimation(null)
     }
     
-    //if(mainView!=null)
-    //  mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_blue))
-
     if(userHint1View!=null)
       userHint1View.setText("")
 
-    if(userHint2View!=null) {
+    if(userHint2View!=null)
       userHint2View.setText("")
-      userHint2View.setVisibility(View.VISIBLE)
-    }
 
     if(userHint3View!=null) {
       userHint3View.setTypeface(null, 0)  // not bold
