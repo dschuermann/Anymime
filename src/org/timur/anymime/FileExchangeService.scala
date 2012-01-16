@@ -753,7 +753,7 @@ class FileExchangeService extends RFServiceTrait {
   def processIncomingBlob(btMessage:BtShare.Message, fromAddr:String, downloadPath:String, remoteDeviceName:String)(readCodedInputStream:() => Array[Byte]) {
     val mime = btMessage.getArg1
     var originalFilename = btMessage.getArg2
-    originalFilename = originalFilename.replaceAll(" ","_")
+    //originalFilename = originalFilename.replaceAll(" ","_")
     val contentLength = btMessage.getDataLength
     if(D) Log.i(TAG, "processIncomingBlob orig=["+originalFilename+"] mime="+mime+" len="+contentLength+" "+downloadPath)
     new File(downloadPath).mkdirs    // for instance "/mnt/sdcard/Download/" via Environment.DIRECTORY_DOWNLOADS
