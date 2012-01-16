@@ -145,6 +145,7 @@ class AnyMimeActivity extends Activity {
 
   private var appService:FileExchangeService = null
   private var rfCommHelper:RFCommHelper = null
+  private var userManualAbort = false
   
   def serviceInitializedFkt() { 
     if(D) Log.i(TAG, "serviceInitializedFkt -> mainViewUpdate")
@@ -241,11 +242,11 @@ class AnyMimeActivity extends Activity {
         if(D) Log.i(TAG, "onClick buttonManualConnect toast 'You are Bluetooth connected already'")
         AndrTools.runOnUiThread(activity) { () =>
           Toast.makeText(activity, "You are connected already", Toast.LENGTH_LONG).show
-          // todo: offer disconnect?
         }
         return
       }
 
+      userManualAbort = false
       if(D) Log.i(TAG, "onClick buttonManualConnect new Intent(activity, classOf[SelectDeviceActivity])")
       val intent = new Intent(activity, classOf[SelectDeviceActivity])
         val bundle = new Bundle()
@@ -617,6 +618,7 @@ class AnyMimeActivity extends Activity {
           case DialogInterface.BUTTON_POSITIVE =>
             // disconnect active connection/transmission
             if(rfCommHelper!=null && rfCommHelper.rfCommService!=null) {
+              userManualAbort = true
               rfCommHelper.rfCommService.stopActiveConnection
               if(D) Log.i(TAG, "offerUserToDisconnect -> mainViewUpdate")
               mainViewUpdate
@@ -796,6 +798,7 @@ class AnyMimeActivity extends Activity {
           if(D) Log.i(TAG, "handleMessage CONNECTION_START done")
 
         case RFCommHelperService.CONNECTION_FAILED =>
+// todo: this seems only be fed ba bluetooth connect fail (not wifi)
           // Anymime connect attempt has failed
           val mDisconnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mDisconnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
@@ -811,7 +814,7 @@ class AnyMimeActivity extends Activity {
           Toast.makeText(getApplicationContext, "Failed to connect to "+mDisconnectedDeviceName+" "+mDisconnectedDeviceAddr, Toast.LENGTH_LONG).show
           mainViewUpdate
 
-          if(!rfCommHelper.connectAttemptFromNfc) {
+          if(!rfCommHelper.connectAttemptFromNfc && !userManualAbort) {
             // coming from REQUEST_SELECT_DEVICE_AND_CONNECT (and not NFC-initiated connect)
             // therefor we ask: "fall back to OPP?"
             val dialogClickListener = new DialogInterface.OnClickListener() {
