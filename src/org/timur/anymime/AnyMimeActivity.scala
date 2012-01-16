@@ -113,7 +113,6 @@ class AnyMimeActivity extends Activity {
 
   private var appServiceConnection:ServiceConnection = null
   private var mConnectedDeviceAddr:String = null    // if set, we do not allow another SelectDeviceActivity
-//private var mConnectedDeviceName:String = null
 
   private val receiveFilesHistory = new ReceiveFilesHistory()
   private var receiveFilesHistoryLength=0
@@ -775,7 +774,6 @@ class AnyMimeActivity extends Activity {
           // note: MESSAGE_DEVICE_NAME is immediately followed by a MESSAGE_STATE_CHANGE/STATE_CONNECTED message
           mConnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mConnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
-          //val pairedBtOnly = msg.getData.getBoolean(RFCommHelperService.SOCKET_TYPE)
           if(D) Log.i(TAG, "handleMessage MESSAGE_DEVICE_NAME="+mConnectedDeviceName+" addr="+mConnectedDeviceAddr)
 
           // show "... has connected" toast only, if we did NOT initiate the connection
@@ -982,12 +980,12 @@ class AnyMimeActivity extends Activity {
 
         case FileExchangeService.MESSAGE_DELIVER_PROGRESS =>
           if(mConnectedDeviceAddr!=null) {
-            val progressType = msg.getData.getString(RFCommHelperService.DELIVER_TYPE) // "receive" or "send"
-            val progressPercent = msg.getData.getInt(RFCommHelperService.DELIVER_PROGRESS)
+            val progressType = msg.getData.getString(FileExchangeService.DELIVER_TYPE) // "receive" or "send"
+            val progressPercent = msg.getData.getInt(FileExchangeService.DELIVER_PROGRESS)
             //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS: progressPercent="+progressPercent)
             if(progressBarView!=null)
               progressBarView.setProgress(progressPercent)
-            val progressBytes = msg.getData.getLong(RFCommHelperService.DELIVER_BYTES)
+            val progressBytes = msg.getData.getLong(FileExchangeService.DELIVER_BYTES)
             val durationSeconds = (SystemClock.uptimeMillis - startTimeConnect) / 1000
             val durationFileSeconds = (SystemClock.uptimeMillis - startTimeFile) / 1000
             if(durationFileSeconds>0) {
@@ -1005,10 +1003,10 @@ class AnyMimeActivity extends Activity {
           }
 
         case FileExchangeService.MESSAGE_RECEIVED_FILE =>
-          val receiveFileName = msg.getData.getString(RFCommHelperService.DELIVER_FILENAME)
+          val receiveFileName = msg.getData.getString(FileExchangeService.DELIVER_FILENAME)
           //if(D) Log.i(TAG, "handleMessage MESSAGE_RECEIVED_FILE: receiveFileName=["+receiveFileName+"]")
           // store receiveFileName so we can show all received files later
-          val receiveUriString = msg.getData.getString(RFCommHelperService.DELIVER_URI)
+          val receiveUriString = msg.getData.getString(FileExchangeService.DELIVER_URI)
           receivedFileUriStringArrayList.add(receiveUriString)
           startTimeFile = SystemClock.uptimeMillis
 

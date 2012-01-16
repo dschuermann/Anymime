@@ -61,6 +61,13 @@ object FileExchangeService {
   val MESSAGE_SEND_FILE = 104
   val MESSAGE_USERHINT1 = 105
   val MESSAGE_USERHINT2 = 106
+
+  // Key names received from Service to the activity handler
+  val DELIVER_PROGRESS = "deliver_progress"
+  val DELIVER_BYTES = "deliver_bytes"
+  val DELIVER_TYPE = "deliver_type"
+  val DELIVER_FILENAME = "deliver_filename"
+  val DELIVER_URI = "deliver_uri"
 }
 
 class FileExchangeService extends RFServiceTrait {
@@ -534,9 +541,9 @@ class FileExchangeService extends RFServiceTrait {
         val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
         val bundle = new Bundle
         val divider = if(contentLength>=100) contentLength/100 else 1
-        bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, (totalSentBytes/divider).asInstanceOf[Int] )
-        bundle.putLong(RFCommHelperService.DELIVER_BYTES, totalSentBytes)
-        bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
+        bundle.putInt(FileExchangeService.DELIVER_PROGRESS, (totalSentBytes/divider).asInstanceOf[Int] )
+        bundle.putLong(FileExchangeService.DELIVER_BYTES, totalSentBytes)
+        bundle.putString(FileExchangeService.DELIVER_TYPE, "send")
         msg.setData(bundle)
         activityMsgHandler.sendMessage(msg)
 
@@ -547,9 +554,9 @@ class FileExchangeService extends RFServiceTrait {
 
       val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
       val bundle = new Bundle
-      bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 100)
-      bundle.putLong(RFCommHelperService.DELIVER_BYTES, totalSentBytes)
-      bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
+      bundle.putInt(FileExchangeService.DELIVER_PROGRESS, 100)
+      bundle.putLong(FileExchangeService.DELIVER_BYTES, totalSentBytes)
+      bundle.putString(FileExchangeService.DELIVER_TYPE, "send")
       msg.setData(bundle)
       activityMsgHandler.sendMessage(msg)
 
@@ -788,10 +795,8 @@ class FileExchangeService extends RFServiceTrait {
 
         val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
         val bundle = new Bundle
-        //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
-        bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 0)
-        //bundle.putLong(RFCommHelperService.DELIVER_BYTES, 0)
-        bundle.putString(RFCommHelperService.DELIVER_TYPE, "receive")
+        bundle.putInt(FileExchangeService.DELIVER_PROGRESS, 0)
+        bundle.putString(FileExchangeService.DELIVER_TYPE, "receive")
         msg.setData(bundle)
         activityMsgHandler.sendMessage(msg)
       }
@@ -815,9 +820,9 @@ class FileExchangeService extends RFServiceTrait {
           if(rawdata==null || rawdata.size==0) {
             val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
             val bundle = new Bundle
-            bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 100)
-            bundle.putLong(RFCommHelperService.DELIVER_BYTES, fileWritten)
-            bundle.putString(RFCommHelperService.DELIVER_TYPE, "receive")
+            bundle.putInt(FileExchangeService.DELIVER_PROGRESS, 100)
+            bundle.putLong(FileExchangeService.DELIVER_BYTES, fileWritten)
+            bundle.putString(FileExchangeService.DELIVER_TYPE, "receive")
             msg.setData(bundle)
             activityMsgHandler.sendMessage(msg)
           } 
@@ -827,9 +832,9 @@ class FileExchangeService extends RFServiceTrait {
             val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
             val bundle = new Bundle
             val divider = if(contentLength>=100) contentLength/100 else 1
-            bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, (fileWritten/divider).asInstanceOf[Int])
-            bundle.putLong(RFCommHelperService.DELIVER_BYTES, fileWritten)
-            bundle.putString(RFCommHelperService.DELIVER_TYPE, "receive")
+            bundle.putInt(FileExchangeService.DELIVER_PROGRESS, (fileWritten/divider).asInstanceOf[Int])
+            bundle.putLong(FileExchangeService.DELIVER_BYTES, fileWritten)
+            bundle.putString(FileExchangeService.DELIVER_TYPE, "receive")
             msg.setData(bundle)
             activityMsgHandler.sendMessage(msg)
           }
@@ -851,8 +856,8 @@ class FileExchangeService extends RFServiceTrait {
         if(activityMsgHandler!=null) {
           val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_RECEIVED_FILE)
           val bundle = new Bundle
-          bundle.putString(RFCommHelperService.DELIVER_FILENAME, originalFilename)
-          bundle.putString(RFCommHelperService.DELIVER_URI, file.toURI.toString)
+          bundle.putString(FileExchangeService.DELIVER_FILENAME, originalFilename)
+          bundle.putString(FileExchangeService.DELIVER_URI, file.toURI.toString)
           msg.setData(bundle)
           activityMsgHandler.sendMessage(msg)
         }
