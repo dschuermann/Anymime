@@ -106,7 +106,7 @@ class ReceiveFilesHistory() {
     var loop=0
     for(historyEntry <- historyQueue) {
       val storeString = historyEntryToCommaSeparatedString(historyEntry)
-      if(D) Log.i(TAG, "persistArrayList loop="+loop+" storeString="+storeString)
+      //if(D) Log.i(TAG, "persistArrayList loop="+loop+" storeString="+storeString)
       prefSettingsEditor.putString(""+loop,storeString)
       prefSettingsEditor.commit
       loop+=1

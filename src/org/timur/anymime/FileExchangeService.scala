@@ -22,6 +22,8 @@ package org.timur.anymime
 
 import java.io.InputStream
 import java.io.OutputStream
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.IOException
 import java.util.Calendar
 import java.util.ArrayList
@@ -51,6 +53,15 @@ import org.timur.rfcomm._
 
 // app-specific code that needs to stay in memory when the activity goes into background
 // so that filetransfer can continue while the app is in background (and the activity might have been removed from memory)
+
+object FileExchangeService {
+  val MESSAGE_DELIVER_PROGRESS = 101
+  val MESSAGE_YOURTURN = 102
+  val MESSAGE_RECEIVED_FILE = 103
+  val MESSAGE_SEND_FILE = 104
+  val MESSAGE_USERHINT1 = 105
+  val MESSAGE_USERHINT2 = 106
+}
 
 class FileExchangeService extends RFServiceTrait {
 
@@ -87,21 +98,17 @@ class FileExchangeService extends RFServiceTrait {
   override def onBind(intent:Intent) :IBinder = localBinder 
 
   override def onCreate() {
-    //if(D) Log.i(TAG, "onCreate ####################")
-    // note: our service was started via bindService() from activity onCreate()
-    //       but ConnectedThread will only be instantiated when needed, from RFCommHelperService connectedBt() or connectedWifi()
-    //       and will run while codedInputStream!=null (set null by ConnectedThread.cancel())
   }
 
   def stopActiveConnection() {
-    // this is called by RFCommHelper.onDestroy
+    // called by RFCommHelper.onDestroy
     if(D) Log.i(TAG, "stopActiveConnection")
     if(connectedThread!=null)
       connectedThread.cancel
   }
 
   def connectViaBackupHost() {
-    // not implemented for FileExchange
+    // not implemented in FileExchangeService
   }
 
   def createConnectedThread() {
@@ -117,8 +124,7 @@ class FileExchangeService extends RFServiceTrait {
     private var localDeviceName:String = null
     private var socketCloseFkt:() => Unit = null
     private var codedInputStream:CodedInputStream = null
-    private var mConnectedSendThread:ConnectedSendThread = null
-    private val sendQueue = new scala.collection.mutable.Queue[Any]
+    private var codedOutputStream:CodedOutputStream = null
     @volatile var threadRunning = false     // set true by run(), set false by cancel()   
 
     bytesWritten=0
@@ -159,11 +165,7 @@ class FileExchangeService extends RFServiceTrait {
 
       try {
         codedInputStream = CodedInputStream.newInstance(mmInStream)
-        //if(D) Log.i(TAG, "ConnectedThread start mmInStream="+mmInStream+" codedInputStream="+codedInputStream+" mmOutStream="+mmOutStream)
-
-        // start fifo queue delivery via codedOutputStream
-        mConnectedSendThread = new ConnectedSendThread(sendQueue,CodedOutputStream.newInstance(mmOutStream))
-        mConnectedSendThread.start
+        codedOutputStream = CodedOutputStream.newInstance(mmOutStream)
       } catch {
         case e: IOException =>
           Log.e(TAG, "ConnectedThread start temp sockets not created", e)
@@ -214,8 +216,6 @@ class FileExchangeService extends RFServiceTrait {
           else {
             Log.e(TAG, "processBtMessage 'disconnect' unable to rfCommHelper.rfCommService.stopActiveConnection")
           }
-          //if(connectedThread!=null)
-          //  connectedThread.cancel
         } else {
           Log.e(TAG, "processBtMessage 'disconnect' connectedThread==null, unable to connectedThread.cancel")
         }
@@ -223,7 +223,7 @@ class FileExchangeService extends RFServiceTrait {
       }
 
       if(cmd.equals("yourturn")) {
-        activityMsgHandler.sendMessage(activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_YOURTURN))
+        activityMsgHandler.sendMessage(activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_YOURTURN))
         // note that this will not arive in the activity, if another activity is running in front of it
         if(firstActor) {
           if(D) Log.i(TAG, "processBtMessage 'yourturn' firstActor stopActiveConnection ...")
@@ -370,13 +370,77 @@ class FileExchangeService extends RFServiceTrait {
       if(D) Log.i(TAG, "ConnectedThread run DONE threadRunning="+threadRunning)
     }
 
-    def writeBtShareMessage(btMessage:BtShare.Message) :Unit = {
-      //if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage btMessage="+btMessage)
+    def writeBtShareMessage(btMessage:BtShare.Message) :Unit = synchronized {
       if(btMessage==null) return
-
-      // fifo queue btMessage - and actually send it from somewhere else
-      sendQueue += btMessage
+      if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage btMessage.getCommand="+btMessage.getCommand+" btMessage.getArg2="+btMessage.getArg2)
+      try {
+        val size = btMessage.getSerializedSize
+        if(size>0) {
+          val byteData = new Array[Byte](size)
+          com.google.protobuf.ByteString.copyFrom(byteData)
+          if(codedOutputStream!=null) {
+            if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage writeRawVarint32(11111)")
+            codedOutputStream.writeRawVarint32(11111)
+            if(codedOutputStream!=null) {
+              if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage writeRawVarint32(size="+size+")")
+              codedOutputStream.writeRawVarint32(size)
+              if(codedOutputStream!=null) {
+                if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage btMessage.writeTo(codedOutputStream)")
+                btMessage.writeTo(codedOutputStream)
+                if(codedOutputStream!=null) {
+                  if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage codedOutputStream.flush ...")
+                  codedOutputStream.flush
+                }
+                if(mmOutStream!=null) {
+                  mmOutStream.flush
+                  if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage mmOutStream flushed size="+size+" codedOutputStr="+codedOutputStream)
+                }
+              }
+              totalSend += size
+            }
+          }
+          if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage size="+size+" totalSend="+totalSend+" btMessage.getCommand="+btMessage.getCommand+" btMessage.getArg2="+btMessage.getArg2)
+        }
+      } catch {
+        case ex: IOException =>
+          // we receive: "java.io.IOException: Connection reset by peer"
+          // or:         "java.io.IOException: Transport endpoint is not connected"
+          var errMsg = ex.getMessage
+          Log.e(TAG, "ConnectedThread writeBtShareMessage ioexception errMsg="+errMsg, ex)
+          activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_USERHINT1, -1, -1, errMsg).sendToTarget
+          //halt
+      }
     }
+
+    def writeData(data:Array[Byte], size:Int) = synchronized {
+      try {
+        if(codedOutputStream!=null) {
+          codedOutputStream.writeRawVarint32(11111)     
+          if(codedOutputStream!=null) {
+            codedOutputStream.writeRawVarint32(size)
+            if(size>0)
+              if(codedOutputStream!=null)
+                codedOutputStream.writeRawBytes(data,0,size)     
+
+            if(codedOutputStream!=null)
+              codedOutputStream.flush
+
+            if(mmOutStream!=null) {
+              mmOutStream.flush
+              //if(D) Log.i(TAG, "ConnectedThread writeData mmOutStream.flush")
+            }
+            totalSend += size
+          }
+        }
+        //if(D) Log.i(TAG, "ConnectedThread writeData size="+size+" totalSend="+totalSend)
+      } catch {
+        case ioex:IOException =>
+          Log.e(TAG, "ConnectedThread writeData "+ioex)
+          activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_USERHINT1, -1, -1, ioex.getMessage).sendToTarget
+          //halt
+      }
+    }
+
 
     // called by send() only
     def writeCmdMsg(cmd:String, message:String, toAddr:String, toName:String, sendMsgCounter:Long) = synchronized {
@@ -400,49 +464,13 @@ class FileExchangeService extends RFServiceTrait {
       writeBtShareMessage(btBuilder.build)
     }
 
-    def writeData(data:Array[Byte], size:Int) {
-      //if(D) Log.i(TAG, "ConnectedThread writeData size="+size)
-      // queue the Array, take care of "out of memory" issues
-
-      if(sendQueue.size>500) {
-        // 500 sendQueue allocations of 10.000 bytes = 500 KB buffer 
-        while(sendQueue.size>500) {
-          if(!threadRunning || disconnecting)
-            return
-          //if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" >500 sleep ===================")
-          try { Thread.sleep(1000); } catch { case ex:Exception => }
-        }
-        //if(D) Log.i(TAG, "ConnectedThread writeData sendQueue.size="+sendQueue.size+" after sleep")
-      }
-
-      if(!threadRunning || disconnecting)
-        return
-      var sendData:Array[Byte] = null
-      if(size>0) {
-        while(sendData==null) {
-          if(!threadRunning || disconnecting)
-            return
-          try {
-            sendData = new Array[Byte](size)
-          } catch {
-            case e: java.lang.OutOfMemoryError =>
-              if(D) Log.i(TAG, "ConnectedThread writeData OutOfMemoryError - force System.gc() sendQueue.size="+sendQueue.size+" ===================")
-              System.gc
-              try { Thread.sleep(2000); } catch { case ex:Exception => }
-              System.gc
-              if(D) Log.i(TAG, "ConnectedThread writeData OutOfMemoryError - continue after System.gc sendQueue.size="+sendQueue.size)
-          }
-        }
-        Array.copy(data,0,sendData,0,size)
-      }
-
-      sendQueue += sendData
-    }
-
     def cancel() {
       if(D) Log.i(TAG, "ConnectedThread cancel()")
 
       threadRunning = false
+
+      codedInputStream = null
+      codedOutputStream = null
 
       if(mmInStream != null) {
         try { mmInStream.close } catch { case e: Exception => }
@@ -454,164 +482,9 @@ class FileExchangeService extends RFServiceTrait {
         //mmOutStream = null
       }
 
-      codedInputStream = null
-      if(mConnectedSendThread!=null)
-      mConnectedSendThread.halt
-
       if(D) Log.i(TAG, "ConnectedThread -> socketCloseFkt")
       socketCloseFkt() // call device-type specific socket.close
-      sendQueue.clear
-      System.gc
       if(D) Log.i(TAG, "ConnectedThread cancel() done")
-    }
-  }
-
-
-
-  class ConnectedSendThread(sendQueue:scala.collection.mutable.Queue[Any], var codedOutputStream:CodedOutputStream) extends Thread {
-    //if(D) Log.i(TAG, "ConnectedSendThread start")
-    var running = false
-    var blobId:Long = 0
-    var contentLength:Long = 0
-    var progressLastStep:Long = 0
-    totalSend = 0
-
-    override def run() {
-      //if(D) Log.i(TAG, "ConnectedSendThread run ")
-      var progressLastMS:Long = SystemClock.uptimeMillis
-      var fileSend:Long = 0
-      try {
-        while(connectedThread!=null && codedOutputStream!=null && sendQueue!=null) {
-          if(sendQueue.size>0) {
-            val obj = sendQueue.dequeue
-            if(obj.isInstanceOf[BtShare.Message]) {
-              //if(D) Log.i(TAG, "ConnectedSendThread run BtShare.Message")
-              val btShareMessage = obj.asInstanceOf[BtShare.Message]
-              val fileName = btShareMessage.getArg2
-              contentLength = btShareMessage.getDataLength
-              //val msg = fileName+" "+contentLength+" bytes"
-              activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT2, -1, -1, fileName).sendToTarget
-
-              // a new blob delivery is starting...
-              blobId = btShareMessage.getId
-              fileSend = 0
-              progressLastStep = 0
-              progressLastMS = SystemClock.uptimeMillis
-              writeBtShareMessage(btShareMessage)
-
-            } else {
-              val data = obj.asInstanceOf[Array[Byte]]
-              if(data!=null) {
-                writeData(data, data.size)
-                // a new blob delivery is in progress... (if data.size==0 then this is the end of this blob delivery)
-                fileSend += data.size
-                totalSend += data.size
-              } else {
-                writeData(null, 0)
-              }
-              
-              // if data.size == 0, message back "blobId finished" to activity
-              // else if contentLength > 0, message back "percentage progress" to activity
-              if(data==null || data.size == 0) {
-                val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_DELIVER_PROGRESS)
-                val bundle = new Bundle
-                //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
-                bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 100)
-                bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
-                bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
-                if(D) Log.i(TAG, "ConnectedSendThread run totalSend="+totalSend+" done")
-                msg.setData(bundle)
-                activityMsgHandler.sendMessage(msg)
-              }
-              else if(contentLength>0 && SystemClock.uptimeMillis-progressLastMS>500) {
-                progressLastMS = SystemClock.uptimeMillis
-                val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_DELIVER_PROGRESS)
-                val bundle = new Bundle
-                //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
-                if(contentLength/100>=1)
-                  bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, (fileSend/(contentLength/100)).asInstanceOf[Int] )
-                bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
-                bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
-                if(D) Log.i(TAG, "ConnectedSendThread run totalSend="+totalSend)
-                msg.setData(bundle)
-                activityMsgHandler.sendMessage(msg)
-              }
-            }
-          } else {
-            if(D) Log.i(TAG, "ConnectedSendThread sendQueue.size(="+sendQueue.size+") not >0  sleep ###################")
-            try { Thread.sleep(500); } catch { case ex:Exception => }
-          }
-        }
-        if(D) Log.i(TAG, "ConnectedSendThread run finished connectedThread="+connectedThread+" codedOutputStream="+codedOutputStream+" sendQueue="+sendQueue+" #######################")
-
-      } catch {
-        case e: IOException =>
-          if(D) Log.i(TAG, "ConnectedSendThread run ex="+e)
-          halt
-      }
-
-      if(D) Log.i(TAG, "ConnectedSendThread run DONE connectedThread="+connectedThread)
-    }
-
-    def halt() {
-      if(D) Log.i(TAG, "ConnectedSendThread halt")
-      codedOutputStream=null
-    }
-
-    private def writeBtShareMessage(btMessage:BtShare.Message) :Unit = synchronized {
-      if(btMessage==null) return
-      //if(D) Log.i(TAG, "ConnectedSendThread writeBtShareMessage btMessage.getCommand="+btMessage.getCommand+" btMessage.getArg2="+btMessage.getArg2)
-      try {
-        val size = btMessage.getSerializedSize
-        if(D) Log.i(TAG, "ConnectedSendThread writeBtShareMessage size="+size+" contentLength="+contentLength+" totalSend="+totalSend+" btMessage.getCommand="+btMessage.getCommand+" btMessage.getArg2="+btMessage.getArg2)
-        if(size>0) {
-          val byteData = new Array[Byte](size)
-          com.google.protobuf.ByteString.copyFrom(byteData)
-          if(codedOutputStream!=null) {
-            codedOutputStream.writeRawVarint32(11111)
-            if(codedOutputStream!=null) {
-              codedOutputStream.writeRawVarint32(size)
-              if(codedOutputStream!=null) {
-                btMessage.writeTo(codedOutputStream)
-                if(codedOutputStream!=null) {
-                  codedOutputStream.flush
-                  if(D) Log.i(TAG, "ConnectedSendThread writeBtShareMSG flushed size="+size+" codedOutputStr="+codedOutputStream)
-                }
-              }
-            }
-          }
-        }
-      } catch {
-        case ex: IOException =>
-          // we receive: "java.io.IOException: Connection reset by peer"
-          // or:         "java.io.IOException: Transport endpoint is not connected"
-          var errMsg = ex.getMessage
-          Log.e(TAG, "ConnectedSendThread writeBtShareMessage ioexception errMsg="+errMsg, ex)
-          activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, errMsg).sendToTarget
-          halt
-      }
-    }
-
-    private def writeData(data:Array[Byte], size:Int) = synchronized {
-      //if(D) Log.i(TAG, "ConnectedSendThread writeData size="+size+" totalSend="+totalSend+" contentLength="+contentLength)
-      try {
-        if(codedOutputStream!=null) {
-          codedOutputStream.writeRawVarint32(11111)     
-          if(codedOutputStream!=null) {
-            codedOutputStream.writeRawVarint32(size)
-            if(size>0)
-              if(codedOutputStream!=null)
-                codedOutputStream.writeRawBytes(data,0,size)     
-            if(codedOutputStream!=null)
-              codedOutputStream.flush
-          }
-        }
-      } catch {
-        case ioex:IOException =>
-          Log.e(TAG, "ConnectedSendThread writeData "+ioex)
-          activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, ioex.getMessage).sendToTarget
-          halt
-      }
     }
   }
 
@@ -635,6 +508,7 @@ class FileExchangeService extends RFServiceTrait {
       if(idxLastSlash>=0)
         filename = fileUriString.substring(idxLastSlash+1)
     }
+    activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_SEND_FILE, -1, -1, filename).sendToTarget
 
     // send blob in a separate thread (1st it will be queued - then be send via RFCommHelperService.ConnectedSendThread())
     // data will be received in RFCommHelperService processIncomingBlob()
@@ -649,20 +523,40 @@ class FileExchangeService extends RFServiceTrait {
 
       // send chunked data
       val byteChunkData = new Array[Byte](blobDeliverChunkSize)
-      var totalSentBytes:Long = 0
-      var readBytes = inputStream.read(byteChunkData,0,blobDeliverChunkSize)
-      if(D) Log.i(TAG, "deliver read file done readBytes="+readBytes)
+      var totalSentBytes = 0
+      val bufferedInputStream = new BufferedInputStream(inputStream)
+      var readBytes = bufferedInputStream.read(byteChunkData,0,blobDeliverChunkSize)
+      //if(D) Log.i(TAG, "deliver read file done readBytes="+readBytes)
       while(readBytes>0) {
         sendData(readBytes, byteChunkData) // may block
         totalSentBytes += readBytes
-        readBytes = inputStream.read(byteChunkData,0,blobDeliverChunkSize)
+
+        val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
+        val bundle = new Bundle
+        val divider = if(contentLength>=100) contentLength/100 else 1
+        bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, (totalSentBytes/divider).asInstanceOf[Int] )
+        bundle.putLong(RFCommHelperService.DELIVER_BYTES, totalSentBytes)
+        bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
+        msg.setData(bundle)
+        activityMsgHandler.sendMessage(msg)
+
+        readBytes = bufferedInputStream.read(byteChunkData,0,blobDeliverChunkSize)
       }
+
+      if(D) Log.i(TAG, "deliver send fileUriString=["+fileUriString+"] done totalSentBytes="+totalSentBytes+" send EOM")
+
+      val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
+      val bundle = new Bundle
+      bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 100)
+      bundle.putLong(RFCommHelperService.DELIVER_BYTES, totalSentBytes)
+      bundle.putString(RFCommHelperService.DELIVER_TYPE, "send")
+      msg.setData(bundle)
+      activityMsgHandler.sendMessage(msg)
 
       // still connected?
       if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state!=RFCommHelperService.STATE_CONNECTED)
         return -3
 
-      if(D) Log.i(TAG, "deliver send fileUriString=["+fileUriString+"] done totalSentBytes="+totalSentBytes+" send EOM")
       sendData(0, byteChunkData) // eom - may block
       inputStream.close
       return 0
@@ -730,7 +624,7 @@ class FileExchangeService extends RFServiceTrait {
           override def run() {
             AndrTools.runOnUiThread(context) { () =>
               if(activityMsgHandler!=null)
-                activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Upload to "+remoteDeviceName).sendToTarget
+                activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_USERHINT1, -1, -1, "Upload to "+remoteDeviceName).sendToTarget
             }
 
             // todo why?
@@ -743,7 +637,6 @@ class FileExchangeService extends RFServiceTrait {
                 val fileString = iterator.next
                 if(fileString!=null) {
                   if(D) Log.i(TAG, "deliverFileArray fileString=["+fileString+"] numberOfSentFiles="+numberOfSentFiles)
-
                   if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && rfCommHelper.rfCommService.state != RFCommHelperService.STATE_CONNECTED) {
                     Log.e(TAG, "deliverFileArray not connected anymore ########")
 
@@ -752,9 +645,6 @@ class FileExchangeService extends RFServiceTrait {
                     if(idxLastDot<0) {
                       Log.e(TAG, "deliverFileArray idxLastDot<0 (no file extension)")
                     } else {
-                      val ext = fileString.substring(idxLastDot+1)
-                      //val dstFileName = mBluetoothAdapter.getName+"."+ext
-                      //if(D) Log.i(TAG, "deliverFileArray dstFileName=["+dstFileName+"]")
                       if(deliverFile(new File(fileString),remoteDeviceName, remoteDeviceAddr)==0)
                         numberOfSentFiles += 1
                     }
@@ -856,7 +746,7 @@ class FileExchangeService extends RFServiceTrait {
         case e: IOException =>
           Log.e(TAG, "Exception during write", e)
           if(activityMsgHandler!=null)
-            activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, e.getMessage).sendToTarget
+            activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_USERHINT1, -1, -1, e.getMessage).sendToTarget
       }
   }
 
@@ -893,10 +783,10 @@ class FileExchangeService extends RFServiceTrait {
       var bytesRead=0
       var fileWritten=0
       if(activityMsgHandler!=null) {
-        activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT1, -1, -1, "Download from "+remoteDeviceName).sendToTarget
-        activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_USERHINT2, -1, -1, originalFilename).sendToTarget
+        activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_USERHINT1, -1, -1, "Download from "+remoteDeviceName).sendToTarget
+        activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_USERHINT2, -1, -1, originalFilename).sendToTarget
 
-        val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_DELIVER_PROGRESS)
+        val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
         val bundle = new Bundle
         //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
         bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 0)
@@ -905,9 +795,10 @@ class FileExchangeService extends RFServiceTrait {
         msg.setData(bundle)
         activityMsgHandler.sendMessage(msg)
       }
+
+      //if(D) Log.i(TAG, "processIncomingBlob readCodedInputStream ...")
       var rawdata = readCodedInputStream()
       while(rawdata != null) {
-        //if(D) Log.i(TAG, "processIncomingBlob rawdata.size="+rawdata.size)
         if(rawdata.size>0) {
           bytesRead += rawdata.size
           if(outputStream!=null) {
@@ -916,34 +807,35 @@ class FileExchangeService extends RFServiceTrait {
             bytesWritten += rawdata.size
           }
         }
+        //if(D) Log.i(TAG, "processIncomingBlob rawdata.size="+rawdata.size+" fileWritten="+fileWritten+" bytesWritten="+bytesWritten)
 
         // if size == 0, message back "blobId finished" to activity
         // else if contentLength > 0, message back "percentage progress" to activity
         if(activityMsgHandler!=null) {
           if(rawdata==null || rawdata.size==0) {
-            val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_DELIVER_PROGRESS)
+            val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
             val bundle = new Bundle
-            //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
             bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, 100)
-            bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
+            bundle.putLong(RFCommHelperService.DELIVER_BYTES, fileWritten)
             bundle.putString(RFCommHelperService.DELIVER_TYPE, "receive")
             msg.setData(bundle)
             activityMsgHandler.sendMessage(msg)
           } 
           else
-          if(contentLength>0 && SystemClock.uptimeMillis-progressLastMS>500) {
+          if(contentLength>0 && SystemClock.uptimeMillis-progressLastMS>=130) {
             progressLastMS = SystemClock.uptimeMillis
-            val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_DELIVER_PROGRESS)
+            val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_DELIVER_PROGRESS)
             val bundle = new Bundle
-            //bundle.putLong(RFCommHelperService.DELIVER_ID, blobId)
             val divider = if(contentLength>=100) contentLength/100 else 1
             bundle.putInt(RFCommHelperService.DELIVER_PROGRESS, (fileWritten/divider).asInstanceOf[Int])
-            bundle.putLong(RFCommHelperService.DELIVER_BYTES, bytesWritten+totalSend)
+            bundle.putLong(RFCommHelperService.DELIVER_BYTES, fileWritten)
             bundle.putString(RFCommHelperService.DELIVER_TYPE, "receive")
             msg.setData(bundle)
             activityMsgHandler.sendMessage(msg)
           }
         }
+
+        //if(D) Log.i(TAG, "processIncomingBlob readCodedInputStream ...")
         rawdata = readCodedInputStream()
       }
 
@@ -957,7 +849,7 @@ class FileExchangeService extends RFServiceTrait {
 
         // send MESSAGE_RECEIVED_FILE/DELIVER_FILENAME with 'fileName' to activity
         if(activityMsgHandler!=null) {
-          val msg = activityMsgHandler.obtainMessage(RFCommHelperService.MESSAGE_RECEIVED_FILE)
+          val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_RECEIVED_FILE)
           val bundle = new Bundle
           bundle.putString(RFCommHelperService.DELIVER_FILENAME, originalFilename)
           bundle.putString(RFCommHelperService.DELIVER_URI, file.toURI.toString)

@@ -128,7 +128,8 @@ class AnyMimeActivity extends Activity {
   private var progressBarView:ProgressBar = null
   private var quickBarView:HorizontalScrollView = null
 
-  @volatile private var startTime:Long = 0
+  @volatile private var startTimeConnect:Long = 0
+  @volatile private var startTimeFile:Long = 0
   private var kbytesPerSecond:Long=0
 
   private var mediaConfirmSound:MediaPlayer = null
@@ -750,12 +751,13 @@ class AnyMimeActivity extends Activity {
               if(progressBarView!=null)
                 progressBarView.setVisibility(View.VISIBLE)
 
-              //if(D) Log.i(TAG, "RFCommHelperService.STATE_CONNECTED: reset startTime")
-              startTime = SystemClock.uptimeMillis
+              //if(D) Log.i(TAG, "RFCommHelperService.STATE_CONNECTED: reset startTimeConnect")
+              startTimeConnect = SystemClock.uptimeMillis
+              startTimeFile = SystemClock.uptimeMillis
 
             case RFCommHelperService.STATE_LISTEN | RFCommHelperService.STATE_NONE =>
               if(D) Log.i(TAG, "handleMessage MESSAGE_STATE_CHANGE: NOT CONNECTED -> mainViewUpdate")
-              mainViewUpdate          
+              mainViewUpdate
           }
 
         case RFCommHelperService.MESSAGE_DEVICE_NAME =>
@@ -769,25 +771,6 @@ class AnyMimeActivity extends Activity {
           if(!initiatedConnectionByThisDevice) {
             Toast.makeText(getApplicationContext, ""+mConnectedDeviceName+" has connected", Toast.LENGTH_LONG).show
                                                   // todo: why do I see a ip4 address here?
-          }
-
-        case RFCommHelperService.MESSAGE_YOURTURN =>
-          if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN reset startTime -> mainViewUpdate")
-          if(progressBarView!=null)
-            progressBarView.setProgress(0)
-          mainViewUpdate          
-
-        case RFCommHelperService.MESSAGE_USERHINT1 =>
-          val writeMessage = msg.obj.asInstanceOf[String]
-          if(userHint1View!=null && writeMessage!=null) {
-            //if(D) Log.i(TAG, "MESSAGE_USERHINT1 userHint1View.setText writeMessage="+writeMessage)
-            userHint1View.setText(writeMessage)
-          }
-
-        case RFCommHelperService.MESSAGE_USERHINT2 =>
-          val readMessage = msg.obj.asInstanceOf[String]
-          if(userHint2View!=null && readMessage!=null) {
-            userHint2View.setText(readMessage)
           }
 
         case RFCommHelperService.CONNECTION_START =>
@@ -877,39 +860,6 @@ class AnyMimeActivity extends Activity {
                                              .show     
           }
 
-
-        case RFCommHelperService.MESSAGE_DELIVER_PROGRESS =>
-          val progressType = msg.getData.getString(RFCommHelperService.DELIVER_TYPE) // "receive" or "send"
-          //val deliverId = msg.getData.getLong(RFCommHelperService.DELIVER_ID)
-          val progressPercent = msg.getData.getInt(RFCommHelperService.DELIVER_PROGRESS)
-          //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS: progressPercent="+progressPercent)
-          if(progressBarView!=null)
-            progressBarView.setProgress(progressPercent)
-          val progressBytes = msg.getData.getLong(RFCommHelperService.DELIVER_BYTES)
-          val durationSeconds = (SystemClock.uptimeMillis - startTime) / 1000
-          if(durationSeconds>0) {
-            val newKbytesPerSecond = (progressBytes/1024)/durationSeconds
-            //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
-            if(newKbytesPerSecond>0 || kbytesPerSecond==0) {
-              kbytesPerSecond = newKbytesPerSecond
-              if(userHint3View!=null) {
-                userHint3View.setTypeface(null, 0)  // un-bold
-                userHint3View.setTextSize(15)  // normal size
-                userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
-              }
-            }
-          }
-          // todo: set receiverActivityFlag, to prevent ReceiverIdleCheckThread() from forcing a disconnect (not yet impl.)
-
-        case RFCommHelperService.MESSAGE_RECEIVED_FILE =>
-          val receiveFileName = msg.getData.getString(RFCommHelperService.DELIVER_FILENAME)
-          //if(D) Log.i(TAG, "handleMessage MESSAGE_RECEIVED_FILE: receiveFileName=["+receiveFileName+"]")
-          // store receiveFileName so we can show all received files later
-          val receiveUriString = msg.getData.getString(RFCommHelperService.DELIVER_URI)
-          //if(D) Log.i(TAG, "handleMessage MESSAGE_RECEIVED_FILE: receiveUriString=["+receiveUriString+"]")
-          receivedFileUriStringArrayList.add(receiveUriString)
-          // todo: must set receiverActivityFlag, to prevent ReceiverIdleCheckThread() from forcing a disconnect
-
         case RFCommHelperService.DEVICE_DISCONNECT =>
           // a remote device got disconnected after being connected
           val mDisconnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
@@ -925,26 +875,20 @@ class AnyMimeActivity extends Activity {
             mediaConfirmSound.start
 
           initiatedConnectionByThisDevice = false
-          if(D) Log.i(TAG, "DEVICE_DISCONNECT -> mainViewUpdate")
-          mainViewUpdate          
+          //if(D) Log.i(TAG, "DEVICE_DISCONNECT -> mainViewUpdate")
+          //mainViewUpdate          
 
           if(receivedFileUriStringArrayList.size<1) {
             Log.e(TAG, "handleMessage MESSAGE_RECEIVED_FILE receivedFileUriStringArrayList.size<1")
-            //TODO: numberOfSentFiles from FileExchangeService
-            //Toast.makeText(getApplicationContext, "Received 0 files, sent "+rfCommService.numberOfSentFiles+" files", Toast.LENGTH_LONG).show
             return
           }
 
-          //TODO: numberOfSentFiles from FileExchangeService
-          //Toast.makeText(getApplicationContext, "Received "+receivedFileUriStringArrayList.size+" files, sent "+rfCommService.numberOfSentFiles+" files", Toast.LENGTH_LONG).show
           if(D) Log.i(TAG, "handleMessage DEVICE_DISCONNECT: call ShowReceivedFilesPopupActivity receivedFileUriStringArrayList.size="+receivedFileUriStringArrayList.size)
-          //persistArrayList(receivedFileUriStringArrayList, "receivedFileUris")
-
           receiveFilesHistoryLength = receiveFilesHistory.add(SystemClock.uptimeMillis, 
                                                               mDisconnectedDeviceName, 
                                                               kbytesPerSecond, 
                                                               receivedFileUriStringArrayList.toArray(new Array[String](0)) )
-          receiveFilesHistoryLength = receiveFilesHistory.store()
+          receiveFilesHistoryLength = receiveFilesHistory.store
 
           // run ShowReceivedFilesPopupActivity hand over receivedFileUriStringArrayList
           // this will show the list of receive files and allow the user to start intents on the individual files
@@ -999,10 +943,66 @@ class AnyMimeActivity extends Activity {
             simpleProgressBarView.setVisibility(View.VISIBLE)
             if(D) Log.i(TAG, "handleMessage CONNECTING simpleProgressBarView now visible ################################")
           }
+
+        ///////////////////////////////////////////////////////////////////////////////////////7
+        case FileExchangeService.MESSAGE_YOURTURN =>
+          if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN -> mainViewUpdate")
+          startTimeFile = SystemClock.uptimeMillis
+          if(progressBarView!=null)
+            progressBarView.setProgress(0)         
+          mainViewUpdate          
+
+        case FileExchangeService.MESSAGE_USERHINT1 =>
+          val writeMessage = msg.obj.asInstanceOf[String]
+          if(userHint1View!=null && writeMessage!=null) {
+            //if(D) Log.i(TAG, "MESSAGE_USERHINT1 userHint1View.setText writeMessage="+writeMessage)
+            userHint1View.setText(writeMessage)
+          }
+
+        case FileExchangeService.MESSAGE_USERHINT2 =>
+          val readMessage = msg.obj.asInstanceOf[String]
+          if(userHint2View!=null && readMessage!=null) {
+            userHint2View.setText(readMessage)
+          }
+
+        case FileExchangeService.MESSAGE_DELIVER_PROGRESS =>
+          val progressType = msg.getData.getString(RFCommHelperService.DELIVER_TYPE) // "receive" or "send"
+          val progressPercent = msg.getData.getInt(RFCommHelperService.DELIVER_PROGRESS)
+          //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS: progressPercent="+progressPercent)
+          if(progressBarView!=null)
+            progressBarView.setProgress(progressPercent)
+          val progressBytes = msg.getData.getLong(RFCommHelperService.DELIVER_BYTES)
+          val durationSeconds = (SystemClock.uptimeMillis - startTimeConnect) / 1000
+          val durationFileSeconds = (SystemClock.uptimeMillis - startTimeFile) / 1000
+          if(durationFileSeconds>0) {
+            val newKbytesPerSecond = (progressBytes/1024)/durationFileSeconds
+            //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
+            if(newKbytesPerSecond>0 || kbytesPerSecond==0) {
+              kbytesPerSecond = newKbytesPerSecond
+              if(userHint3View!=null) {
+                userHint3View.setTypeface(null, 0)  // un-bold
+                userHint3View.setTextSize(15)  // normal size
+                userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
+              }
+            }
+          }
+
+        case FileExchangeService.MESSAGE_RECEIVED_FILE =>
+          val receiveFileName = msg.getData.getString(RFCommHelperService.DELIVER_FILENAME)
+          //if(D) Log.i(TAG, "handleMessage MESSAGE_RECEIVED_FILE: receiveFileName=["+receiveFileName+"]")
+          // store receiveFileName so we can show all received files later
+          val receiveUriString = msg.getData.getString(RFCommHelperService.DELIVER_URI)
+          receivedFileUriStringArrayList.add(receiveUriString)
+          startTimeFile = SystemClock.uptimeMillis
+
+        case FileExchangeService.MESSAGE_SEND_FILE =>
+          val sendFileName = msg.obj.asInstanceOf[String]
+          if(userHint2View!=null && sendFileName!=null)
+            userHint2View.setText(sendFileName)
+          startTimeFile = SystemClock.uptimeMillis
       }
     }
   }
-
 
 /*
   // todo: implement idle connection timeout
@@ -1048,8 +1048,8 @@ class AnyMimeActivity extends Activity {
       }
     }
 
-    if(mainView!=null)
-      mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_dark))
+    //if(mainView!=null)
+    //  mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_dark))
 
     if(userHint1View!=null) {
       // get free space on SD-card
