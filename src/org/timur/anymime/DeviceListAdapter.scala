@@ -53,6 +53,8 @@ class DeviceListAdapter(context:Context, messageResourceId:Int)
   private var addrList = new ArrayList[String]()
   private var otherList = new ArrayList[String]()
   private var discoveredOnList = new ArrayList[Long]()
+  @volatile private var activityDestroyed = false
+
 
   override def clear() {
     nameList.clear
@@ -137,14 +139,18 @@ class DeviceListAdapter(context:Context, messageResourceId:Int)
                 override def run() {
                   do {
                     try { Thread.sleep(2000) } catch { case ex:Exception => }
-                  } while(discoveredOnList.get(position)>SystemClock.uptimeMillis)
-                  discoveredOnList.set(position,0)
+                    // todo: maybe parent activity was ended?
+                  } while(discoveredOnList.get(position) > SystemClock.uptimeMillis && !activityDestroyed)
 
-                  AndrTools.runOnUiThread(context) { () =>
-                  	iconDiscovered.setVisibility(View.INVISIBLE)
-                    //notifyDataSetChanged
+                  if(!activityDestroyed) {
+                    discoveredOnList.set(position,0)
+
+                    AndrTools.runOnUiThread(context) { () =>
+                    	iconDiscovered.setVisibility(View.INVISIBLE)
+                      //notifyDataSetChanged
+                    }
+                    if(D) Log.i(TAG, "getView("+position+") turnOff after sleep")
                   }
-                  if(D) Log.i(TAG, "getView("+position+") turnOff after sleep")
                 }
               }.start                        
             } //todo else if(discovered.startsWith("stored")) {
@@ -186,6 +192,10 @@ class DeviceListAdapter(context:Context, messageResourceId:Int)
         }
       }
     }
+  }
+
+  def exit() {
+    activityDestroyed = true
   }
 }
 

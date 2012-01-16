@@ -1031,7 +1031,8 @@ class AnyMimeActivity extends Activity {
     } else {
       if(D) Log.i(TAG, "mainViewUpdate rfCommService.activityResumed="+rfCommHelper.rfCommService.activityResumed+" rfCommService.state="+rfCommHelper.rfCommService.state)
     }
-      
+
+    // tmtmtm: what icons to draw in connect-mode
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && 
         (rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED || rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)) {
       if(rfCommHelper.rfCommService.connectedRadio==2)
@@ -1046,6 +1047,8 @@ class AnyMimeActivity extends Activity {
 
   private def mainViewDefaults() {
     if(D) Log.i(TAG, "mainViewDefaults")
+
+    // tmtmtm: what icons to draw in offline mode
     if(radioLogoView!=null) {
       if(rfCommHelper!=null && rfCommHelper.isNfcEnabled) {
         radioLogoView.setImageResource(R.drawable.nfc)

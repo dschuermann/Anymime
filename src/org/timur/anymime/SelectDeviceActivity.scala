@@ -45,13 +45,16 @@ class SelectDeviceActivity extends Activity {
   private val REQUEST_BT_SETTINGS = 1
 
   private var activity:Activity = null
+  //private var activityDestroyed = false
   private var rfCommHelper:RFCommHelper = null
   private var mediaMiniAlert:MediaPlayer = null
+  private var deviceListAdapter:DeviceListAdapter = null
 
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
     if(D) Log.i(TAG, "onCreate")
     activity = this
+    //activityDestroyed = false
 
     val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
     if(anyMimeApp==null) {
@@ -81,7 +84,7 @@ class SelectDeviceActivity extends Activity {
       return
     }
 
-    val deviceListAdapter = new DeviceListAdapter(this, R.layout.device_list_entry)
+    deviceListAdapter = new DeviceListAdapter(this, R.layout.device_list_entry)
 		listView.setAdapter(deviceListAdapter)
     mediaMiniAlert = MediaPlayer.create(this, R.raw.confirm8bit)
     rfCommHelper.addAllDevices(deviceListAdapter,mediaMiniAlert)
@@ -143,6 +146,8 @@ class SelectDeviceActivity extends Activity {
   override def onDestroy() {
     if(D) Log.i(TAG, "onDestroy")
     rfCommHelper.addAllDevicesUnregister
+    //activityDestroyed = true
+    deviceListAdapter.exit
     super.onDestroy
   }
   
