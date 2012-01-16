@@ -1038,6 +1038,7 @@ class AnyMimeActivity extends Activity {
         mainViewWifiDirect
       else
         mainViewBluetooth
+
     } else {
       mainViewDefaults
     }
