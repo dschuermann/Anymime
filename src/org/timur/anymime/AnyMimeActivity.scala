@@ -598,7 +598,7 @@ class AnyMimeActivity extends Activity {
         val packageInfo = getPackageManager.getPackageInfo(getPackageName, 0)
         if(D) Log.i(TAG, "onCreateDialog id==DIALOG_ABOUT manifest versionName="+packageInfo.versionName)
         val textView = menuDialog.findViewById(R.id.aboutVersion).asInstanceOf[TextView]
-        val dispVersion = "v"+packageInfo.versionName + " ("+android.os.Build.VERSION.SDK_INT+")"
+        val dispVersion = "v"+packageInfo.versionName + " - on Device API "+android.os.Build.VERSION.SDK_INT
         textView.setText(dispVersion.asInstanceOf[CharSequence],TextView.BufferType.NORMAL)
       } catch {
         case nnfex:android.content.pm.PackageManager.NameNotFoundException =>
@@ -904,7 +904,7 @@ class AnyMimeActivity extends Activity {
           }
 
           if(D) Log.i(TAG, "handleMessage DEVICE_DISCONNECT: call ShowReceivedFilesPopupActivity receivedFileUriStringArrayList.size="+receivedFileUriStringArrayList.size)
-          receiveFilesHistoryLength = receiveFilesHistory.add(SystemClock.uptimeMillis, 
+          receiveFilesHistoryLength = receiveFilesHistory.add(System.currentTimeMillis,
                                                               mDisconnectedDeviceName, 
                                                               kbytesPerSecond, 
                                                               receivedFileUriStringArrayList.toArray(new Array[String](0)) )

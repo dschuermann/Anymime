@@ -41,26 +41,36 @@
       android:orientation="vertical"
       android:gravity="fill"
     >
-<!--
+
       <TextView
-        android:id="@+id/aboutText"
+        android:id="@+id/aboutText1"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:layout_marginTop="6px"
-        android:layout_marginBottom="0px"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp"
         android:textColor="#eef"
-        android:textStyle="bold"
-        android:textSize="21sp"
-        android:text="About: Anymime"
+        android:textSize="16sp"
+        android:text="Filetransfer application for Android"
       />
--->
-      <!-- at runtime this will be filled with android:versionName from the manifest and build date+time -->
+
+      <TextView
+        android:id="@+id/aboutText1"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp"
+        android:textColor="#eef"
+        android:textSize="16sp"
+        android:text="Copy any file over NFC &amp; Bluetooth"
+      />
+
+      <!-- will be filled with android:versionName from the manifest and build date+time -->
       <TextView
         android:id="@+id/aboutVersion"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="0px"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
       />
@@ -69,11 +79,11 @@
         android:id="@+id/aboutCopyright"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:layout_marginTop="0px"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="(c) 2012 Timur Mehrvarz"
+        android:text="(C) 2012 Timur Mehrvarz"
       />
 
       <TextView
@@ -84,7 +94,7 @@
         android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="Open sourced under GPL"
+        android:text="Sourcedcode available under GPL"
       />
 
       <TextView
@@ -106,7 +116,7 @@
         android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="3rd party components: Google Protobuf, Teambox file icons"
+        android:text="3rd party components: Scala 2.8, JCraft JSch, Google Protobuf, Teambox file icons"
       />
 
       <!--Button
