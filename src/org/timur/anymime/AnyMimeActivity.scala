@@ -119,7 +119,7 @@ class AnyMimeActivity extends Activity {
 
 	private var slowAnimation:Animation = null
   private var mainView:View = null
-  private var radioLogoView:ImageView = null
+  private var radioLogoViewArray = new Array[ImageView](4)
   private var userHint1View:TextView = null
   private var userHint2View:TextView = null
   private var userHint3View:TextView = null
@@ -195,7 +195,10 @@ class AnyMimeActivity extends Activity {
     mediaNegativeSound = MediaPlayer.create(activity, R.raw.collision8bit)
 
     mainView = findViewById(R.id.main)
-    radioLogoView = findViewById(R.id.radioLogo).asInstanceOf[ImageView]
+    radioLogoViewArray(0) = findViewById(R.id.radioLogo1).asInstanceOf[ImageView]
+    radioLogoViewArray(1) = findViewById(R.id.radioLogo2).asInstanceOf[ImageView]
+    radioLogoViewArray(2) = findViewById(R.id.radioLogo3).asInstanceOf[ImageView]
+    radioLogoViewArray(3) = findViewById(R.id.radioLogo4).asInstanceOf[ImageView]
     userHint1View = findViewById(R.id.userHint).asInstanceOf[TextView]
     userHint2View = findViewById(R.id.userHint2).asInstanceOf[TextView]
     userHint3View = findViewById(R.id.userHint3).asInstanceOf[TextView]
@@ -331,7 +334,7 @@ class AnyMimeActivity extends Activity {
                                         appService,
                                         activity.getClass.asInstanceOf[java.lang.Class[Activity]],    // -> class of method onNewIntent(), needed to receive nfc-events
                                         mediaConfirmSound, mediaNegativeSound,
-                                        RFCommHelper.RADIO_BT| /*RFCommHelper.RADIO_P2PWIFI|*/ RFCommHelper.RADIO_NFC,      // disable p2pWifi here
+                                        RFCommHelper.RADIO_BT|   RFCommHelper.RADIO_P2PWIFI|   RFCommHelper.RADIO_NFC,      // disable p2pWifi here
                                         "AnyMimeSecure",   "00001101-afac-11de-9991-0800200c9a66",
                                         "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B3466",
                                         8954, "anymime")
@@ -811,8 +814,11 @@ class AnyMimeActivity extends Activity {
           mConnectedDeviceAddr = null
           //mConnectedDeviceName = null
           initiatedConnectionByThisDevice = false
-          if(radioLogoView!=null)
-          	radioLogoView.setAnimation(null)
+
+          // tmtmtm
+          //if(radioLogoView!=null)
+          //	radioLogoView.setAnimation(null)
+
           if(D) Log.i(TAG, "CONNECTION_FAILED -> mainViewUpdate")
           if(mediaConfirmSound!=null)
             mediaConfirmSound.start
@@ -878,8 +884,11 @@ class AnyMimeActivity extends Activity {
           val mDisconnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mDisconnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage DEVICE_DISCONNECT: "+mDisconnectedDeviceName+" addr="+mDisconnectedDeviceAddr)
-          if(radioLogoView!=null)
-          	radioLogoView.setAnimation(null)
+
+          // tmtmtm
+          //if(radioLogoView!=null)
+          //	radioLogoView.setAnimation(null)
+
           mConnectedDeviceAddr=null
           //mConnectedDeviceName=null
 
@@ -943,8 +952,11 @@ class AnyMimeActivity extends Activity {
         case RFCommHelperService.CONNECTING =>
           val otherDeviceInfo = msg.obj.asInstanceOf[String]
           if(D) Log.i(TAG, "handleMessage CONNECTING otherDeviceInfo="+otherDeviceInfo+" ################################")
-          if(radioLogoView!=null)
-            radioLogoView.setImageResource(R.drawable.bluetooth)
+
+          // tmtmtm
+          //if(radioLogoView!=null)
+          //  radioLogoView.setImageResource(R.drawable.bluetooth)
+
           if(userHint1View!=null)
             userHint1View.setText("waiting for "+otherDeviceInfo)
           // show a little round progress bar
@@ -1020,7 +1032,7 @@ class AnyMimeActivity extends Activity {
   }
 
 /*
-  // todo: implement idle connection timeout
+  // todo: implement idle connection timeout, for when youturn doesn't come
   private class ReceiverIdleCheckThread() extends Thread {
     override def run() {
       while connected {
@@ -1040,14 +1052,10 @@ class AnyMimeActivity extends Activity {
       if(D) Log.i(TAG, "mainViewUpdate rfCommService.activityResumed="+rfCommHelper.rfCommService.activityResumed+" rfCommService.state="+rfCommHelper.rfCommService.state)
     }
 
-    // tmtmtm: what icons to draw in connect-mode
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && 
-        (rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED || rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)) {
-      if(rfCommHelper.rfCommService.connectedRadio==2)
-        mainViewWifiDirect
-      else
-        mainViewBluetooth
-
+        (rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED || 
+         rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)) {
+      onlineViewDefaults
     } else {
       mainViewDefaults
     }
@@ -1057,14 +1065,46 @@ class AnyMimeActivity extends Activity {
     if(D) Log.i(TAG, "mainViewDefaults")
 
     // tmtmtm: what icons to draw in offline mode
-    if(radioLogoView!=null) {
-      if(rfCommHelper!=null && rfCommHelper.isNfcEnabled) {
-        radioLogoView.setImageResource(R.drawable.nfc)
-        if(radioLogoView!=null && slowAnimation!=null)
-        	radioLogoView.setAnimation(slowAnimation)
-      } else {
-        radioLogoView.setImageResource(R.drawable.bluetooth)
+    if(rfCommHelper!=null) {
+      var radioLogoArrayIdx = 0
+      var countMainRadios = 0
+
+      if(rfCommHelper.isNfcEnabled) {
+        radioLogoViewArray(radioLogoArrayIdx).setImageResource(R.drawable.nfc)
+        radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.VISIBLE)
+        radioLogoArrayIdx+=1
       }
+
+      if(rfCommHelper.rfCommService!=null) {
+        if(rfCommHelper.rfCommService.desiredWifiDirect &&
+           rfCommHelper.rfCommService.wifiP2pManager!=null && rfCommHelper.rfCommService.isWifiP2pEnabled) {
+          radioLogoViewArray(radioLogoArrayIdx).setImageResource(R.drawable.wifi_direct_logo)
+          radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.VISIBLE)
+          radioLogoArrayIdx+=1
+          countMainRadios+=1
+        }
+
+        val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter
+        if(rfCommHelper.rfCommService.desiredBluetooth && mBluetoothAdapter!=null && mBluetoothAdapter.isEnabled) {
+          radioLogoViewArray(radioLogoArrayIdx).setImageResource(R.drawable.bluetooth)
+          radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.VISIBLE)
+          radioLogoArrayIdx+=1
+          countMainRadios+=1
+        }
+      }
+      
+      if(countMainRadios==0) {
+        // display: internet icon
+        //      or: ap-wifi icon or mobile-internet icon
+      }
+
+      while(radioLogoArrayIdx<4) {
+        radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.GONE)
+        radioLogoArrayIdx+=1
+      }
+
+      //if(slowAnimation!=null)
+      //	radioLogoView.setAnimation(slowAnimation)
     }
 
     //if(mainView!=null)
@@ -1075,7 +1115,7 @@ class AnyMimeActivity extends Activity {
       val statFs = new android.os.StatFs(android.os.Environment.getExternalStorageDirectory().getPath())
       val sdAvailSize = statFs.getAvailableBlocks().asInstanceOf[Long] * statFs.getBlockSize().asInstanceOf[Long]
       val str = Formatter.formatFileSize(this, sdAvailSize)
-      userHint1View.setText(str+" free to receive files")
+      userHint1View.setText(str+" free disk space")
     }
 
     if(userHint2View!=null) {
@@ -1120,14 +1160,37 @@ class AnyMimeActivity extends Activity {
       quickBarView.setVisibility(View.VISIBLE)
   }
 
+  private def onlineViewDefaults() {
+    if(D) Log.i(TAG, "onlineViewDefaults")
 
-  private def mainViewBluetooth() {
-    if(D) Log.i(TAG, "mainViewBluetooth")
-    if(radioLogoView!=null) {
-      radioLogoView.setImageResource(R.drawable.bluetooth)
-    	radioLogoView.setAnimation(null)
+    // tmtmtm: what icons to draw in connect-mode
+    if(rfCommHelper!=null) {
+      var radioLogoArrayIdx = 0
+
+      if(rfCommHelper.rfCommService.connectedRadio==1) {
+        radioLogoViewArray(radioLogoArrayIdx).setImageResource(R.drawable.bluetooth)
+        radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.VISIBLE)
+        radioLogoArrayIdx+=1
+      } else if(rfCommHelper.rfCommService.connectedRadio==2) {
+        radioLogoViewArray(radioLogoArrayIdx).setImageResource(R.drawable.wifi_direct_logo)
+        radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.VISIBLE)
+        radioLogoArrayIdx+=1
+      } else {
+        //radioLogoViewArray(radioLogoArrayIdx).setImageResource(R.drawable. mobile-internet )  // todo
+        radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.VISIBLE)
+        radioLogoArrayIdx+=1
+      }
+      
+      while(radioLogoArrayIdx<4) {
+        radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.GONE)
+        radioLogoArrayIdx+=1
+      }
+
+      //if(slowAnimation!=null)
+      //	radioLogoView.setAnimation(slowAnimation)
     }
-    
+
+
     if(userHint1View!=null)
       userHint1View.setText("")
 
@@ -1140,44 +1203,16 @@ class AnyMimeActivity extends Activity {
       userHint3View.setText("")
       userHint3View.setVisibility(View.VISIBLE)
     }
+
+    if(simpleProgressBarView!=null)
+      simpleProgressBarView.setVisibility(View.GONE)
+
     if(progressBarView!=null) {
       progressBarView.setVisibility(View.GONE)
       progressBarView.setMax(100)
       progressBarView.setProgress(0)
     }
-
-    if(simpleProgressBarView!=null)
-      simpleProgressBarView.setVisibility(View.GONE)
   }
 
-  
-  private def mainViewWifiDirect() {
-    if(D) Log.i(TAG, "mainViewWifiDirect")
-    if(radioLogoView!=null) {
-      radioLogoView.setImageResource(R.drawable.wifi_direct_logo)
-    	radioLogoView.setAnimation(null)
-    }
-    
-    if(userHint1View!=null)
-      userHint1View.setText("")
-
-    if(userHint2View!=null)
-      userHint2View.setText("")
-
-    if(userHint3View!=null) {
-      userHint3View.setTypeface(null, 0)  // not bold
-      userHint3View.setTextSize(15)  // normal size
-      userHint3View.setText("")
-      userHint3View.setVisibility(View.VISIBLE)
-    }
-
-    if(simpleProgressBarView!=null)
-      simpleProgressBarView.setVisibility(View.GONE)
-
-    if(progressBarView!=null) {
-      progressBarView.setMax(100)
-      progressBarView.setProgress(0)
-    }
-  }
 }
 
