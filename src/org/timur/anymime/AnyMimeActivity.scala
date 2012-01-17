@@ -334,7 +334,7 @@ class AnyMimeActivity extends Activity {
                                         appService,
                                         activity.getClass.asInstanceOf[java.lang.Class[Activity]],    // -> class of method onNewIntent(), needed to receive nfc-events
                                         mediaConfirmSound, mediaNegativeSound,
-                                        RFCommHelper.RADIO_BT|   RFCommHelper.RADIO_P2PWIFI|   RFCommHelper.RADIO_NFC,      // disable p2pWifi here
+                                        RFCommHelper.RADIO_BT|   /*RFCommHelper.RADIO_P2PWIFI|*/   RFCommHelper.RADIO_NFC,      // disable p2pWifi here
                                         "AnyMimeSecure",   "00001101-afac-11de-9991-0800200c9a66",
                                         "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B3466",
                                         8954, "anymime")
@@ -756,10 +756,9 @@ class AnyMimeActivity extends Activity {
               receivedFileUriStringArrayList.clear
               if(D) Log.i(TAG, "STATE_CONNECTED -> mainViewUpdate")
               mainViewUpdate
-
-              // switch off button bar, switch on progressBar
-              if(quickBarView!=null)
-                quickBarView.setVisibility(View.GONE)
+              // switch off button bar, switch on progressBar (should now happen automatically)
+              //if(quickBarView!=null)
+              //  quickBarView.setVisibility(View.GONE)
               if(progressBarView!=null)
                 progressBarView.setVisibility(View.VISIBLE)
 
@@ -797,7 +796,6 @@ class AnyMimeActivity extends Activity {
           if(userHint2View!=null)
             //userHint2View.setVisibility(View.GONE)
             userHint2View.setText("")
-
           if(userHint3View!=null)
             userHint3View.setVisibility(View.GONE)
           if(simpleProgressBarView!=null)
@@ -806,7 +804,7 @@ class AnyMimeActivity extends Activity {
           if(D) Log.i(TAG, "handleMessage CONNECTION_START done")
 
         case RFCommHelperService.CONNECTION_FAILED =>
-// todo: this seems only be fed ba bluetooth connect fail (not wifi)
+          // todo: this seems only be fed by bluetooth connect fail (not wifi)
           // Anymime connect attempt has failed
           val mDisconnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mDisconnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
@@ -963,7 +961,6 @@ class AnyMimeActivity extends Activity {
           if(userHint2View!=null)
             //userHint2View.setVisibility(View.GONE)
             userHint2View.setText("")
-
           if(userHint3View!=null)
             userHint3View.setVisibility(View.GONE)
           if(simpleProgressBarView!=null)
@@ -973,9 +970,9 @@ class AnyMimeActivity extends Activity {
         case FileExchangeService.MESSAGE_YOURTURN =>
           if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN -> mainViewUpdate")
           startTimeFile = SystemClock.uptimeMillis
-          if(progressBarView!=null)
-            progressBarView.setProgress(0)         
-          mainViewUpdate          
+          //if(progressBarView!=null)
+          //  progressBarView.setProgress(0)         
+          //mainViewUpdate          
 
         case FileExchangeService.MESSAGE_USERHINT1 =>
           val writeMessage = msg.obj.asInstanceOf[String]
@@ -1064,7 +1061,6 @@ class AnyMimeActivity extends Activity {
   private def mainViewDefaults() {
     if(D) Log.i(TAG, "mainViewDefaults")
 
-    // tmtmtm: what icons to draw in offline mode
     if(rfCommHelper!=null) {
       var radioLogoArrayIdx = 0
       var countMainRadios = 0
@@ -1146,6 +1142,7 @@ class AnyMimeActivity extends Activity {
       }
       userHint3View.setVisibility(View.VISIBLE)
     }
+
     // switch off progressBar, switch back on button bar
     if(progressBarView!=null) {
       progressBarView.setVisibility(View.GONE)
@@ -1160,10 +1157,10 @@ class AnyMimeActivity extends Activity {
       quickBarView.setVisibility(View.VISIBLE)
   }
 
+
   private def onlineViewDefaults() {
     if(D) Log.i(TAG, "onlineViewDefaults")
 
-    // tmtmtm: what icons to draw in connect-mode
     if(rfCommHelper!=null) {
       var radioLogoArrayIdx = 0
 
@@ -1212,6 +1209,9 @@ class AnyMimeActivity extends Activity {
       progressBarView.setMax(100)
       progressBarView.setProgress(0)
     }
+
+    if(quickBarView!=null)
+      quickBarView.setVisibility(View.GONE)
   }
 
 }
