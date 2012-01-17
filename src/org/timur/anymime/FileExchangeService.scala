@@ -386,16 +386,16 @@ class FileExchangeService extends RFServiceTrait {
           val byteData = new Array[Byte](size)
           com.google.protobuf.ByteString.copyFrom(byteData)
           if(codedOutputStream!=null) {
-            if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage writeRawVarint32(11111)")
+            //if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage writeRawVarint32(11111)")
             codedOutputStream.writeRawVarint32(11111)
             if(codedOutputStream!=null) {
-              if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage writeRawVarint32(size="+size+")")
+              //if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage writeRawVarint32(size="+size+")")
               codedOutputStream.writeRawVarint32(size)
               if(codedOutputStream!=null) {
-                if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage btMessage.writeTo(codedOutputStream)")
+                //if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage btMessage.writeTo(codedOutputStream)")
                 btMessage.writeTo(codedOutputStream)
                 if(codedOutputStream!=null) {
-                  if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage codedOutputStream.flush ...")
+                  //if(D) Log.i(TAG, "ConnectedThread writeBtShareMessage codedOutputStream.flush ...")
                   codedOutputStream.flush
                 }
                 if(mmOutStream!=null) {
@@ -857,7 +857,7 @@ class FileExchangeService extends RFServiceTrait {
           val msg = activityMsgHandler.obtainMessage(FileExchangeService.MESSAGE_RECEIVED_FILE)
           val bundle = new Bundle
           bundle.putString(FileExchangeService.DELIVER_FILENAME, originalFilename)
-          bundle.putString(FileExchangeService.DELIVER_URI, file.toURI.toString)
+          bundle.putString(FileExchangeService.DELIVER_URI, file.toURI.toString)      // todo: issue with blanks?
           msg.setData(bundle)
           activityMsgHandler.sendMessage(msg)
         }

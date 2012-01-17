@@ -2,7 +2,7 @@
  * This file is part of AnyMime, a program to help you swap files
  * wirelessly between mobile devices.
  *
- * Copyright (C) 2011 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+ * Copyright (C) 2012 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ class ShowReceivedFilesHistoryActivity extends ListActivity {
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
     if(D) Log.i(TAG, "onCreate()")
-    requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS)
+    //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS)
     context = this
 
     val intent = getIntent

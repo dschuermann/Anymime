@@ -58,7 +58,11 @@ class FileListAdapter(context:Context, messageResourceId:Int)
 	}
 
   override def getView(position:Int, setView:View, parentViewGroup:ViewGroup) :View = {
-    val pathFileString = msgList.get(position)
+    val pathFileUriString = msgList.get(position)
+    //if(D) Log.i(TAG, "getView("+position+") position="+position+" pathFileUriString="+pathFileUriString)
+    val pathFileUri = new java.net.URI(pathFileUriString)
+    val pathFileString = pathFileUri.getPath
+    //if(D) Log.i(TAG, "getView("+position+") position="+position+" pathFileString="+pathFileString)
 
     var view = setView
     if(view == null) {

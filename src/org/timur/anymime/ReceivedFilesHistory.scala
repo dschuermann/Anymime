@@ -40,7 +40,7 @@ class ReceiveFilesHistory() {
   private val TAG = "ReceiveFilesHistory"
   private val D = Static.DBGLOG
 
-  val history_length = 20
+  val history_length = 40
   val historyQueue = new scala.collection.mutable.Queue[HistoryEntry]
 
   private val PREFS_SETTINGS = "org.timur.anymime.historyQueue"

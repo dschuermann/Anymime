@@ -52,7 +52,7 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
   override def onCreate(savedInstanceState:Bundle) {
     super.onCreate(savedInstanceState)
     if(D) Log.i(TAG, "onCreate()")
-    requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS)
+    //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS)
 
     val intent = getIntent
     if(intent==null) {
@@ -122,22 +122,21 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
     userInteractionCount+=1
 
 		// Get the item that was clicked
-		val obj = getListAdapter.getItem(position)
-		if(obj==null) {
+		val encodedFilePathString = getListAdapter.getItem(position).asInstanceOf[String]
+		if(encodedFilePathString==null) {
       Log.e(TAG, "onListItemClick position="+position+" getListAdapter.getItem(position)=null")
 		  return
 		}
 
     // process fileUriString
-		var fileUriString = obj.toString
-		if(fileUriString.startsWith("file:"))
-		  fileUriString = fileUriString.substring(5)
-    if(D) Log.i(TAG, "onListItemClick fileUriString="+fileUriString)
+    val pathFileURI = new java.net.URI(encodedFilePathString)
+    val decodedFilePathString = pathFileURI.getPath
+    //if(D) Log.i(TAG, "onListItemClick decodedFilePathString="+decodedFilePathString)
+
     try {
-      val selectedUri = Uri.fromFile(new File(fileUriString))
-      if(D) Log.i(TAG, "onListItemClick fileUriString="+fileUriString+" selectedUri="+selectedUri)
+      val selectedUri = Uri.fromFile(new File(decodedFilePathString))
       val processFileIntent = new Intent(Intent.ACTION_VIEW)
-      val fileUriStringLower = fileUriString.toLowerCase
+      val fileUriStringLower = decodedFilePathString.toLowerCase
       val lastIdxOfDot = fileUriStringLower.lastIndexOf(".")
       val extension = if(lastIdxOfDot>=0) fileUriStringLower.substring(lastIdxOfDot+1) else null
       if(extension!=null) {
@@ -167,7 +166,7 @@ class ShowReceivedFilesPopupActivity extends ListActivity {
 
     } catch {
       case ex:Exception =>
-        Log.e(TAG, "onListItemClick startActivity fileUriString="+fileUriString,ex)
+        Log.e(TAG, "onListItemClick startActivity decodedFilePathString="+decodedFilePathString,ex)
         val errMsg = ex.getMessage
         Toast.makeText(this, errMsg, Toast.LENGTH_LONG).show
     }

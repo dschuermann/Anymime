@@ -66,6 +66,7 @@
         <data android:mimeType="text/plain" />
       </intent-filter>
 
+<!--
       <intent-filter android:label="Anymime send">
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
@@ -79,24 +80,29 @@
         <category android:name="android.intent.category.DEFAULT" />
         <data android:mimeType="image/*"/>
       </intent-filter>
+-->
     </activity>
 
     <activity android:name="SelectDeviceActivity"
               android:label="Target device selection"
               android:configChanges="orientation|keyboardHidden" />
 
+<!-- ugly background -->
     <activity android:name=".ShowReceivedFilesHistoryActivity"
               android:label="Received files history"
               android:configChanges="orientation|keyboardHidden" />
 
+<!-- ugly background -->
     <activity android:name=".ShowReceivedFilesPopupActivity"
               android:label="Received files"
               android:configChanges="orientation|keyboardHidden" />
 
+<!-- ugly background -->
     <activity android:name=".ShowSelectedSlotActivity"
               android:label="Select delivery slot"
               android:configChanges="orientation|keyboardHidden" />
 
+<!-- nice background -->
     <activity android:name=".ShowSelectedFilesActivity"
               android:label="Files selected for delivery"
               android:configChanges="orientation|keyboardHidden" />
