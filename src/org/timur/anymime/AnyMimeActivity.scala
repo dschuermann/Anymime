@@ -598,7 +598,7 @@ class AnyMimeActivity extends Activity {
         val packageInfo = getPackageManager.getPackageInfo(getPackageName, 0)
         if(D) Log.i(TAG, "onCreateDialog id==DIALOG_ABOUT manifest versionName="+packageInfo.versionName)
         val textView = menuDialog.findViewById(R.id.aboutVersion).asInstanceOf[TextView]
-        val dispVersion = "v"+packageInfo.versionName + " - on Device API "+android.os.Build.VERSION.SDK_INT
+        val dispVersion = "v"+packageInfo.versionName + " - Device API "+android.os.Build.VERSION.SDK_INT
         textView.setText(dispVersion.asInstanceOf[CharSequence],TextView.BufferType.NORMAL)
       } catch {
         case nnfex:android.content.pm.PackageManager.NameNotFoundException =>
@@ -643,6 +643,14 @@ class AnyMimeActivity extends Activity {
     val alertDialog = new AlertDialog.Builder(activity).setTitle("Disconnect?")
                            .setPositiveButton("Yes",dialogClickListener)
                            .setNegativeButton("No", dialogClickListener)
+                           .setCancelable(false)
+/*
+    alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+      def onCancel(dialog:DialogInterface) {
+        if(D) Log.i(TAG, "offerUserToDisconnect ignore onCancel")
+      }
+    })
+*/
     if(rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)
       alertDialog.setMessage("Are you sure you want to abort the ongoing connect request?")
     else

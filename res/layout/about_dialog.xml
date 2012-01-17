@@ -83,7 +83,7 @@
         android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="(C) 2012 Timur Mehrvarz"
+        android:text="(C) 2012 timur.mehrvarz@gmail.com"
       />
 
       <TextView
@@ -94,7 +94,7 @@
         android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="Sourcedcode available under GPL"
+        android:text="Sourcecode available under GPL"
       />
 
       <TextView
@@ -116,7 +116,7 @@
         android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="3rd party components: Scala 2.8, JCraft JSch, Google Protobuf, Teambox file icons"
+        android:text="3rd party components used: Scala, Ant, Proguard, Bouncycastle, JCraft JSch, Google Protobuf, Teambox file icons"
       />
 
       <!--Button

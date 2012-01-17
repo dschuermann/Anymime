@@ -46,30 +46,31 @@
         android:layout_height="fill_parent"
         android:layout_above="@+id/progressBar"
         android:orientation="horizontal"
+        android:layout_marginBottom="4dip"
       >
         <Button
           android:id="@+id/buttonCancel"
           android:text="Back"
           android:textSize="12sp"
-          android:layout_width="100dip"
+          android:layout_width="80dip"
           android:layout_height="fill_parent"
           style="@style/dialogTextAppearence.HighlightButton"
           android:drawableTop="@android:drawable/ic_menu_revert"
           android:drawablePadding="0dp"
-          android:layout_marginLeft="2dip"
-          android:layout_marginRight="2dip"
+          android:layout_marginLeft="4dip"
+          android:layout_marginRight="4dip"
         />
         <Button
           android:id="@+id/buttonBt"
           android:text="Bluetooth"
           android:textSize="12sp"
-          android:layout_width="100dip"
+          android:layout_width="80dip"
           android:layout_height="fill_parent"
           style="@style/dialogTextAppearence.HighlightButton"
           android:drawableTop="@android:drawable/ic_menu_preferences"
           android:drawablePadding="0dp"
-          android:layout_marginLeft="2dip"
-          android:layout_marginRight="2dip"
+          android:layout_marginLeft="4dip"
+          android:layout_marginRight="4dip"
         />
         <!--Button
           android:id="@+id/buttonHistory"
