@@ -481,12 +481,12 @@ class FileExchangeService extends RFServiceTrait {
 
       if(mmInStream != null) {
         try { mmInStream.close } catch { case e: Exception => }
-        //mmInStream = null
+        mmInStream = null
       }
 
       if(mmOutStream != null) {
         try { mmOutStream.close } catch { case e: Exception => }
-        //mmOutStream = null
+        mmOutStream = null
       }
 
       if(D) Log.i(TAG, "ConnectedThread -> socketCloseFkt")

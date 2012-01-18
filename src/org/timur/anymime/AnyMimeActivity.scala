@@ -148,8 +148,10 @@ class AnyMimeActivity extends Activity {
   
   def serviceInitializedFkt() { 
     if(D) Log.i(TAG, "serviceInitializedFkt -> mainViewUpdate")
-    checkLayout
-    mainViewUpdate
+    AndrTools.runOnUiThread(activity) { () =>
+      checkLayout
+      mainViewUpdate
+    }
 
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
       rfCommHelper.rfCommService.activityResumed = activityResumed // important! see onResume() below
@@ -335,8 +337,8 @@ class AnyMimeActivity extends Activity {
                                         activity.getClass.asInstanceOf[java.lang.Class[Activity]],    // -> class of method onNewIntent(), needed to receive nfc-events
                                         mediaConfirmSound, mediaNegativeSound,
                                         RFCommHelper.RADIO_BT|   /*RFCommHelper.RADIO_P2PWIFI|*/   RFCommHelper.RADIO_NFC,      // disable p2pWifi here
-                                        "AnyMimeSecure",   "00001101-afac-11de-9991-0800200c9a66",
-                                        "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B3466",
+                                        "AnyMimeSecure",   "00001101-0000-1000-8000-00805F9B34FB",
+                                        "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B3466",                                                            
                                         8954, "anymime")
 
         // provide SelectDeviceActivity with access to rfCommHelper
@@ -896,18 +898,15 @@ class AnyMimeActivity extends Activity {
           //	radioLogoView.setAnimation(null)
 
           mConnectedDeviceAddr=null
-          //mConnectedDeviceName=null
 
           // audio notification for disconnect
           if(mediaConfirmSound!=null)
             mediaConfirmSound.start
 
           initiatedConnectionByThisDevice = false
-          //if(D) Log.i(TAG, "DEVICE_DISCONNECT -> mainViewUpdate")
-          //mainViewUpdate          
 
           if(receivedFileUriStringArrayList.size<1) {
-            Log.e(TAG, "handleMessage MESSAGE_RECEIVED_FILE receivedFileUriStringArrayList.size<1")
+            if(D) Log.i(TAG, "handleMessage MESSAGE_RECEIVED_FILE receivedFileUriStringArrayList.size<1")
             return
           }
 
