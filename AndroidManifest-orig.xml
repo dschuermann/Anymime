@@ -2,7 +2,7 @@
 <!--
   This file is part of AnyMime, a program to help you swap files
   wirelessly between mobile devices.
-  Copyright (C) 2011 timur.mehrvarz@gmail.com
+  Copyright (C) 2012 timur.mehrvarz@gmail.com
  
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.timur.anymime"
-    android:versionCode="17"
-    android:versionName="2.0.6 - $buildtime">
+    android:versionCode="18"
+    android:versionName="2.0.7 - $buildtime">
 
   <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11" />
 
@@ -33,14 +33,14 @@
   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-<!-- when enabling wifi.direct, also add RFCommHelper.RADIO_P2PWIFI to new RFCommHelper() -->
+<!-- when enabling wifi.direct, also add RFCommHelper.RADIO_P2PWIFI flag to new RFCommHelper() -->
 <!--
   <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
   <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
   <uses-feature android:name="android.hardware.wifi.direct" android:required="false"/>
 -->
 
-  <!-- permission.INTERNET: only needed for wifi.direct + UploadPgpFilesPopupActivity -->
+  <!-- permission.INTERNET: only needed for wifi.direct + SSH in UploadPgpFilesPopupActivity -->
   <uses-permission android:name="android.permission.INTERNET" />
 
   <uses-permission android:name="android.permission.CAMERA"/> 
@@ -163,6 +163,5 @@
     <service android:name="org.timur.rfcomm.RFCommHelperService" />
     <service android:name=".FileExchangeService" />
   </application>
-
 </manifest>
 

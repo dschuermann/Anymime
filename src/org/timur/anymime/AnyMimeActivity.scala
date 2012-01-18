@@ -75,10 +75,12 @@ import android.media.MediaPlayer
 import org.timur.rfcomm._
 
 class AnyMimeApp extends android.app.Application {
+  // for sharing the rfcomm helper+service with sub activities
   var rfCommHelper:RFCommHelper = null
 }
 
 object BluetoothShare {
+  // for using obex
   val URI = "uri"
   val CONTENT_URI = Uri.parse("content://com.android.bluetooth.opp/btopp")
   val VISIBILITY = "visibility"
@@ -272,20 +274,6 @@ class AnyMimeActivity extends Activity {
         rfCommHelper.radioDialog()
     }
 
-/*
-    AndrTools.buttonCallback(activity, R.id.buttonBluetoothSettings) { () =>
-      if(D) Log.i(TAG, "onClick buttonBluetoothSettings")
-      val bluetoothSettingsIntent = new Intent
-      bluetoothSettingsIntent.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
-      startActivity(bluetoothSettingsIntent) // -> BLUETOOTH_SETTINGS
-    }
-
-    AndrTools.buttonCallback(activity, R.id.buttonAbout) { () =>
-      if(D) Log.i(TAG, "onClick buttonAbout")
-      showDialog(DIALOG_ABOUT)
-    }
-*/
-
     AndrTools.buttonCallback(activity, R.id.applogo) { () =>
       if(D) Log.i(TAG, "onClick applogoView")
       showDialog(DIALOG_ABOUT)
@@ -390,13 +378,6 @@ class AnyMimeActivity extends Activity {
       // rfcommService was not yet loaded. must set activityResumed=false state in rfCommHelper as soon as it becomes available
     }
   }
-
-/*
-  override def onChannelDisconnected() {
-    if(rfCommHelper!=null) 
-      rfCommHelper.onChannelDisconnected
-  }
-*/
 
   override def onDestroy() {
     if(D) Log.i(TAG, "onDestroy")
@@ -527,7 +508,7 @@ class AnyMimeActivity extends Activity {
                   deviceAddr = deviceAddr.substring(0,idxComment)
                 val deviceAddrComment = if(idxComment>=0) device.substring(idxCR+1+idxComment+1) else null
 
-                // todo: if activity is currently in sleep mode, wait for it to be resumed
+                // activity may still be in pause mode, wait for it to be resumed
                 new Thread() {
                   override def run() {
                     try { Thread.sleep(300) } catch { case ex:Exception => }
@@ -552,11 +533,6 @@ class AnyMimeActivity extends Activity {
                         rfCommHelper.rfCommService.connectBt(remoteBluetoothDevice, reportConnectState=true, onstartEnableBackupConnection=false)
                       }
                     }
-                    
-                    /*AndrTools.runOnUiThread(activity) { () =>
-                      if(D) Log.i(TAG, "REQUEST_SELECT_DEVICE_AND_CONNECT -> mainViewUpdate")
-                      mainViewUpdate
-                    }*/
                   }
                 }.start                        
               }
@@ -587,7 +563,6 @@ class AnyMimeActivity extends Activity {
     }
   }
 
-
   override def onCreateDialog(id:Int) :Dialog = {
     val menuDialog = new Dialog(this)
 
@@ -602,21 +577,22 @@ class AnyMimeActivity extends Activity {
         val textView = menuDialog.findViewById(R.id.aboutVersion).asInstanceOf[TextView]
         val dispVersion = "v"+packageInfo.versionName + " - Device API "+android.os.Build.VERSION.SDK_INT
         textView.setText(dispVersion.asInstanceOf[CharSequence],TextView.BufferType.NORMAL)
+
       } catch {
         case nnfex:android.content.pm.PackageManager.NameNotFoundException =>
           Log.e(TAG, "onClick btnAbout FAILED on getPackageManager.getPackageInfo(getPackageName, 0) "+nnfex)
           val errMsg = nnfex.getMessage
           Toast.makeText(activity, errMsg, Toast.LENGTH_LONG).show
       }
-
     } 
 
     return menuDialog
   }
 
 /*
+  // about dialog will now open if Anymime logo is clicked
   override def onCreateOptionsMenu(menu: Menu): Boolean = {
-    if(D) Log.i(TAG, "onCreateOptionsMenu android.os.Build.VERSION.SDK_INT="+android.os.Build.VERSION.SDK_INT)
+    if(D) Log.i(TAG, "onCreateOptionsMenu")
     showDialog(DIALOG_ABOUT)
     return true
   }
@@ -646,17 +622,10 @@ class AnyMimeActivity extends Activity {
                            .setPositiveButton("Yes",dialogClickListener)
                            .setNegativeButton("No", dialogClickListener)
                            .setCancelable(false)
-/*
-    alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-      def onCancel(dialog:DialogInterface) {
-        if(D) Log.i(TAG, "offerUserToDisconnect ignore onCancel")
-      }
-    })
-*/
     if(rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)
-      alertDialog.setMessage("Are you sure you want to abort the ongoing connect request?")
+      alertDialog.setMessage("Do you really want to abort the ongoing connect request?")
     else
-      alertDialog.setMessage("Are you sure you want to abort the ongoing transmission?")
+      alertDialog.setMessage("Do you really want to abort the ongoing transmission?")
     alertDialog.show     
 	}
 
@@ -665,11 +634,11 @@ class AnyMimeActivity extends Activity {
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null &&
        (rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTED || 
         rfCommHelper.rfCommService.state==RFCommHelperService.STATE_CONNECTING)) {
-      // ask the user to confirm before disconnecting active transmission
+      // ask user to confirm before disconnecting active transmission
       offerUserToDisconnect
       return
     }
-    // this activity will be closed here
+    // our activity will be closed
     super.onBackPressed 
 	}
 
@@ -766,9 +735,6 @@ class AnyMimeActivity extends Activity {
               receivedFileUriStringArrayList.clear
               if(D) Log.i(TAG, "STATE_CONNECTED -> mainViewUpdate")
               mainViewUpdate
-              // switch off button bar, switch on progressBar (should now happen automatically)
-              //if(quickBarView!=null)
-              //  quickBarView.setVisibility(View.GONE)
               if(progressBarView!=null)
                 progressBarView.setVisibility(View.VISIBLE)
 
@@ -788,7 +754,7 @@ class AnyMimeActivity extends Activity {
           val mConnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage MESSAGE_DEVICE_NAME="+mConnectedDeviceName+" addr="+mConnectedDeviceAddr)
 
-          // show "... has connected" toast only, if we did NOT initiate the connection
+          // toast only, if we did NOT initiate the connection
           if(!initiatedConnectionByThisDevice) {
             Toast.makeText(getApplicationContext, ""+mConnectedDeviceName+" has connected", Toast.LENGTH_LONG).show
                                                   // todo: why do I see a ip4 address here?
@@ -804,29 +770,21 @@ class AnyMimeActivity extends Activity {
             userHint1View.setText("connecting to "+mConnectingDeviceName+" "+mConnectingDeviceAddr)
           // show a little round progress bar animation
           if(userHint2View!=null)
-            //userHint2View.setVisibility(View.GONE)
             userHint2View.setText("")
           if(userHint3View!=null)
             userHint3View.setVisibility(View.GONE)
           if(simpleProgressBarView!=null)
             simpleProgressBarView.setVisibility(View.VISIBLE)
-
           if(D) Log.i(TAG, "handleMessage CONNECTION_START done")
 
         case RFCommHelperService.CONNECTION_FAILED =>
-          // todo: this seems only be fed by bluetooth connect fail (not wifi)
           // Anymime connect attempt has failed
+          // todo: this seems only be fed by bluetooth connect fail (not wifi)
           val mDisconnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mDisconnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage CONNECTION_FAILED: ["+mDisconnectedDeviceName+"] addr="+mDisconnectedDeviceAddr)
           mConnectedDeviceAddr = null
-          //mConnectedDeviceName = null
           initiatedConnectionByThisDevice = false
-
-          // tmtmtm
-          //if(radioLogoView!=null)
-          //	radioLogoView.setAnimation(null)
-
           if(D) Log.i(TAG, "CONNECTION_FAILED -> mainViewUpdate")
           if(mediaConfirmSound!=null)
             mediaConfirmSound.start
@@ -892,17 +850,10 @@ class AnyMimeActivity extends Activity {
           val mDisconnectedDeviceAddr = msg.getData.getString(RFCommHelperService.DEVICE_ADDR)
           val mDisconnectedDeviceName = msg.getData.getString(RFCommHelperService.DEVICE_NAME)
           if(D) Log.i(TAG, "handleMessage DEVICE_DISCONNECT: "+mDisconnectedDeviceName+" addr="+mDisconnectedDeviceAddr)
-
-          // tmtmtm
-          //if(radioLogoView!=null)
-          //	radioLogoView.setAnimation(null)
-
           mConnectedDeviceAddr=null
-
           // audio notification for disconnect
           if(mediaConfirmSound!=null)
             mediaConfirmSound.start
-
           initiatedConnectionByThisDevice = false
 
           if(receivedFileUriStringArrayList.size<1) {
@@ -931,9 +882,7 @@ class AnyMimeActivity extends Activity {
             while(iterator.hasNext) {
               val fileString = iterator.next
               if(fileString.endsWith(".asc")) {
-                bundle.putString("sendKeyFile", fileString)
-                // break
-                
+                bundle.putString("sendKeyFile", fileString)               
                 // todo: we might want to auto-open optical key-verification
               }
             }
@@ -956,43 +905,31 @@ class AnyMimeActivity extends Activity {
         
         case RFCommHelperService.CONNECTING =>
           val otherDeviceInfo = msg.obj.asInstanceOf[String]
-          if(D) Log.i(TAG, "handleMessage CONNECTING otherDeviceInfo="+otherDeviceInfo+" ################################")
-
-          // tmtmtm
-          //if(radioLogoView!=null)
-          //  radioLogoView.setImageResource(R.drawable.bluetooth)
-
+          if(D) Log.i(TAG, "handleMessage CONNECTING otherDeviceInfo="+otherDeviceInfo)
           if(userHint1View!=null)
             userHint1View.setText("waiting for "+otherDeviceInfo)
-          // show a little round progress bar
           if(userHint2View!=null)
-            //userHint2View.setVisibility(View.GONE)
             userHint2View.setText("")
+          // show little round busy progress animation
           if(userHint3View!=null)
             userHint3View.setVisibility(View.GONE)
           if(simpleProgressBarView!=null)
             simpleProgressBarView.setVisibility(View.VISIBLE)
 
-        ///////////////////////////////////////////////////////////////////////////////////////7
+        ///////////////////////////////////////////////////////////////////////////////////////
         case FileExchangeService.MESSAGE_YOURTURN =>
           if(D) Log.i(TAG, "handleMessage MESSAGE_YOURTURN -> mainViewUpdate")
           startTimeFile = SystemClock.uptimeMillis
-          //if(progressBarView!=null)
-          //  progressBarView.setProgress(0)         
-          //mainViewUpdate          
 
         case FileExchangeService.MESSAGE_USERHINT1 =>
           val writeMessage = msg.obj.asInstanceOf[String]
-          if(userHint1View!=null && writeMessage!=null) {
-            //if(D) Log.i(TAG, "MESSAGE_USERHINT1 userHint1View.setText writeMessage="+writeMessage)
+          if(userHint1View!=null && writeMessage!=null)
             userHint1View.setText(writeMessage)
-          }
 
         case FileExchangeService.MESSAGE_USERHINT2 =>
           val readMessage = msg.obj.asInstanceOf[String]
-          if(userHint2View!=null && readMessage!=null) {
+          if(userHint2View!=null && readMessage!=null)
             userHint2View.setText(readMessage)
-          }
 
         case FileExchangeService.MESSAGE_DELIVER_PROGRESS =>
           if(mConnectedDeviceAddr!=null) {
@@ -1009,11 +946,8 @@ class AnyMimeActivity extends Activity {
               //if(D) Log.i(TAG, "handleMessage MESSAGE_DELIVER_PROGRESS progressPercent="+progressPercent+" kbytesPerSecond="+kbytesPerSecond)
               if(newKbytesPerSecond>0 || kbytesPerSecond==0) {
                 kbytesPerSecond = newKbytesPerSecond
-                if(userHint3View!=null) {
-                  //userHint3View.setTypeface(null, 0)  // un-bold
-                  //userHint3View.setTextSize(15)  // normal size
+                if(userHint3View!=null)
                   userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
-                }
               }
             }
           }
@@ -1037,6 +971,7 @@ class AnyMimeActivity extends Activity {
 
 /*
   // todo: implement idle connection timeout, for when youturn doesn't come
+  // nonono: if at all, we'd implement this inside the service
   private class ReceiverIdleCheckThread() extends Thread {
     override def run() {
       while connected {
@@ -1097,7 +1032,7 @@ class AnyMimeActivity extends Activity {
       }
       
       if(countMainRadios==0) {
-        // display: internet icon
+        // todo display: internet icon
         //      or: ap-wifi icon or mobile-internet icon
       }
 
@@ -1105,13 +1040,7 @@ class AnyMimeActivity extends Activity {
         radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.GONE)
         radioLogoArrayIdx+=1
       }
-
-      //if(slowAnimation!=null)
-      //	radioLogoView.setAnimation(slowAnimation)
     }
-
-    //if(mainView!=null)
-    //  mainView.setBackgroundDrawable(getResources().getDrawable(R.drawable.layer_list_dark))
 
     if(userHint1View!=null) {
       // get free space on SD-card
@@ -1129,22 +1058,15 @@ class AnyMimeActivity extends Activity {
         userHint2View.setText("Ready to send "+numberOfFilesToSend+" files from '"+selectedSlotName+"'")
       else
         userHint2View.setText("Ready to send "+numberOfFilesToSend+" files from slot "+(selectedSlot+1))
-      //userHint2View.setVisibility(View.VISIBLE)
     }
 
     if(userHint3View!=null) {
       if(rfCommHelper==null) {
-        //userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
-        //userHint3View.setTextSize(15)  // bigger
         userHint3View.setText("RFComm subsystem failed - no radio interface")
       } else if(rfCommHelper.isNfcEnabled) {
-        //userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
-        //userHint3View.setTextSize(15)  // bigger
         userHint3View.setText("NFC ready: Tap devices to share")   
       } else {
         userHint3View.setTypeface(null, 0)  // not bold
-        //userHint3View.setTextSize(15)  // normal size
-        //userHint3View.setText("NFC disabled - please connect manually")
         userHint3View.setText("")
       }
       userHint3View.setVisibility(View.VISIBLE)
@@ -1163,7 +1085,6 @@ class AnyMimeActivity extends Activity {
     if(quickBarView!=null)
       quickBarView.setVisibility(View.VISIBLE)
   }
-
 
   private def onlineViewDefaults() {
     if(D) Log.i(TAG, "onlineViewDefaults")
@@ -1189,21 +1110,13 @@ class AnyMimeActivity extends Activity {
         radioLogoViewArray(radioLogoArrayIdx).setVisibility(View.GONE)
         radioLogoArrayIdx+=1
       }
-
-      //if(slowAnimation!=null)
-      //	radioLogoView.setAnimation(slowAnimation)
     }
-
 
     if(userHint1View!=null)
       userHint1View.setText("")
-
     if(userHint2View!=null)
       userHint2View.setText("")
-
     if(userHint3View!=null) {
-      //userHint3View.setTypeface(null, 0)  // not bold
-      //userHint3View.setTextSize(15)  // normal size
       userHint3View.setText("")
       userHint3View.setVisibility(View.VISIBLE)
     }
@@ -1220,6 +1133,5 @@ class AnyMimeActivity extends Activity {
     if(quickBarView!=null)
       quickBarView.setVisibility(View.GONE)
   }
-
 }
 

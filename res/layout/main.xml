@@ -2,7 +2,7 @@
 <!--
   This file is part of AnyMime, a program to help you swap files
   wirelessly between mobile devices.
-  Copyright (C) 2011 timur.mehrvarz@gmail.com
+  Copyright (C) 2012 timur.mehrvarz@gmail.com
  
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@
       android:layout_centerHorizontal="true"
       android:fillViewport="true"
     >
-      <!-- progress bar -->
+      <!-- transfer progress bar -->
       <ProgressBar 
         android:id="@+id/progressBar"
         android:layout_width="match_parent"
@@ -114,18 +114,6 @@
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
           />
-          <!--Button
-            android:id="@+id/buttonManualConnectOpp"
-            android:text="Transfer OPP"
-            android:textSize="12sp"
-            android:layout_width="80dp"
-            android:layout_height="match_parent"
-            style="@style/dialogTextAppearence.HighlightButton"
-            android:drawableTop="@android:drawable/ic_menu_upload"
-            android:drawablePadding="0dp"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp"
-          /-->
           <Button
             android:id="@+id/buttonSendFiles"
             android:text="To send"
@@ -162,35 +150,10 @@
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
           />
-          <!--Button
-            android:id="@+id/buttonBluetoothSettings"
-            android:text="Bluetooth"
-            android:textSize="12sp"
-            android:layout_width="80dp"
-            android:layout_height="match_parent"
-            style="@style/dialogTextAppearence.HighlightButton"
-            android:drawableTop="@android:drawable/ic_menu_preferences"
-            android:drawablePadding="0dp"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp"
-          /-->
-          <!--Button
-            android:id="@+id/buttonAbout"
-            android:text="About"
-            android:textSize="12sp"
-            android:layout_width="80dp"
-            android:layout_height="match_parent"
-            style="@style/dialogTextAppearence.HighlightButton"
-            android:drawableTop="@android:drawable/ic_menu_info_details"
-            android:drawablePadding="0dp"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp"
-          /-->
         </LinearLayout>
       </HorizontalScrollView>
     </RelativeLayout>
   </LinearLayout>
-
 
   <!-- main -->
   <LinearLayout
@@ -203,8 +166,6 @@
     android:layout_centerHorizontal="true"
     android:layout_centerVertical="true"
   >
-    <!-- layout_marginBottom moves this view up above the vertical center -->
-
     <RelativeLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
@@ -222,7 +183,6 @@
         android:layout_marginTop="4dp"
         android:layout_marginBottom="18dp"
       >
-
         <!-- radio icon bar -->
         <LinearLayout
           android:layout_width="wrap_content"
@@ -266,8 +226,7 @@
           />
         </LinearLayout>
 
-
-        <!-- todo: maybe use larger font, if the screen is bigger -->
+        <!-- three text lines -->
         <TextView
           android:id="@+id/userHint"
           android:layout_width="match_parent"
@@ -293,10 +252,10 @@
           android:textSize="16sp"
           android:textColor="#eee"
           android:gravity="center"
-          android:layout_marginBottom="6dp"
+          android:layout_marginBottom="10dp"
         />
 
-        <!-- simple progress bar -->
+        <!-- simple busy progress bar -->
         <LinearLayout 
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
@@ -316,7 +275,5 @@
     </RelativeLayout>
   </LinearLayout>
 
-
 </RelativeLayout>
-
 

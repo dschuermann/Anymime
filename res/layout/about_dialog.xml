@@ -2,7 +2,7 @@
 <!--
   This file is part of AnyMime, a program to help you swap files
   wirelessly between mobile devices.
-  Copyright (C) 2011 timur.mehrvarz@gmail.com
+  Copyright (C) 2012 timur.mehrvarz@gmail.com
  
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,8 +23,7 @@
   android:layout_height="wrap_content"
   android:orientation="vertical"
   android:padding="12dip"
-  >
-
+>
   <ScrollView
     android:layout_height="fill_parent"
     android:layout_width="wrap_content"
@@ -41,7 +40,6 @@
       android:orientation="vertical"
       android:gravity="fill"
     >
-
       <TextView
         android:id="@+id/aboutText1"
         android:layout_height="wrap_content"
@@ -52,17 +50,6 @@
         android:textSize="16sp"
         android:text="Wireless filetransfer for Android"
       />
-
-      <!--TextView
-        android:id="@+id/aboutText1"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="4dp"
-        android:textColor="#eef"
-        android:textSize="16sp"
-        android:text="Copy any file over NFC &amp; Bluetooth"
-      /-->
 
       <!-- will be filled with android:versionName from the manifest and build date+time -->
       <TextView
@@ -118,30 +105,6 @@
         android:textSize="16sp"
         android:text="3rd party components used: Scala, Ant, Proguard, Bouncycastle, JCraft JSch, Google Protobuf, Teambox file icons"
       />
-
-      <!--Button
-        android:id="@+id/buttonPromoteSMS"
-        android:text="Send download link via SMS"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textSize="17sp"
-        android:padding="10dip"
-        style="@style/dialogTextAppearence.Button"
-        android:layout_marginTop="8dp"
-        android:visibility="gone"
-      /-->
-
-      <!--Button
-        android:id="@+id/buttonClose"
-        android:text="Close"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textSize="17sp"
-        android:padding="10dip"
-        android:layout_marginTop="18dp"
-        style="@style/dialogTextAppearence.Button"
-      /-->
-
     </LinearLayout>
   </ScrollView>
 </LinearLayout>
