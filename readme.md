@@ -1,10 +1,7 @@
-Anymime for Android
-===================
+Anymime 2.0
+===========
 
-Anymime is a NFC/Bluetooth Tap to share application for Android v2.2+
-
-It allows you to easily and quickly establish ad-hoc two-way file exchange sessions.
-
+Anymime is a two-way wireless tap-to-share filetransfer application for Android 2.2 - 4.0
 
 Info
 ----
@@ -13,11 +10,21 @@ Download Android apk: [https://market.android.com/details?id=org.timur.anymime](
 
 App home page: [http://timur.mobi/anymime/](http://timur.mobi/anymime/)
 
-Copyright (C) 2011 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+Features:
+
+- API 08 Android 2.2    Bluetooth Filetransfer
+- API 10 Android 2.3.3  NFC tap-to-share support
+- API 14 Android 4.0    Pairless Bluetooth
 
 Source code is licensed under the GNU General Public License, Version 3:
 
+Copyright (C) 2012 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+
 3rd party components being used
+
+- JCraft JSch
+
+- Bouncycastele
 
 - Google protobuf
 
@@ -27,24 +34,23 @@ Source code is licensed under the GNU General Public License, Version 3:
 - FileDialog
   https://code.google.com/p/android-file-dialog/
 
+- Scala, Ant, Proguard
+
 Prepare to build
 ----------------
 
-Building requires Android SDK version-11, JDK 6, Scala 2.8.1 + Ant 1.8.2
+You need: Android SDK version-11, JDK 6, Scala 2.8.1 + Ant 1.8.2
 
 $ cp local.properties.sample local.properties
 
-- Adjust SDK path settings in "local.properties"
-  (Do not commit "local.properties" back to git)
+Adjust path settings in "local.properties". Done.
 
 Building from source
 --------------------
 
 $ ./make
 
-This will build a debug version of the application in bin/Anymime-debug.apk.
-View the logs at runtime using this:
+This will build a debug version of the application in bin/Anymime.apk.
 
-$ adb logcat |grep -E "Any|RFComm|Show|BtDevice|Popup|nfc|Nfc|Bluetooth|SshHelper|AndroidRuntime|E/|DEBUG"
-
+All info: [http://timur.mobi/anymime/](http://timur.mobi/anymime/)
 

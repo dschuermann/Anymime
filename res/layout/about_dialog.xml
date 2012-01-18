@@ -81,18 +81,7 @@
         android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="Sourcecode available under GPL"
-      />
-
-      <TextView
-        android:id="@+id/aboutText5"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="4dp"
-        android:textColor="#eef"
-        android:textSize="16sp"
-        android:text="github.com/mehrvarz/Anymime"
+        android:text="Sourcecode available under GPL: github.com/mehrvarz/Anymime"
       />
 
       <TextView
