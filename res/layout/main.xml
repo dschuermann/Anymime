@@ -220,7 +220,7 @@
         android:background="@drawable/layer_list_dark"
         android:gravity="center"
         android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="18dp"
       >
 
         <!-- radio icon bar -->
@@ -229,13 +229,13 @@
           android:layout_height="wrap_content"
           android:orientation="horizontal"
           android:gravity="center"
-          android:layout_marginTop="6dp"
-          android:layout_marginBottom="10dp"
+          android:layout_marginTop="8dp"
+          android:layout_marginBottom="12dp"
         >
           <ImageView
             android:id="@+id/radioLogo1"
             android:layout_width="0dp"
-            android:layout_height="24dp"
+            android:layout_height="26dp"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
             android:layout_weight="1"
@@ -243,7 +243,7 @@
           <ImageView
             android:id="@+id/radioLogo2"
             android:layout_width="0dp"
-            android:layout_height="24dp"
+            android:layout_height="26dp"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
             android:layout_weight="1"
@@ -251,7 +251,7 @@
           <ImageView
             android:id="@+id/radioLogo3"
             android:layout_width="0dp"
-            android:layout_height="24dp"
+            android:layout_height="26dp"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
             android:layout_weight="1"
@@ -259,7 +259,7 @@
           <ImageView
             android:id="@+id/radioLogo4"
             android:layout_width="0dp"
-            android:layout_height="24dp"
+            android:layout_height="26dp"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
             android:layout_weight="1"
@@ -272,28 +272,28 @@
           android:id="@+id/userHint"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:textSize="15sp"
+          android:textSize="16sp"
           android:textColor="#eee"
           android:gravity="center"
-          android:layout_marginBottom="8dp"
+          android:layout_marginBottom="6dp"
         />
         <TextView
           android:id="@+id/userHint2"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:textSize="15sp"
+          android:textSize="16sp"
           android:textColor="#eee"
           android:gravity="center"
-          android:layout_marginBottom="8dp"
+          android:layout_marginBottom="6dp"
         />
         <TextView
           android:id="@+id/userHint3"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:textSize="15sp"
+          android:textSize="16sp"
           android:textColor="#eee"
           android:gravity="center"
-          android:layout_marginBottom="8dp"
+          android:layout_marginBottom="6dp"
         />
 
         <!-- simple progress bar -->

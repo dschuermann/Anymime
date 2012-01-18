@@ -1010,8 +1010,8 @@ class AnyMimeActivity extends Activity {
               if(newKbytesPerSecond>0 || kbytesPerSecond==0) {
                 kbytesPerSecond = newKbytesPerSecond
                 if(userHint3View!=null) {
-                  userHint3View.setTypeface(null, 0)  // un-bold
-                  userHint3View.setTextSize(15)  // normal size
+                  //userHint3View.setTypeface(null, 0)  // un-bold
+                  //userHint3View.setTextSize(15)  // normal size
                   userHint3View.setText(""+(progressBytes/1024)+"\u00A0KB   "+durationSeconds+"s   "+kbytesPerSecond+"\u00A0KB/s")
                 }
               }
@@ -1118,7 +1118,7 @@ class AnyMimeActivity extends Activity {
       val statFs = new android.os.StatFs(android.os.Environment.getExternalStorageDirectory().getPath())
       val sdAvailSize = statFs.getAvailableBlocks().asInstanceOf[Long] * statFs.getBlockSize().asInstanceOf[Long]
       val str = Formatter.formatFileSize(this, sdAvailSize)
-      userHint1View.setText(str+" free disk space")
+      userHint1View.setText(str+" free disk")
     }
 
     if(userHint2View!=null) {
@@ -1134,16 +1134,16 @@ class AnyMimeActivity extends Activity {
 
     if(userHint3View!=null) {
       if(rfCommHelper==null) {
-        userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
-        userHint3View.setTextSize(18)  // bigger
+        //userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
+        //userHint3View.setTextSize(15)  // bigger
         userHint3View.setText("RFComm subsystem failed - no radio interface")
       } else if(rfCommHelper.isNfcEnabled) {
-        userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
-        userHint3View.setTextSize(18)  // bigger
+        //userHint3View.setTypeface(null, Typeface.BOLD)  // make bold
+        //userHint3View.setTextSize(15)  // bigger
         userHint3View.setText("NFC ready: Tap devices to share")   
       } else {
         userHint3View.setTypeface(null, 0)  // not bold
-        userHint3View.setTextSize(15)  // normal size
+        //userHint3View.setTextSize(15)  // normal size
         //userHint3View.setText("NFC disabled - please connect manually")
         userHint3View.setText("")
       }
@@ -1202,8 +1202,8 @@ class AnyMimeActivity extends Activity {
       userHint2View.setText("")
 
     if(userHint3View!=null) {
-      userHint3View.setTypeface(null, 0)  // not bold
-      userHint3View.setTextSize(15)  // normal size
+      //userHint3View.setTypeface(null, 0)  // not bold
+      //userHint3View.setTextSize(15)  // normal size
       userHint3View.setText("")
       userHint3View.setVisibility(View.VISIBLE)
     }

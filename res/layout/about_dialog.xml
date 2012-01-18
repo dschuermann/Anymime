@@ -50,10 +50,10 @@
         android:layout_marginBottom="4dp"
         android:textColor="#eef"
         android:textSize="16sp"
-        android:text="Filetransfer application for Android"
+        android:text="Wireless filetransfer for Android"
       />
 
-      <TextView
+      <!--TextView
         android:id="@+id/aboutText1"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
@@ -62,7 +62,7 @@
         android:textColor="#eef"
         android:textSize="16sp"
         android:text="Copy any file over NFC &amp; Bluetooth"
-      />
+      /-->
 
       <!-- will be filled with android:versionName from the manifest and build date+time -->
       <TextView
