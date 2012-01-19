@@ -1,7 +1,9 @@
+.gitignore
 local.properties
 bin/
 gen/
 AndroidManifest.xml
+build-scala-nolib.xml
 getrfcomm
 maker
 other
