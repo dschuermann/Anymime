@@ -16,7 +16,7 @@ Features:
 - API 10 Android 2.3.3 - NFC tap-to-share
 - API 14 Android 4.0 - Pairless Bluetooth
 
-Source code is licensed under the GNU General Public License, Version 3:
+Source code is licensed under the GNU General Public License, Version 3
 
 Copyright (C) 2012 timur.mehrvarz(a)gmail(.)com
 
@@ -39,7 +39,7 @@ Copyright (C) 2012 timur.mehrvarz(a)gmail(.)com
 Prepare to build
 ----------------
 
-You need: Android SDK version-11, JDK 6, Scala 2.8.1 + Ant 1.8.2
+You need: Android SDK version-14, JDK 6, Scala 2.8.1, Ant 1.8.2
 
 $ cp local.properties.sample local.properties
 
