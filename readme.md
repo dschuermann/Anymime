@@ -14,17 +14,17 @@ Feature set:
 
 - Android 2.2 / API 08:
 
-  Bluetooth Filetransfer
-  Multiple transfer lists can be predefined
-  Camera verification of received PGP keys
+-- Bluetooth Filetransfer
+-- Multiple transfer lists
+-- Camera verification of transfered PGP keys
 
 - Android 2.3.3 / API 10:
 
-  NFC tap-to-share
+-- NFC tap-to-share
 
 - Android 4.0 / API 14: 
 
-  Pairless Bluetooth
+-- Pairless Bluetooth
 
 Source code is licensed under the GNU General Public License, Version 3
 
