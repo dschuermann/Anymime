@@ -12,13 +12,13 @@ App home page: [http://timur.mobi/anymime/](http://timur.mobi/anymime/)
 
 Features:
 
-- API 08 Android 2.2    Bluetooth Filetransfer
-- API 10 Android 2.3.3  NFC tap-to-share support
-- API 14 Android 4.0    Pairless Bluetooth
+- API 08 Android 2.2 - Bluetooth Filetransfer
+- API 10 Android 2.3.3 - NFC tap-to-share
+- API 14 Android 4.0 - Pairless Bluetooth
 
 Source code is licensed under the GNU General Public License, Version 3:
 
-Copyright (C) 2012 Timur Mehrvarz, timur.mehrvarz(a)gmail(.)com
+Copyright (C) 2012 timur.mehrvarz(a)gmail(.)com
 
 3rd party components being used
 
