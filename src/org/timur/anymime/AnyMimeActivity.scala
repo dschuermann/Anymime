@@ -155,9 +155,6 @@ class AnyMimeActivity extends Activity {
       mainViewUpdate
     }
 
-    if(rfCommHelper!=null && rfCommHelper.rfCommService!=null)
-      rfCommHelper.rfCommService.activityResumed = activityResumed // important! see onResume() below
-
     /* TODO: re-include
         // have we been started with a file being handed over (say from OI File Manager)?
         val intent = getIntent
@@ -329,6 +326,8 @@ class AnyMimeActivity extends Activity {
                                         "AnyMimeInsecure", "00001101-0000-1000-8000-00805F9B3466",                                                            
                                         8954, "anymime")
 
+        rfCommHelper.setActivityResumed(activityResumed); // from now on the activityResumed state is synced into rfCommHelper from within onResume/onPause
+
         // provide SelectDeviceActivity with access to rfCommHelper
         val anyMimeApp = getApplication.asInstanceOf[AnyMimeApp]
         if(anyMimeApp!=null)
@@ -353,30 +352,19 @@ class AnyMimeActivity extends Activity {
   override def onResume() = synchronized {
     if(D) Log.i(TAG, "onResume")
     super.onResume
-
-    activityResumed = true
-
-    if(rfCommHelper!=null) {
-      // make sure the UUID's for the mBluetoothAdapter.listenUsingxxxxx hass been set
+    if(rfCommHelper!=null)
       rfCommHelper.onResume
-    }
-    else {
-      if(D) Log.i(TAG, "onResume rfCommHelper==null #####")
-      // rfcommService was not yet loaded. must set activityResumed=true state in rfCommHelper as soon as it becomes available
-    }
+    else
+      activityResumed = true
   }
 
   override def onPause() = synchronized {
     if(D) Log.i(TAG, "onPause")
-    super.onPause
-    activityResumed = false
-
     if(rfCommHelper!=null) 
       rfCommHelper.onPause
-    else {
-      Log.e(TAG, "onPause rfCommHelper==null #####")
-      // rfcommService was not yet loaded. must set activityResumed=false state in rfCommHelper as soon as it becomes available
-    }
+    else
+      activityResumed = false
+    super.onPause
   }
 
   override def onDestroy() {
@@ -988,7 +976,7 @@ class AnyMimeActivity extends Activity {
     if(rfCommHelper==null || rfCommHelper.rfCommService==null) {
       if(D) Log.i(TAG, "mainViewUpdate rfCommService==null || rfCommHelper.rfCommService==null")
     } else {
-      if(D) Log.i(TAG, "mainViewUpdate rfCommService.activityResumed="+rfCommHelper.rfCommService.activityResumed+" rfCommService.state="+rfCommHelper.rfCommService.state)
+      if(D) Log.i(TAG, "mainViewUpdate rfCommService.state="+rfCommHelper.rfCommService.state)
     }
 
     if(rfCommHelper!=null && rfCommHelper.rfCommService!=null && 
