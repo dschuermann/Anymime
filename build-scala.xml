@@ -11,6 +11,12 @@
     <!-- Project settings -->
     <property name="configs.dir" value="${basedir}/configs" />
     <property name="ant-invoked.jar" value="${configs.dir}/ant-invoked.jar" />
+<!-- https://gist.github.com/1491527 -->
+<path id="jar.libs.ref">
+<fileset dir="${jar.libs.absolute.dir}" includes="*.jar" />
+<path refid="project.libraries.jars" />
+</path>
+
 
     <path id="scala.path">
         <pathelement path="${scala-compiler.jar}" />
